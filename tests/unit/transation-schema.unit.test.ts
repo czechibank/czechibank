@@ -12,24 +12,37 @@ describe("ApiTransactionCreateSchema", () => {
     it("accepts amount as a number", () => {
       const result = safeParse(ApiTransactionCreateSchema, {
         amount: 1.5,
-        toBankNumber: "1234567890123455/5555",
+        toBankNumber: "555555555555/5555",
       });
+      if (!result.success) {
+        // Log error for debugging
+        // eslint-disable-next-line no-console
+        console.error("Error for amount as a number:", result.error);
+      }
       expect(result.success).toBe(true);
     });
 
     it("accepts amount as a valid string number", () => {
       const result = safeParse(ApiTransactionCreateSchema, {
         amount: "2.3",
-        toBankNumber: "1234567890123455/5555",
+        toBankNumber: "555555555555/5555",
       });
+      if (!result.success) {
+        // eslint-disable-next-line no-console
+        console.error("Error for amount as a valid string number:", result.error);
+      }
       expect(result.success).toBe(true);
     });
 
     it("accepts amount as a valid scientific notation string", () => {
       const result = safeParse(ApiTransactionCreateSchema, {
         amount: "1e3",
-        toBankNumber: "1234567890123455/5555",
+        toBankNumber: "555555555555/5555",
       });
+      if (!result.success) {
+        // eslint-disable-next-line no-console
+        console.error("Error for amount as a valid scientific notation string:", result.error);
+      }
       expect(result.success).toBe(true);
     });
   });
@@ -38,7 +51,7 @@ describe("ApiTransactionCreateSchema", () => {
     it("rejects amount as an invalid string with letters", () => {
       const result = safeParse(ApiTransactionCreateSchema, {
         amount: "1mama123",
-        toBankNumber: "1234567890123455/5555",
+        toBankNumber: "555555555555/5555",
       });
       expect(result.success).toBe(false);
     });
@@ -46,7 +59,7 @@ describe("ApiTransactionCreateSchema", () => {
     it("rejects amount as an empty string", () => {
       const result = safeParse(ApiTransactionCreateSchema, {
         amount: "",
-        toBankNumber: "1234567890123455/5555",
+        toBankNumber: "555555555555/5555",
       });
       expect(result.success).toBe(false);
     });
@@ -54,7 +67,7 @@ describe("ApiTransactionCreateSchema", () => {
     it("rejects amount as zero", () => {
       const result = safeParse(ApiTransactionCreateSchema, {
         amount: 0,
-        toBankNumber: "1234567890123455/5555",
+        toBankNumber: "555555555555/5555",
       });
       expect(result.success).toBe(false);
     });
@@ -62,14 +75,14 @@ describe("ApiTransactionCreateSchema", () => {
     it("rejects amount as negative", () => {
       const result = safeParse(ApiTransactionCreateSchema, {
         amount: -1,
-        toBankNumber: "1234567890123455/5555",
+        toBankNumber: "555555555555/5555",
       });
       expect(result.success).toBe(false);
     });
 
     it("rejects missing amount", () => {
       const result = safeParse(ApiTransactionCreateSchema, {
-        toBankNumber: "1234567890123455/5555",
+        toBankNumber: "555555555555/5555",
       });
       expect(result.success).toBe(false);
     });
@@ -84,7 +97,7 @@ describe("ApiTransactionCreateSchema", () => {
     it("rejects invalid toBankNumber format", () => {
       const result = safeParse(ApiTransactionCreateSchema, {
         amount: 1,
-        toBankNumber: "1234567890123455/1234",
+        toBankNumber: "555555555555/1234",
       });
       expect(result.success).toBe(false);
     });
