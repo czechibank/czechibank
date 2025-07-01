@@ -39,11 +39,7 @@ describe("ApiTransactionCreateSchema", () => {
         amount: "1e3",
         toBankNumber: "555555555555/5555",
       });
-      if (!result.success) {
-        // eslint-disable-next-line no-console
-        console.error("Error for amount as a valid scientific notation string:", result.error);
-      }
-      expect(result.success).toBe(true);
+      expect(result.success).toBe(false);
     });
   });
 

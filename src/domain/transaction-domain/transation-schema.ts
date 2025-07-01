@@ -20,8 +20,8 @@ export const ApiTransactionCreateSchema = z.object({
     (val) => {
       // Only accept strings that are valid numbers (integer or decimal)
       if (typeof val === "string") {
-        // Regex matches optional leading +/-, digits, optional decimal, optional exponent
-        const validNumberPattern = /^[-+]?\d*(\.\d+)?([eE][-+]?\d+)?$/;
+        // Regex matches optional leading +/-, digits, optional decimal, but not allow "e" or "E" or any exponent part
+        const validNumberPattern = /^[-+]?\d*(\.\d+)?$/;
         if (validNumberPattern.test(val.trim()) && val.trim() !== "") {
           const parsed = parseFloat(val);
           return isNaN(parsed) ? undefined : parsed;
