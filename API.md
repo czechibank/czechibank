@@ -145,16 +145,19 @@ curl http://localhost:3000/api/v1/transactions/txn_123 \
 ## Best Practices
 
 1. **Error Handling**
+
    - Always check the `success` field in responses
    - Handle HTTP status codes appropriately
    - Check error details for field-specific validation errors
 
 2. **Pagination**
+
    - Use pagination for listing endpoints to manage response size
    - Default page size is 10 items
    - Maximum page size is 100 items
 
 3. **Rate Limiting**
+
    - Implement exponential backoff for retries
    - Cache frequently accessed data
    - Respect rate limits when implemented
