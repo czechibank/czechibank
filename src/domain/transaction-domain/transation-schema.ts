@@ -1,6 +1,8 @@
 import { Currency } from "@prisma/client";
 import { z } from "zod";
 
+// TODO: we should have one schema for the transaction creation logic in the service and one for the API request body
+
 // Schema for the actual transaction creation logic in the service
 export const CreateTransactionNumberToNumberSchema = z.object({
   amount: z
