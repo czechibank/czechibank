@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { ApiTransactionCreateSchema } from "../../src/domain/transaction-domain/transation-schema";
+import { ApiTransactionCreateSchema } from "../../src/domain/transaction-domain/transaction-schema";
 
 // Helper for schema parsing
 function safeParse(schema: any, data: any) {

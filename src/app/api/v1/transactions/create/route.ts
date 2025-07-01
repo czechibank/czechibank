@@ -1,7 +1,7 @@
 import { checkUserAuthOrThrowError } from "@/app/api/v1/server-actions";
 import bankAccountService from "@/domain/bankAccount-domain/ba-service";
+import { ApiTransactionCreateSchema } from "@/domain/transaction-domain/transaction-schema";
 import transactionService from "@/domain/transaction-domain/transaction-service";
-import { ApiTransactionCreateSchema } from "@/domain/transaction-domain/transation-schema";
 import { ApiErrorCode, errorResponse, validateEventHandler } from "@/lib/response";
 import { NextRequest, NextResponse } from "next/server";
 /**

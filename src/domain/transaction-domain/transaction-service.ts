@@ -4,7 +4,7 @@ import { Currency } from "@prisma/client";
 import bankAccountService from "../bankAccount-domain/ba-service";
 import { sendDiscordMessage } from "../social-reporting-domain/discord-action";
 import * as repository from "./transaction-repository";
-import { CreateTransactionNumberToNumberSchema } from "./transation-schema";
+import { CreateTransactionNumberToNumberSchema } from "./transaction-schema";
 
 function parseTransactionData(
   userId: string,
