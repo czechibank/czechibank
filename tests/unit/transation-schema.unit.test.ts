@@ -27,11 +27,7 @@ describe("ApiTransactionCreateSchema", () => {
         amount: "2.3",
         toBankNumber: "555555555555/5555",
       });
-      if (!result.success) {
-        // eslint-disable-next-line no-console
-        console.error("Error for amount as a valid string number:", result.error);
-      }
-      expect(result.success).toBe(true);
+      expect(result.success).toBe(false);
     });
 
     it("accepts amount as a valid scientific notation string", () => {
@@ -63,6 +59,22 @@ describe("ApiTransactionCreateSchema", () => {
     it("rejects amount as zero", () => {
       const result = safeParse(ApiTransactionCreateSchema, {
         amount: 0,
+        toBankNumber: "555555555555/5555",
+      });
+      expect(result.success).toBe(false);
+    });
+
+    it("accepts amount as 0.001", () => {
+      const result = safeParse(ApiTransactionCreateSchema, {
+        amount: 0.001,
+        toBankNumber: "555555555555/5555",
+      });
+      expect(result.success).toBe(true);
+    });
+
+    it("rejects amount as 0.0009", () => {
+      const result = safeParse(ApiTransactionCreateSchema, {
+        amount: 0.0009,
         toBankNumber: "555555555555/5555",
       });
       expect(result.success).toBe(false);

@@ -16,27 +16,12 @@ export const CreateTransactionNumberToNumberSchema = z.object({
 
 // Schema specifically for validating the incoming API request body
 export const ApiTransactionCreateSchema = z.object({
-  amount: z.preprocess(
-    (val) => {
-      // Only accept strings that are valid numbers (integer or decimal)
-      if (typeof val === "string") {
-        // Regex matches optional leading +/-, digits, optional decimal, but not allow "e" or "E" or any exponent part
-        const validNumberPattern = /^[-+]?\d*(\.\d+)?$/;
-        if (validNumberPattern.test(val.trim()) && val.trim() !== "") {
-          const parsed = parseFloat(val);
-          return isNaN(parsed) ? undefined : parsed;
-        }
-        return undefined; // Invalid string, will fail number validation
-      }
-      return val;
-    },
-    // Apply number and positive validation after preprocessing
-    z
-      .number({
-        invalid_type_error: "Amount must be a number or a string representing a number.",
-      })
-      .positive("Amount must be a positive number."),
-  ),
+  amount: z
+    .number()
+    .positive("Amount should be positive, this incident was reported. Nice day!")
+    .min(0.001)
+    .max(Number.MAX_SAFE_INTEGER, "Amount must be less than or equal to 9007199254740991 due security reasons.")
+    .transform((val) => Math.round(val * 10) / 10),
   toBankNumber: z.string().endsWith("5555").length(17, "Bank number must be exactly in format 1111222233334444/5555"),
 });
 
