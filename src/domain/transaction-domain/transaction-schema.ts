@@ -1,5 +1,6 @@
 import { Currency } from "@prisma/client";
 import { z } from "zod";
+import { roundAmount } from "../../lib/utils";
 
 // TODO: we should have one schema for the transaction creation logic in the service and one for the API request body
 
@@ -9,7 +10,7 @@ export const CreateTransactionNumberToNumberSchema = z.object({
     .number()
     .positive("Amount should be positive, this incident was reported. Nice day!")
     .max(Number.MAX_SAFE_INTEGER, "Amount must be less than or equal to 9007199254740991 due security reasons.")
-    .transform((val) => Math.round(val * 10) / 10),
+    .transform((val) => roundAmount(val, 3)),
   currency: z.custom<Currency>(),
   toBankNumber: z.string().endsWith("5555").length(17, "Bank number must be exactly in format 1111222233334444/5555"),
   userId: z.string(),
@@ -23,7 +24,7 @@ export const ApiTransactionCreateSchema = z.object({
     .positive("Amount should be positive, this incident was reported. Nice day!")
     .min(0.001)
     .max(Number.MAX_SAFE_INTEGER, "Amount must be less than or equal to 9007199254740991 due security reasons.")
-    .transform((val) => Math.round(val * 10) / 10),
+    .transform((val) => roundAmount(val, 3)),
   toBankNumber: z.string().endsWith("5555").length(17, "Bank number must be exactly in format 1111222233334444/5555"),
 });
 
@@ -32,7 +33,7 @@ export const CreateTransactionUserIdToUserIdUserSchema = z.object({
     .number()
     .positive("Amount should be positive, this incident was reported. Nice try. Nice day!")
     .max(Number.MAX_SAFE_INTEGER, "Amount must be less than or equal to 9007199254740991 due security reasons.")
-    .transform((val) => parseFloat(val.toFixed(1))),
+    .transform((val) => roundAmount(val, 3)),
   currency: z.custom<Currency>(),
   fromUserId: z.string(),
   toUserId: z.string(),

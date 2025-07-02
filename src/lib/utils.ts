@@ -35,3 +35,14 @@ export function generateRandomAvatarConfig() {
   console.log(getRandomValues(options));
   return { ...getRandomValues(options), backgroundColor: [color] };
 }
+
+/**
+ * Safely round a number to a given number of decimal places, avoiding floating-point issues.
+ * @param value The number to round
+ * @param decimals Number of decimal places
+ */
+export function roundAmount(value: number, decimals: number = 3): number {
+  const factor = Math.pow(10, decimals);
+  // Use Number.EPSILON to avoid floating-point issues
+  return Math.round((value + Number.EPSILON) * factor) / factor;
+}
