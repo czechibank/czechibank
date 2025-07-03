@@ -1,11 +1,12 @@
 export { DELETE, HEAD, OPTIONS, PATCH, PUT } from "../../routes";
 
-import { UserSchema } from "@/domain/user-domain/user-schema";
-
 import apikeyService from "@/domain/apikey/apikey-service";
+import { UserSchema } from "@/domain/user-domain/user-schema";
 import userService from "@/domain/user-domain/user-service";
+import { withValidatedJSON } from "@/lib/api/validation";
 import { validateEventHandler } from "@/lib/response";
-import { ApiError, handleErrors } from "../../routes";
+import { APIError } from "better-auth/api";
+import { NextRequest } from "next/server";
 
 /**
  * @swagger
@@ -48,9 +49,8 @@ import { ApiError, handleErrors } from "../../routes";
  *             schema:
  *               $ref: '#/components/schemas/Error'
  */
-export async function POST(request: Request) {
+export const POST = withValidatedJSON(async (request: NextRequest, body) => {
   try {
-    const body = await request.json();
     const parsedUser = await validateEventHandler(UserSchema, body);
     if ("error" in parsedUser) {
       return Response.json(parsedUser, { status: 422 });
@@ -59,7 +59,7 @@ export async function POST(request: Request) {
     const apiKey = await apikeyService.server.createApiKey(createdUser.user.id);
 
     return Response.json({ ...createdUser.user, apiKey: apiKey.key }, { status: 201 });
-  } catch (error) {
+  } catch (error: unknown) {
     // TODO: @vojtech-cerveny - handle better-auth - we can reuse their ApiErrorCodes etc.
     // https://www.better-auth.com/docs/concepts/api#error-handling
 
@@ -67,10 +67,10 @@ export async function POST(request: Request) {
     //   const newError = new ApiError(error.message, error.statusCode, ApiErrorCode.EMAIL_ALREADY_EXISTS);
     //   return handleErrors(newError);
     // }
-    if (error instanceof ApiError) {
-      return handleErrors(error);
+    if (error instanceof APIError) {
+      return Response.json({ error: error.message }, { status: error.statusCode });
     } else {
-      return Response.json({ error: "Internal Server Error", message: error }, { status: 500 });
+      return Response.json({ error: "Internal Server Error", message: String(error) }, { status: 500 });
     }
   }
-}
+});

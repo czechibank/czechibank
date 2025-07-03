@@ -1,6 +1,7 @@
 import { checkUserAuthOrThrowError } from "@/app/api/v1/server-actions";
 import { BankAccountSchema } from "@/domain/bankAccount-domain/ba-schema";
 import bankAccountService from "@/domain/bankAccount-domain/ba-service";
+import { withValidatedJSON } from "@/lib/api/validation";
 import { ApiErrorCode, errorResponse, successResponse } from "@/lib/response";
 import { ApiError, handleErrors } from "../../routes";
 /**
@@ -46,25 +47,21 @@ import { ApiError, handleErrors } from "../../routes";
  *             schema:
  *               $ref: '#/components/schemas/Error'
  */
-export async function POST(request: Request) {
+export const POST = withValidatedJSON(async (request, body) => {
   try {
     const user = await checkUserAuthOrThrowError(request);
     if ("error" in user) {
       return Response.json(user, { status: 401 });
     }
-    const body = await request.json();
     const parsedBody = BankAccountSchema.safeParse(body);
-
     if (!parsedBody.success) {
       return Response.json(errorResponse(parsedBody.error.message, ApiErrorCode.VALIDATION_ERROR));
     }
-
     const result = await bankAccountService.createBankAccount({
       userId: user.id,
       currency: parsedBody.data.currency,
       name: parsedBody.data.name || "New Bank Account",
     });
-
     return Response.json(successResponse("Bank account created successfully", { bankAccount: result }), {
       status: 201,
     });
@@ -77,4 +74,4 @@ export async function POST(request: Request) {
       ]);
     }
   }
-}
+});

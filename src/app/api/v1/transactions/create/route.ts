@@ -2,8 +2,9 @@ import { checkUserAuthOrThrowError } from "@/app/api/v1/server-actions";
 import bankAccountService from "@/domain/bankAccount-domain/ba-service";
 import { ApiTransactionCreateSchema } from "@/domain/transaction-domain/transaction-schema";
 import transactionService from "@/domain/transaction-domain/transaction-service";
+import { withValidatedJSON } from "@/lib/api/validation";
 import { ApiErrorCode, errorResponse, validateEventHandler } from "@/lib/response";
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 /**
  * @swagger
  * /transactions/create:
@@ -53,42 +54,24 @@ import { NextRequest, NextResponse } from "next/server";
  *             schema:
  *               $ref: '#/components/schemas/Error'
  */
-export async function POST(request: NextRequest) {
+export const POST = withValidatedJSON(async (request, body) => {
   try {
     const user = await checkUserAuthOrThrowError(request);
     if ("error" in user) {
       return NextResponse.json(errorResponse(user.error.message, user.error.code), { status: 401 });
     }
 
-    async function validateJSON(request: NextRequest) {
-      try {
-        return await request.json();
-      } catch (error) {
-        console.error("Error in validateJSON:", error);
-        return NextResponse.json(errorResponse("Invalid JSON", "400"), { status: 400 });
-      }
-    }
-
-    const body = await validateJSON(request);
-
-    if (body instanceof NextResponse) {
-      return body;
-    }
     const validatedBody = await validateEventHandler(ApiTransactionCreateSchema, body);
-
     if ("error" in validatedBody) {
       return NextResponse.json(validatedBody, { status: 400 });
     }
 
     const { amount, toBankNumber } = validatedBody;
-
     const userBankAccounts = await bankAccountService.getMyBankAccounts(user.id, { page: 1, limit: 1 });
     if ("error" in userBankAccounts || userBankAccounts.data.items.length === 0) {
       return NextResponse.json(errorResponse("No bank account found for user", "400"), { status: 400 });
     }
-
     const fromBankNumber = userBankAccounts.data.items[0].number;
-
     const result = await transactionService.sendMoneyToBankNumber({
       amount,
       toBankNumber,
@@ -97,7 +80,6 @@ export async function POST(request: NextRequest) {
       currency: "CZECHITOKEN",
       applicationType: "api",
     });
-
     if ("error" in result) {
       const error = result.error as { code: ApiErrorCode; message: string };
       if (error.code === "NOT_FOUND") {
@@ -105,7 +87,6 @@ export async function POST(request: NextRequest) {
       }
       return NextResponse.json(errorResponse(error.message, "400"), { status: 400 });
     }
-
     return NextResponse.json(
       {
         success: true,
@@ -117,4 +98,4 @@ export async function POST(request: NextRequest) {
     console.error("Error in POST /api/v1/transactions/create:", error);
     return NextResponse.json(errorResponse("Internal server error", "500"), { status: 500 });
   }
-}
+});
