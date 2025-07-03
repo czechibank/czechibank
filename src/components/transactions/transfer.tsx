@@ -2,6 +2,7 @@
 
 import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { sendMoneyToBankNumberAction } from "@/domain/transaction-domain/transaction-action";
+import { AmountSchema } from "@/domain/transaction-domain/transaction-schema";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Prisma } from "@prisma/client";
 import { useForm } from "react-hook-form";
@@ -29,7 +30,6 @@ export function TransactionTranfer({
   balance: number;
   bankAccountNumber: string;
 }) {
-  console.log(userId, bankAccountNumber, balance);
   const { toast } = useToast();
   const users = allUsers
     .filter((user) => user.id !== userId)
@@ -41,29 +41,32 @@ export function TransactionTranfer({
     });
 
   const transferScheme = z.object({
-    toBankNumber: z.string(),
-    amount: z.coerce.number().min(0).max(balance),
-    // .refine((value) => {
-    //   // const decimalPart = value.toString().split('.')[1];
-    //   // return decimalPart === undefined || decimalPart.length === 1;
-    // },
-    //   {
-    //     message: "Only one decimal is allowed",
-    //     path: ["amount"],
-    // })
+    toBankNumber: z.string().endsWith("5555").length(17, "Bank number must be exactly in format 1111222233334444/5555"),
+    amount: z.preprocess(
+      (val) => (typeof val === "string" ? Number(val.replace(",", ".")) : val),
+      AmountSchema.refine((val: number) => val <= balance, {
+        message: `Amount must be less than or equal to your balance (${balance})`,
+      }),
+    ),
   });
 
-  const form = useForm<z.infer<typeof transferScheme>>({
+  type TransferFormValues = {
+    toBankNumber: string;
+    amount: string;
+  };
+
+  const form = useForm<TransferFormValues>({
     resolver: zodResolver(transferScheme),
     defaultValues: {
-      amount: 0,
+      amount: "1",
       toBankNumber: "",
     },
+    mode: "onChange",
   });
 
-  const action: () => void = form.handleSubmit(async (data) => {
+  const action = form.handleSubmit(async (data) => {
     const response = await sendMoneyToBankNumberAction({
-      amount: data.amount,
+      amount: Number(data.amount),
       currency: "CZECHITOKEN",
       fromBankNumber: bankAccountNumber,
       toBankNumber: data.toBankNumber,
@@ -79,9 +82,10 @@ export function TransactionTranfer({
         ),
       });
     } else {
+      const errorMessage = response.error.details!.map((detail) => detail.message).join(", ");
       toast({
         title: "💸 Transaction failed!",
-        description: response.error.message,
+        description: errorMessage,
       });
     }
 
@@ -91,7 +95,7 @@ export function TransactionTranfer({
   return (
     <div className="flex flex-col gap-4">
       <Form {...form}>
-        <form action={action} className="flex flex-col gap-4">
+        <form onSubmit={action} className="flex flex-col gap-4">
           <FormField
             control={form.control}
             name="toBankNumber"
@@ -134,14 +138,23 @@ export function TransactionTranfer({
               <FormItem className="gap-4">
                 <FormLabel>Amount</FormLabel>
                 <FormControl>
-                  <Input type="number" placeholder="Amount" {...field} />
+                  <Input
+                    type="text"
+                    {...field}
+                    onChange={(e) => {
+                      // Replace comma with dot for normalization
+                      field.onChange(e.target.value.replace(/,/g, "."));
+                    }}
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
             )}
           />
 
-          <Button type="submit">Transfer</Button>
+          <Button type="submit" disabled={!form.formState.isValid || form.formState.isSubmitting}>
+            {form.formState.isSubmitting ? "Transferring..." : "Transfer"}
+          </Button>
         </form>
       </Form>
     </div>

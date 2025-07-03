@@ -2,15 +2,24 @@ import { Currency } from "@prisma/client";
 import { z } from "zod";
 import { roundAmount } from "../../lib/utils";
 
-// TODO: we should have one schema for the transaction creation logic in the service and one for the API request body
+// AmountSchema: Accepts only numbers, disallows scientific notation, enforces max 3 decimal places, min/max, and rounds to 3 decimals.
+// Frontend: Use string validation for user input, but always send number to server.
+// Backend: Scientific notation is still something what is handled - request.json() transforms it to number before our validation
+export const AmountSchema = z
+  .number()
+  .min(0.001, "Number must be greater than 0.001")
+  .max(Number.MAX_SAFE_INTEGER, "Amount must be less than or equal to 9007199254740991 due security reasons.")
+  .refine((val) => !val.toString().toLowerCase().includes("e"), {
+    message: "Scientific notation is not allowed",
+  })
+  .refine((val) => /^\d+(\.\d{1,3})?$/.test(val.toString()), {
+    message: "Use amount with max. 3 decimal places (e.g. 1.234)",
+  })
+  .transform((val) => roundAmount(val, 3));
 
 // Schema for the actual transaction creation logic in the service
 export const CreateTransactionNumberToNumberSchema = z.object({
-  amount: z
-    .number()
-    .positive("Amount should be positive, this incident was reported. Nice day!")
-    .max(Number.MAX_SAFE_INTEGER, "Amount must be less than or equal to 9007199254740991 due security reasons.")
-    .transform((val) => roundAmount(val, 3)),
+  amount: AmountSchema,
   currency: z.custom<Currency>(),
   toBankNumber: z.string().endsWith("5555").length(17, "Bank number must be exactly in format 1111222233334444/5555"),
   userId: z.string(),
@@ -19,22 +28,6 @@ export const CreateTransactionNumberToNumberSchema = z.object({
 
 // Schema specifically for validating the incoming API request body
 export const ApiTransactionCreateSchema = z.object({
-  amount: z
-    .number()
-    .positive("Amount should be positive, this incident was reported. Nice day!")
-    .min(0.001)
-    .max(Number.MAX_SAFE_INTEGER, "Amount must be less than or equal to 9007199254740991 due security reasons.")
-    .transform((val) => roundAmount(val, 3)),
+  amount: AmountSchema,
   toBankNumber: z.string().endsWith("5555").length(17, "Bank number must be exactly in format 1111222233334444/5555"),
-});
-
-export const CreateTransactionUserIdToUserIdUserSchema = z.object({
-  amount: z
-    .number()
-    .positive("Amount should be positive, this incident was reported. Nice try. Nice day!")
-    .max(Number.MAX_SAFE_INTEGER, "Amount must be less than or equal to 9007199254740991 due security reasons.")
-    .transform((val) => roundAmount(val, 3)),
-  currency: z.custom<Currency>(),
-  fromUserId: z.string(),
-  toUserId: z.string(),
 });

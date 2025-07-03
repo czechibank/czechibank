@@ -60,8 +60,20 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(errorResponse(user.error.message, user.error.code), { status: 401 });
     }
 
-    const body = await request.json();
+    async function validateJSON(request: NextRequest) {
+      try {
+        return await request.json();
+      } catch (error) {
+        console.error("Error in validateJSON:", error);
+        return NextResponse.json(errorResponse("Invalid JSON", "400"), { status: 400 });
+      }
+    }
 
+    const body = await validateJSON(request);
+
+    if (body instanceof NextResponse) {
+      return body;
+    }
     const validatedBody = await validateEventHandler(ApiTransactionCreateSchema, body);
 
     if ("error" in validatedBody) {
