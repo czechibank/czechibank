@@ -48,7 +48,7 @@ export default async function BankAccountPage(props: { params: Promise<{ id: str
               <div className="flex-none">
                 <div className="flex scroll-m-20 flex-col items-center justify-end">
                   <span className="bg-clip-text text-7xl font-extrabold tracking-tight text-transparent text-white lg:text-6xl">
-                    {bankAccount.data.balance.toFixed(1)}
+                    {bankAccount.data.balance.toFixed(3)}
                   </span>
                   <span className="bg-clip-text text-4xl font-bold tracking-tight text-transparent text-white lg:text-3xl">
                     {bankAccount.data.currency}

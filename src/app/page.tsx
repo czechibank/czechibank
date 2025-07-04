@@ -40,7 +40,7 @@ function BankAccountCard({ bankAccount }: { bankAccount: BankAccount }) {
       <CardContent>
         <h1 className="flex scroll-m-20 flex-row items-center space-x-2 text-5xl font-extrabold tracking-tight lg:text-5xl">
           <Image src="/czechitoken-black.svg" alt="Czechitoken" width={40} height={40} />
-          <span>{bankAccount.balance.toFixed(1)}</span>
+          <span>{bankAccount.balance.toFixed(3)}</span>
         </h1>
         <p className="text-gray-500">Currency: {bankAccount.currency}</p>
       </CardContent>
