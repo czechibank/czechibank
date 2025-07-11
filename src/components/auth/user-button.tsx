@@ -46,6 +46,9 @@ export default function UserButton() {
           <Link href="/profile" className="w-full">
             <Button className="w-full">Profile</Button>
           </Link>
+          <Link href="/profile" className="w-full">
+            <Button className="w-full">Administration</Button>
+          </Link>
         </DropdownMenuItem>
         <DropdownMenuItem>
           <SignOut className="w-full" />
