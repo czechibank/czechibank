@@ -1,7 +1,8 @@
 export { DELETE, HEAD, OPTIONS, PATCH, PUT } from "../../routes";
 
 import { UserSchema } from "@/domain/user-domain/user-schema";
-import userService from "@/domain/user-domain/user.service";
+import userService from "@/domain/user-domain/user-service";
+
 import { ApiErrorCode, validateEventHandler } from "@/lib/response";
 import { ApiError, handleErrors } from "../../routes";
 
@@ -53,8 +54,7 @@ export async function POST(request: Request) {
     if ("error" in parsedUser) {
       return Response.json(parsedUser, { status: 422 });
     }
-
-    const response = await userService.createUser(parsedUser, true);
+    const response = await userService.createUserFromEmail(parsedUser, true);
     console.log("response", response);
     if (!response.success) {
       if (response.error?.code === ApiErrorCode.EMAIL_ALREADY_EXISTS) {

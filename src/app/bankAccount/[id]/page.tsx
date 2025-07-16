@@ -4,7 +4,7 @@ import { TransactionTranfer } from "@/components/transactions/transfer";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Meteors } from "@/components/ui/meteors";
 import bankAccountService from "@/domain/bankAccount-domain/ba-service";
-import userService from "@/domain/user-domain/user.service";
+import userService from "@/domain/user-domain/user-service";
 import { getSession } from "@/lib/auth";
 import { RocketIcon } from "lucide-react";
 import { notFound, redirect } from "next/navigation";

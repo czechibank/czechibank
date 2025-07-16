@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { UserAvatar } from "@/components/user/avatar";
-import userService from "@/domain/user-domain/user.service";
+import userService from "@/domain/user-domain/user-service";
 import { getSession } from "@/lib/auth";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";

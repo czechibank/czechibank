@@ -1,44 +1,15 @@
 "use server";
 import prisma from "@/lib/db";
 import { ApiErrorCode, errorResponse, successResponse } from "@/lib/response";
-import { Prisma } from "@prisma/client";
 
-export async function registerUser(user: Prisma.UserCreateInput) {
-  const prismaUser = await prisma.user.create({
-    data: {
-      ...user,
-    },
-  });
-  if ("error" in prismaUser) {
-    return errorResponse("An error occurred while creating the user", ApiErrorCode.OPERATION_FAILED);
-  }
-  return successResponse("User created successfully", prismaUser);
-}
+/**
+ * Custom user repository functions for logic not handled by better-auth.
+ * All standard user CRUD/auth flows are handled by better-auth.
+ */
 
-export async function isEmailUnique(email: string) {
-  const user = await prisma.user.findUnique({
-    where: {
-      email: email,
-    },
-  });
-
-  return user === null;
-}
-
-export async function signInUser(email: string, password: string) {
-  return await prisma.user.findUnique({
-    where: {
-      email: email,
-    },
-  });
-}
-
-export async function getAllUsers() {
-  const users = await prisma.user.findMany({ include: { BankAccount: true } });
-
-  return successResponse("Users found", users);
-}
-
+/**
+ * Regenerates a user's API key (custom logic, not handled by better-auth).
+ */
 export async function regenerateApiKey(userId: string) {
   const user = await prisma.user.update({
     where: {
@@ -52,6 +23,9 @@ export async function regenerateApiKey(userId: string) {
   return successResponse("API key regenerated", user);
 }
 
+/**
+ * Regenerates a user's avatar config (custom logic, not handled by better-auth).
+ */
 export async function regenerateAvatarConfig(userId: string, avatarConfig: string) {
   const user = await prisma.user.update({
     where: {
@@ -68,16 +42,9 @@ export async function regenerateAvatarConfig(userId: string, avatarConfig: strin
   return successResponse("Avatar config regenerated", user);
 }
 
-export async function getUserById(userId: string) {
-  const user = await prisma.user.findUnique({
-    where: {
-      id: userId,
-    },
-  });
-
-  return user;
-}
-
+/**
+ * Finds a user by API key (if you still use API keys for custom logic).
+ */
 export async function getUserByApiKey(apiKey: string) {
   const user = await prisma.user.findFirst({
     where: {

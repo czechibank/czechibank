@@ -1,6 +1,6 @@
 "use server";
 
-import userService from "@/domain/user-domain/user.service";
+import userService from "@/domain/user-domain/user-service";
 import { ApiErrorCode, errorResponse, type ErrorResponse } from "@/lib/response";
 import { User } from "@prisma/client";
 import { v4 as uuidv4 } from "uuid";

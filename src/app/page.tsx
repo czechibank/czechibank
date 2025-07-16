@@ -1,12 +1,15 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { getBankAccountsByUserId } from "@/domain/bankAccount-domain/ba-repository";
-import { getSession } from "@/lib/auth";
 import { BankAccount } from "@prisma/client";
+import { headers } from "next/headers";
 import Image from "next/image";
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { auth } from "../../auth";
 export default async function Home() {
-  const session = await getSession();
+  const session = await auth.api.getSession({
+    headers: await headers(),
+  });
 
   if (!session) {
     redirect("/signin");

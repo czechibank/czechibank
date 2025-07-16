@@ -5,30 +5,26 @@ import {
   DropdownMenuLabel,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import userService from "@/domain/user-domain/user.service";
-import { getSession } from "@/lib/auth";
+import { headers } from "next/headers";
 import Link from "next/link";
+import { auth } from "../../../auth";
 import { Button } from "../ui/button";
-import { UserAvatar } from "../user/avatar";
 import { SignIn } from "./auth-components";
 import { SignOut } from "./sign-out";
 
 export default async function UserButton() {
-  const session = await getSession();
-
-  if (!session?.user) return <SignIn />;
-  const userResponse = await userService.getUserById(session.user.id);
-
-  if (!userResponse.success) {
+  const session = await auth.api.getSession({
+    headers: await headers(),
+  });
+  if (!session?.user?.id) {
     return <SignIn />;
   }
 
-  const user = userResponse.data;
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <div className="rounded-full border-2 border-solid border-slate-500 hover:border-slate-200">
-          <UserAvatar size={8} userAvatarConfig={user!.avatarConfig} />
+          {/* <UserAvatar size={8} userAvatarConfig={session.user.avatarConfig} /> */}
         </div>
       </DropdownMenuTrigger>
       <DropdownMenuContent className="w-56" align="end" forceMount>
