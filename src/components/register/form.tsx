@@ -11,8 +11,8 @@ import { AlertCircle } from "lucide-react";
 
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Input } from "@/components/ui/input";
+import { processUserRegistration } from "@/domain/user-domain/user-actions";
 import { UserSchema } from "@/domain/user-domain/user-schema";
-import userService from "@/domain/user-domain/user-service";
 import { Response } from "@/lib/response";
 import { useState } from "react";
 
@@ -34,8 +34,9 @@ export function RegisterForm() {
   });
 
   const action: () => void = form.handleSubmit(async (data) => {
-    console.log(data);
-    const response = await userService.createUserFromEmail(data);
+    const formData = new FormData();
+    Object.entries(data).forEach(([key, value]) => formData.append(key, value as string));
+    const response = await processUserRegistration(formData);
     setServerResponse(response);
 
     if (response.success) {

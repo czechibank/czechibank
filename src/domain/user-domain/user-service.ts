@@ -2,7 +2,7 @@ import { toast } from "@/components/ui/use-toast";
 import { authClient } from "@/lib/auth-client";
 import { ApiErrorCode, errorResponse, successResponse } from "@/lib/response";
 import { generateRandomAvatarConfig } from "@/lib/utils";
-import bankAccountService from "../bankAccount-domain/ba-service";
+import { auth } from "../../../auth";
 import * as userRepository from "./user-repository";
 import { UserSchema } from "./user-schema";
 
@@ -20,20 +20,14 @@ const userService = {
       return errorResponse("Invalid user data", ApiErrorCode.VALIDATION_ERROR, parsedUser.error.errors);
     }
     const user = parsedUser.data;
-    const avatarConfig = generateRandomAvatarConfig();
+    const avatarConfig = JSON.stringify(generateRandomAvatarConfig());
     // Use better-auth admin API to create user with role 'user'
     const { data, error } = await authClient.signUp.email({
       name: user.name,
       email: user.email,
       password: user.password,
-      callbackURL: "/dashboard",
+      image: avatarConfig,
       fetchOptions: {
-        onResponse: () => {
-          console.log("onResponse");
-        },
-        onRequest: () => {
-          console.log("onRequest");
-        },
         onError: (ctx) => {
           toast({
             title: "Error",
@@ -50,7 +44,6 @@ const userService = {
         },
       },
     });
-    // If you want to store extra fields (sex, avatarConfig), update the user after registration here.
 
     if (error) {
       if (error.code === "email_exists") {
@@ -58,35 +51,53 @@ const userService = {
       }
       return errorResponse(error.message ?? "Unknown error", ApiErrorCode.OPERATION_FAILED);
     }
-    await bankAccountService.createBankAccount({
-      userId: data.user.id,
-      currency: "CZECHITOKEN",
-      name: "My Bank Account",
-    });
+
+    // console.log("[user-service] creating bank account");
+    // await bankAccountService.createBankAccount({
+    //   userId: data.user.id,
+    //   currency: "CZECHITOKEN",
+    //   name: "My Bank Account",
+    // });
+    // console.log("[user-service] bank account created");
+
+    if (isAPI) {
+      console.log("[user-service] creating api key");
+      const apiKey = await authClient.apiKey.create({
+        name: "default-api-key",
+        expiresIn: 3600 * 24 * 60,
+      });
+      if (apiKey.error) {
+        return errorResponse(apiKey.error.message ?? "Unknown error", ApiErrorCode.OPERATION_FAILED);
+      }
+      console.log("[user-service] api key created", apiKey);
+      return successResponse("User created successfully", {
+        success: true,
+        user: { ...data, apiKey: apiKey.data.key },
+      });
+    }
     // Optionally sign in the user after registration
-    // if (!isAPI) {
-    //   await userService.signInUser(user.email, user.password);
-    // }
-    return successResponse("User created successfully", { success: true, user: data });
+    return successResponse("User created successfully", { success: true, user: { ...data } });
   },
 
   /**
    * Gets a user by ID using better-auth admin API.
    */
-  // async getUserById(userId: string) {
-  //   const result = await authClient.admin.listUsers({
-  //     query: {
-  //       filterField: "id",
-  //       filterOperator: "eq",
-  //       filterValue: userId,
-  //       limit: 1,
-  //     },
-  //   });
-  //   if (!result || !Array.isArray((result as any).users) || (result as any).users.length === 0) {
-  //     return errorResponse("User not found", ApiErrorCode.NOT_FOUND);
-  //   }
-  //   return successResponse("User found", { success: true, user: (result as any).users[0] });
-  // },
+  async getUserById(userId: string) {
+    console.log("[user-service] getUserById", userId);
+    const result = await authClient.admin.listUsers({
+      query: {
+        filterField: "id",
+        filterOperator: "eq",
+        filterValue: userId,
+        limit: 1,
+      },
+    });
+    console.log("[user-service] getUserById", result);
+    if (!result || !Array.isArray((result as any).users) || (result as any).users.length === 0) {
+      return errorResponse("User not found", ApiErrorCode.NOT_FOUND);
+    }
+    return successResponse("User found", { success: true, user: (result as any).users[0] });
+  },
 
   /**
    * Gets a user by API key using the repository (custom logic).
@@ -103,15 +114,15 @@ const userService = {
    * Signs in a user using better-auth.
    */
   async signInUser(email: string, password: string) {
-    const { data, error } = await authClient.signIn.email({ email, password });
-    console.log(data, error);
-    if (error?.code === "user_not_found") {
-      return errorResponse("User not found", ApiErrorCode.NOT_FOUND);
-    }
-    if (error?.code === "invalid_credentials") {
-      return errorResponse("Invalid password", ApiErrorCode.INVALID_PASSWORD);
-    }
-    return successResponse("User signed in", data);
+    const user = await auth.api.signInEmail({ body: { email, password } });
+    console.log(user);
+    // if (error?.code === "user_not_found") {
+    //   return errorResponse("User not found", ApiErrorCode.NOT_FOUND);
+    // }
+    // if (error?.code === "invalid_credentials") {
+    //   return errorResponse("Invalid password", ApiErrorCode.INVALID_PASSWORD);
+    // }
+    return successResponse("User signed in", user);
   },
 
   /**
@@ -126,6 +137,7 @@ const userService = {
    */
   async regenerateAvatarConfig(userId: string) {
     const avatarConfig = generateRandomAvatarConfig();
+
     return userRepository.regenerateAvatarConfig(userId, JSON.stringify(avatarConfig));
   },
 

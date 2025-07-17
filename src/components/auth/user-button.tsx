@@ -1,3 +1,5 @@
+"use client";
+
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -5,18 +7,18 @@ import {
   DropdownMenuLabel,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { headers } from "next/headers";
+import { useSession } from "@/lib/auth-client";
 import Link from "next/link";
-import { auth } from "../../../auth";
 import { Button } from "../ui/button";
+import { UserAvatar } from "../user/avatar";
 import { SignIn } from "./auth-components";
 import { SignOut } from "./sign-out";
 
-export default async function UserButton() {
-  const session = await auth.api.getSession({
-    headers: await headers(),
-  });
-  if (!session?.user?.id) {
+export default function UserButton() {
+  const { data: session, isPending, error } = useSession();
+  console.log("[user-button] session", session);
+  console.log("[user-button] error", error);
+  if (!session) {
     return <SignIn />;
   }
 
@@ -24,7 +26,8 @@ export default async function UserButton() {
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <div className="rounded-full border-2 border-solid border-slate-500 hover:border-slate-200">
-          {/* <UserAvatar size={8} userAvatarConfig={session.user.avatarConfig} /> */}
+          <UserAvatar image={session.user.image ?? null} size={8} />
+          {/* <UserIcon className="h-6 w-6" /> */}
         </div>
       </DropdownMenuTrigger>
       <DropdownMenuContent className="w-56" align="end" forceMount>

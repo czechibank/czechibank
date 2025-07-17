@@ -19,13 +19,7 @@ export async function processUserRegistration(formData: FormData) {
 }
 
 export async function processUserSignIn({ email, password }: { email: string; password: string }) {
-  const response = await userService.signInUser(email, password);
-
-  console.log(response.success);
-  if (!response.success) {
-    return response;
-  }
-
+  await authClient.signIn.email({ email, password });
   redirect("/");
 }
 

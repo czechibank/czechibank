@@ -1,6 +1,7 @@
 "use server";
 import prisma from "@/lib/db";
 import { ApiErrorCode, errorResponse, successResponse } from "@/lib/response";
+import { auth } from "../../../auth";
 
 /**
  * Custom user repository functions for logic not handled by better-auth.
@@ -11,12 +12,10 @@ import { ApiErrorCode, errorResponse, successResponse } from "@/lib/response";
  * Regenerates a user's API key (custom logic, not handled by better-auth).
  */
 export async function regenerateApiKey(userId: string) {
-  const user = await prisma.user.update({
-    where: {
-      id: userId,
-    },
-    data: {
-      apiKey: Math.random().toString(36).substring(2),
+  const user = await auth.api.updateApiKey({
+    body: {
+      userId: userId,
+      keyId: Math.random().toString(36).substring(2),
     },
   });
 
@@ -32,7 +31,7 @@ export async function regenerateAvatarConfig(userId: string, avatarConfig: strin
       id: userId,
     },
     data: {
-      avatarConfig: JSON.stringify(avatarConfig),
+      image: JSON.stringify(avatarConfig),
     },
   });
   if ("error" in user) {
@@ -48,7 +47,11 @@ export async function regenerateAvatarConfig(userId: string, avatarConfig: strin
 export async function getUserByApiKey(apiKey: string) {
   const user = await prisma.user.findFirst({
     where: {
-      apiKey: apiKey,
+      apikeys: {
+        some: {
+          key: apiKey,
+        },
+      },
     },
   });
 

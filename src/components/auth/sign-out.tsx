@@ -1,12 +1,28 @@
-import { processUserSignOut } from "@/domain/user-domain/user-actions";
+"use client";
+
+import { authClient } from "@/lib/auth-client";
+import { useRouter } from "next/navigation";
 import { Button } from "../ui/button";
 
-export async function SignOut(props: React.ComponentPropsWithRef<typeof Button>) {
+export function SignOut(props: React.ComponentPropsWithRef<typeof Button>) {
+  const router = useRouter();
   return (
-    <form action={processUserSignOut} className="w-full">
-      <Button variant="ghost" type="submit" className="flex w-full" {...props}>
-        Sign Out
-      </Button>
-    </form>
+    <Button
+      variant="ghost"
+      type="submit"
+      className="flex w-full"
+      {...props}
+      onClick={async () => {
+        await authClient.signOut({
+          fetchOptions: {
+            onSuccess: () => {
+              router.push("/");
+            },
+          },
+        });
+      }}
+    >
+      Sign Out
+    </Button>
   );
 }

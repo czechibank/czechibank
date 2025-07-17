@@ -32,6 +32,6 @@ export function generateRandomAvatarConfig() {
   }
 
   const color = generateLightColorHex();
-
+  console.log(getRandomValues(options));
   return { ...getRandomValues(options), backgroundColor: [color] };
 }

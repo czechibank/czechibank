@@ -1,28 +1,124 @@
 "use client";
 
 import { useToast } from "@/components/ui/use-toast";
-import { ClipboardCopyIcon } from "lucide-react";
+import { authClient } from "@/lib/auth-client";
+import { Apikey } from "@prisma/client";
+import { CalendarIcon, CopyIcon, EyeIcon, EyeOffIcon, TrashIcon } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
+import { Badge } from "../ui/badge";
 import { Button } from "../ui/button";
-import { Input } from "../ui/input";
+import { Card, CardContent } from "../ui/card";
 import { Label } from "../ui/label";
 
-export function ApiKeyForm({ apiKey }: { apiKey: string }) {
+export function ApiKeyForm({ apiKey }: { apiKey: Apikey }) {
   const { toast } = useToast();
+  const router = useRouter();
+  const [showKey, setShowKey] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
 
-  const handleCopyClick = () => {
-    navigator.clipboard.writeText(apiKey);
-    toast({ description: "API key byl zkopírován do schránky." });
+  const handleCopyKey = async () => {
+    try {
+      await navigator.clipboard.writeText(apiKey.key);
+      toast({
+        description: "API key copied to clipboard",
+        duration: 2000,
+      });
+    } catch (err) {
+      toast({
+        description: "Failed to copy API key",
+        variant: "destructive",
+      });
+    }
   };
 
+  const handleDelete = () => {
+    setIsDeleting(true);
+    authClient.apiKey.delete(
+      {
+        keyId: apiKey.id,
+      },
+      {
+        onSuccess: () => {
+          toast({
+            description: `API key "${apiKey.name}" has been deleted.`,
+            duration: 3000,
+          });
+          router.refresh();
+        },
+        onError: (error) => {
+          console.error(error);
+          toast({
+            description: "Failed to delete API key",
+            variant: "destructive",
+          });
+          setIsDeleting(false);
+        },
+      },
+    );
+  };
+
+  const isExpired = apiKey.expiresAt && new Date() > apiKey.expiresAt;
+  const expiresSoon =
+    apiKey.expiresAt && new Date() > new Date(apiKey.expiresAt.getTime() - 7 * 24 * 60 * 60 * 1000) && !isExpired;
+
   return (
-    <>
-      <div>
-        <Label>API Key</Label>
-        <Input className="select-all" name={"apiKey"} value={apiKey} readOnly />
-      </div>
-      <Button onClick={handleCopyClick}>
-        <ClipboardCopyIcon />
-      </Button>
-    </>
+    <Card className="border-l-4 border-l-primary">
+      <CardContent className="p-4">
+        <div className="flex items-start justify-between">
+          <div className="flex-1 space-y-3">
+            <div className="flex items-center space-x-2">
+              <h3 className="text-lg font-semibold">{apiKey.name}</h3>
+              {isExpired && (
+                <Badge variant="destructive" className="text-xs">
+                  Expired
+                </Badge>
+              )}
+              {expiresSoon && !isExpired && (
+                <Badge variant="secondary" className="text-xs">
+                  Expires Soon
+                </Badge>
+              )}
+            </div>
+
+            <div className="space-y-2">
+              <div className="flex items-center space-x-2">
+                <Label className="text-sm font-medium text-muted-foreground">API Key:</Label>
+                <div className="flex items-center space-x-2">
+                  <code className="rounded bg-muted px-2 py-1 font-mono text-sm">
+                    {showKey ? apiKey.key : "•".repeat(32)}
+                  </code>
+                  <Button variant="ghost" size="sm" onClick={() => setShowKey(!showKey)} className="h-6 w-6 p-0">
+                    {showKey ? <EyeOffIcon className="h-3 w-3" /> : <EyeIcon className="h-3 w-3" />}
+                  </Button>
+                  <Button variant="ghost" size="sm" onClick={handleCopyKey} className="h-6 w-6 p-0">
+                    <CopyIcon className="h-3 w-3" />
+                  </Button>
+                </div>
+              </div>
+
+              <div className="flex items-center space-x-2 text-sm text-muted-foreground">
+                <CalendarIcon className="h-3 w-3" />
+                <span>
+                  {apiKey.expiresAt
+                    ? `Expires: ${apiKey.expiresAt.toLocaleDateString()} at ${apiKey.expiresAt.toLocaleTimeString()}`
+                    : "Never expires"}
+                </span>
+              </div>
+
+              <div className="text-xs text-muted-foreground">Created: {apiKey.createdAt.toLocaleDateString()}</div>
+            </div>
+          </div>
+
+          <Button variant="destructive" size="sm" onClick={handleDelete} disabled={isDeleting} className="ml-4">
+            {isDeleting ? (
+              <div className="h-3 w-3 animate-spin rounded-full border-b border-white"></div>
+            ) : (
+              <TrashIcon className="h-3 w-3" />
+            )}
+          </Button>
+        </div>
+      </CardContent>
+    </Card>
   );
 }

@@ -14,7 +14,7 @@ import { Response } from "@/lib/response";
 import { useState } from "react";
 
 import { useToast } from "@/components/ui/use-toast";
-import { processUserSignIn } from "@/domain/user-domain/user-actions";
+import { authClient } from "@/lib/auth-client";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 
@@ -30,11 +30,18 @@ export default function SignInPage() {
   });
 
   const action: () => void = form.handleSubmit(async (data) => {
-    const response = await processUserSignIn(data);
-    setServerResponse(response);
-    if (response.success) {
-      redirect("/");
-    }
+    await authClient.signIn.email(
+      { email: data.email, password: data.password },
+      {
+        onSuccess: () => {
+          console.log("success");
+          redirect("/");
+        },
+        onError: (error) => {
+          console.log(error);
+        },
+      },
+    );
   });
 
   return (

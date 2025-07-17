@@ -21,7 +21,8 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import * as userActions from "@/domain/user-domain/user-actions";
+import { authClient } from "@/lib/auth-client";
+import { redirect } from "next/navigation";
 import { useToast } from "../ui/use-toast";
 
 export function SignIn({
@@ -41,20 +42,24 @@ export function SignIn({
   });
 
   const action: () => void = form.handleSubmit(async (data) => {
-    const response = await userActions.processUserSignIn(data);
-    setServerResponse(response);
-    if (response.success) {
-      toast({
-        title: "Welcome back!",
-        description: "You have successfully logged in. Enjoy your journey in Czechitoken!",
-      });
-    }
+    await authClient.signIn.email(
+      { email: data.email, password: data.password },
+      {
+        onSuccess: () => {
+          console.log("success");
+          redirect("/");
+        },
+        onError: (error) => {
+          console.log(error);
+        },
+      },
+    );
   });
 
   return (
     <Dialog>
       <DialogTrigger>
-        <Button>Sign in</Button>
+        <div>Sign in</div>
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>

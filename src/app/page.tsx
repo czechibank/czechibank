@@ -6,12 +6,14 @@ import Image from "next/image";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { auth } from "../../auth";
+
 export default async function Home() {
   const session = await auth.api.getSession({
     headers: await headers(),
   });
 
   if (!session) {
+    console.log("no session");
     redirect("/signin");
   }
 
