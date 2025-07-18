@@ -11,10 +11,14 @@ import { AlertCircle } from "lucide-react";
 
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Input } from "@/components/ui/input";
-import { processUserRegistration } from "@/domain/user-domain/user-actions";
+
 import { UserSchema } from "@/domain/user-domain/user-schema";
+import { authClient } from "@/lib/auth-client";
 import { Response } from "@/lib/response";
+import { generateRandomAvatarConfig } from "@/lib/utils";
+import { redirect } from "next/navigation";
 import { useState } from "react";
+import { toast } from "../ui/use-toast";
 
 export function RegisterForm() {
   const [serverResponse, setServerResponse] = useState<Response<any> | null>(null);
@@ -36,13 +40,31 @@ export function RegisterForm() {
   const action: () => void = form.handleSubmit(async (data) => {
     const formData = new FormData();
     Object.entries(data).forEach(([key, value]) => formData.append(key, value as string));
-    const response = await processUserRegistration(formData);
-    setServerResponse(response);
 
-    if (response.success) {
-      // form.reset();
-      // redirect("/");
-    }
+    authClient.signUp.email(
+      {
+        email: data.email,
+        password: data.password,
+        name: data.name,
+        image: JSON.stringify(generateRandomAvatarConfig()),
+      },
+      {
+        onSuccess: () => {
+          form.reset();
+          toast({
+            title: "Account created",
+            description: "You can create your first transaction now! 🎉",
+          });
+          redirect("/");
+        },
+        onError: (error) => {
+          toast({
+            title: "Error",
+            description: error.error.message,
+          });
+        },
+      },
+    );
   });
 
   return (

@@ -7,6 +7,7 @@ import { Inter } from "next/font/google";
 import Image from "next/image";
 import Link from "next/link";
 import Script from "next/script";
+import { Suspense } from "react";
 import "./globals.css";
 const inter = Inter({ subsets: ["latin"] });
 
@@ -15,7 +16,7 @@ export const metadata: Metadata = {
   description: "Best bank for YOU!",
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
@@ -33,7 +34,9 @@ export default function RootLayout({
               </Link>
               <div className="flex flex-1 items-center justify-end space-x-2 p-2">
                 <ModeToggle />
-                <UserButton />
+                <Suspense fallback={<div>Loading...</div>}>
+                  <UserButton />
+                </Suspense>
               </div>
             </div>
             <div className="mx-auto max-w-3xl">{children}</div>

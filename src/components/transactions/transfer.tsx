@@ -14,7 +14,7 @@ import { UserAvatar } from "../user/avatar";
 
 type UserWithBankAccounts = Prisma.UserGetPayload<{
   include: {
-    BankAccount: true;
+    bankAccounts: true;
   };
 }>;
 
@@ -106,11 +106,11 @@ export function TransactionTranfer({
                     <SelectContent>
                       <SelectGroup>
                         {users.map((user) =>
-                          user.BankAccount.map((bankAccount) => (
+                          user.bankAccounts.map((bankAccount) => (
                             <SelectItem key={bankAccount.number} value={bankAccount.number} className="flex w-full">
                               <div className="flex w-full flex-row items-center justify-between">
                                 <div className="flex w-[300px] flex-row items-center gap-4 pl-8 font-semibold ">
-                                  <UserAvatar size={8} userAvatarConfig={user.avatarConfig} />
+                                  <UserAvatar size={8} image={user.image ?? null} />
                                   <span className="truncate">{user.name}</span>
                                 </div>
                                 <span className="font-mono">{bankAccount.number}</span>

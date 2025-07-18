@@ -1,51 +1,20 @@
-"use client";
-
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { useSession } from "@/lib/auth-client";
-import Link from "next/link";
-import { Button } from "../ui/button";
-import { UserAvatar } from "../user/avatar";
+"use server";
 import { SignIn } from "./auth-components";
-import { SignOut } from "./sign-out";
 
-export default function UserButton() {
-  const { data: session, isPending, error } = useSession();
-  console.log("[user-button] session", session);
-  console.log("[user-button] error", error);
+import { headers } from "next/headers";
+import { auth } from "../../../auth";
+import UserButtonClient from "./user-button.client";
+
+// TODO: I tried to resolve problem with client component - better-auth has some problem with useSession
+// https://github.com/better-auth/better-auth/issues/1006
+export default async function UserButton() {
+  const session = await auth.api.getSession({
+    headers: await headers(), // you need to pass the headers object.
+  });
+
   if (!session) {
     return <SignIn />;
   }
 
-  return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <div className="rounded-full border-2 border-solid border-slate-500 hover:border-slate-200">
-          <UserAvatar image={session.user.image ?? null} size={8} />
-          {/* <UserIcon className="h-6 w-6" /> */}
-        </div>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent className="w-56" align="end" forceMount>
-        <DropdownMenuLabel className="font-normal">
-          <div className="flex flex-col space-y-1">
-            <p className="leading-none">{session.user.name}</p>
-            <p className="text-xs leading-none text-muted-foreground">{session.user.email}</p>
-          </div>
-        </DropdownMenuLabel>
-        <DropdownMenuItem>
-          <Link href="/profile" className="w-full">
-            <Button className="w-full">Profile</Button>
-          </Link>
-        </DropdownMenuItem>
-        <DropdownMenuItem>
-          <SignOut className="w-full" />
-        </DropdownMenuItem>
-      </DropdownMenuContent>
-    </DropdownMenu>
-  );
+  return <UserButtonClient session={session} />;
 }

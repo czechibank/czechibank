@@ -13,7 +13,13 @@ export const auth = betterAuth({
     enabled: true,
   },
   plugins: [
-    apiKey(),
+    apiKey({
+      rateLimit: {
+        enabled: true,
+        timeWindow: 1000 * 60 * 1, // 1 minute - good for testing rate limit in dev
+        maxRequests: 20, // 20 requests per minute
+      },
+    }),
     adminPlugin({
       ac,
       roles: {

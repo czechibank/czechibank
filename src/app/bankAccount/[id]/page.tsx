@@ -5,9 +5,11 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Meteors } from "@/components/ui/meteors";
 import bankAccountService from "@/domain/bankAccount-domain/ba-service";
 import userService from "@/domain/user-domain/user-service";
-import { getSession } from "@/lib/auth";
+
 import { RocketIcon } from "lucide-react";
+import { headers } from "next/headers";
 import { notFound, redirect } from "next/navigation";
+import { auth } from "../../../../auth";
 
 type Session = {
   user: {
@@ -25,7 +27,9 @@ type Session = {
 
 export default async function BankAccountPage(props: { params: Promise<{ id: string }> }) {
   const params = await props.params;
-  const session: Session = await getSession();
+  const session = await auth.api.getSession({
+    headers: await headers(), // you need to pass the headers object.
+  });
 
   if (!session) {
     redirect("/signin");
@@ -75,15 +79,17 @@ export default async function BankAccountPage(props: { params: Promise<{ id: str
               <CardTitle>Transfer your money</CardTitle>
             </CardHeader>
             <CardContent>
-              <TransactionTranfer
-                bankAccountNumber={bankAccount.data.number}
-                userId={session.user.id}
-                allUsers={allUsers.data.data.map((user) => ({
-                  ...user,
-                  BankAccount: user.BankAccount,
-                }))}
-                balance={bankAccount.data.balance}
-              />
+              {allUsers.success && (
+                <TransactionTranfer
+                  bankAccountNumber={bankAccount.data.number}
+                  userId={session.user.id}
+                  allUsers={allUsers.data.map((user) => ({
+                    ...user,
+                    BankAccount: user.bankAccounts,
+                  }))}
+                  balance={bankAccount.data.balance}
+                />
+              )}
             </CardContent>
           </Card>
         </div>

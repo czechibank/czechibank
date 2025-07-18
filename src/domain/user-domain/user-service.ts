@@ -1,5 +1,6 @@
 import { toast } from "@/components/ui/use-toast";
 import { authClient } from "@/lib/auth-client";
+import prisma from "@/lib/db";
 import { ApiErrorCode, errorResponse, successResponse } from "@/lib/response";
 import { generateRandomAvatarConfig } from "@/lib/utils";
 import { auth } from "../../../auth";
@@ -144,13 +145,14 @@ const userService = {
   /**
    * Gets all users using better-auth admin API.
    */
-  // async getAllUsers() {
-  //   const result = await authClient.admin.listUsers({ query: { limit: 100 } });
-  //   if (!result || !Array.isArray((result as any).users)) {
-  //     return errorResponse("No users found", ApiErrorCode.NOT_FOUND);
-  //   }
-  //   return successResponse("Users found", (result as any).users);
-  // },
+  async getAllUsers() {
+    const result = await prisma.user.findMany({
+      include: {
+        bankAccounts: true,
+      },
+    });
+    return successResponse("Users found", result);
+  },
 };
 
 export default userService;
