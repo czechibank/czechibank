@@ -3,7 +3,7 @@
 import { useToast } from "@/components/ui/use-toast";
 import { authClient } from "@/lib/auth-client";
 import { Apikey } from "@prisma/client";
-import { CalendarIcon, CopyIcon, EyeIcon, EyeOffIcon, TrashIcon } from "lucide-react";
+import { CalendarIcon, EyeIcon, EyeOffIcon, TrashIcon } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { Badge } from "../ui/badge";
@@ -16,21 +16,6 @@ export function ApiKeyForm({ apiKey }: { apiKey: Apikey }) {
   const router = useRouter();
   const [showKey, setShowKey] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
-
-  const handleCopyKey = async () => {
-    try {
-      await navigator.clipboard.writeText(apiKey.key);
-      toast({
-        description: "API key copied to clipboard",
-        duration: 2000,
-      });
-    } catch (err) {
-      toast({
-        description: "Failed to copy API key",
-        variant: "destructive",
-      });
-    }
-  };
 
   const handleDelete = () => {
     setIsDeleting(true);
@@ -68,7 +53,7 @@ export function ApiKeyForm({ apiKey }: { apiKey: Apikey }) {
         <div className="flex items-start justify-between">
           <div className="flex-1 space-y-3">
             <div className="flex items-center space-x-2">
-              <h3 className="text-lg font-semibold">{apiKey.name}</h3>
+              <h3 className="text-lg font-semibold">{apiKey.name ?? "API Key (without name)"}</h3>
               {isExpired && (
                 <Badge variant="destructive" className="text-xs">
                   Expired
@@ -83,16 +68,13 @@ export function ApiKeyForm({ apiKey }: { apiKey: Apikey }) {
 
             <div className="space-y-2">
               <div className="flex items-center space-x-2">
-                <Label className="text-sm font-medium text-muted-foreground">API Key:</Label>
+                <Label className="text-sm font-medium text-muted-foreground">API Key (start of the key):</Label>
                 <div className="flex items-center space-x-2">
-                  <code className="rounded bg-muted px-2 py-1 font-mono text-sm">
-                    {showKey ? apiKey.key : "•".repeat(32)}
+                  <code className="rounded bg-muted px-6 py-1 font-mono text-sm">
+                    {showKey ? apiKey.start : "•".repeat(6)}
                   </code>
                   <Button variant="ghost" size="sm" onClick={() => setShowKey(!showKey)} className="h-6 w-6 p-0">
                     {showKey ? <EyeOffIcon className="h-3 w-3" /> : <EyeIcon className="h-3 w-3" />}
-                  </Button>
-                  <Button variant="ghost" size="sm" onClick={handleCopyKey} className="h-6 w-6 p-0">
-                    <CopyIcon className="h-3 w-3" />
                   </Button>
                 </div>
               </div>
