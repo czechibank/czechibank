@@ -1,4 +1,4 @@
-import { RATE_LIMIT } from "@/constants";
+import { RATE_LIMIT, SESSION } from "@/constants";
 import bankAccountService from "@/domain/bankAccount-domain/ba-service";
 import prisma from "@/lib/db";
 import { ac, admin, user } from "@/lib/permissions";
@@ -12,6 +12,10 @@ export const auth = betterAuth({
   }),
   emailAndPassword: {
     enabled: true,
+  },
+  session: {
+    expiresIn: SESSION.EXPIRES_IN,
+    updateAge: SESSION.UPDATE_AGE,
   },
   plugins: [
     apiKey({

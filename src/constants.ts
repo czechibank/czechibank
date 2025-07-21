@@ -4,3 +4,8 @@ export const RATE_LIMIT = {
   TIME_WINDOW: 1000 * 60 * 1, // 1 minute
   MAX_REQUESTS: 20, // 20 requests per minute
 };
+
+export const SESSION = {
+  EXPIRES_IN: 60 * 60 * 15, // 15 minutes
+  UPDATE_AGE: 60 * 60 * 5, // 5 minutes (every 5 minutes the session expiration is updated)
+};
