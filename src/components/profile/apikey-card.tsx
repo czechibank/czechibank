@@ -11,7 +11,7 @@ import { Button } from "../ui/button";
 import { Card, CardContent } from "../ui/card";
 import { Label } from "../ui/label";
 
-export function ApiKeyForm({ apiKey }: { apiKey: Apikey }) {
+export function ApiKeyCard({ apiKey }: { apiKey: Apikey }) {
   const { toast } = useToast();
   const router = useRouter();
   const [showKey, setShowKey] = useState(false);

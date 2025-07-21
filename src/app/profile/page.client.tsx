@@ -1,5 +1,5 @@
 "use client";
-import { ApiKeyForm } from "@/components/profile/apikey-form";
+import { ApiKeyCard } from "@/components/profile/apikey-card";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
@@ -11,7 +11,7 @@ import { Apikey, User } from "@prisma/client";
 import { KeyIcon, SettingsIcon, UserIcon } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import CreateApiKey from "./create-api-key";
+import CreateApiKey from "../../components/profile/create-api-key";
 
 export default function ProfileClientPage({ user, apiKeys }: { user: User; apiKeys: Apikey[] }) {
   const { data: session, isPending, error } = useSession();
@@ -130,7 +130,7 @@ export default function ProfileClientPage({ user, apiKeys }: { user: User; apiKe
               {apiKeys
                 .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())
                 .map((apiKey) => (
-                  <ApiKeyForm key={apiKey.id} apiKey={apiKey} />
+                  <ApiKeyCard key={apiKey.id} apiKey={apiKey} />
                 ))}
             </div>
           )}
