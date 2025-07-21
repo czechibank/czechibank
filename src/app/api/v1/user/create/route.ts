@@ -1,9 +1,9 @@
 export { DELETE, HEAD, OPTIONS, PATCH, PUT } from "../../routes";
 
 import { UserSchema } from "@/domain/user-domain/user-schema";
-import userService from "@/domain/user-domain/user-service";
 
-import { ApiErrorCode, validateEventHandler } from "@/lib/response";
+import { validateEventHandler } from "@/lib/response";
+import { auth } from "../../../../../../auth";
 import { ApiError, handleErrors } from "../../routes";
 
 /**
@@ -54,17 +54,31 @@ export async function POST(request: Request) {
     if ("error" in parsedUser) {
       return Response.json(parsedUser, { status: 422 });
     }
-    const response = await userService.createUserFromEmail(parsedUser, true);
-    console.log("response", response);
-    if (!response.success) {
-      if (response.error?.code === ApiErrorCode.EMAIL_ALREADY_EXISTS) {
-        return Response.json(response, { status: 400 });
-      }
-      return Response.json(response);
-    }
 
-    return Response.json(response, { status: 201 });
+    const response = await auth.api.createUser({
+      body: {
+        email: parsedUser.email,
+        password: parsedUser.password,
+        name: parsedUser.name,
+        role: "user",
+      },
+    });
+
+    const apiKey = await auth.api.createApiKey({
+      body: {
+        userId: response.user.id,
+      },
+    });
+
+    return Response.json({ ...response.user, apiKey: apiKey.key }, { status: 201 });
   } catch (error) {
+    // TODO: @vojtech-cerveny - handle better-auth - we can reuse their ApiErrorCodes etc.
+    // https://www.better-auth.com/docs/concepts/api#error-handling
+
+    // if (error instanceof BetterAuthAPIError) {
+    //   const newError = new ApiError(error.message, error.statusCode, ApiErrorCode.EMAIL_ALREADY_EXISTS);
+    //   return handleErrors(newError);
+    // }
     if (error instanceof ApiError) {
       return handleErrors(error);
     } else {

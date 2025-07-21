@@ -10,6 +10,7 @@ import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, For
 import { Input } from "@/components/ui/input";
 
 import { useToast } from "@/components/ui/use-toast";
+import { MIN_PASSWORD_LENGTH } from "@/constants";
 import { authClient } from "@/lib/auth-client";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -18,7 +19,7 @@ export default function SignInPage() {
   const { toast } = useToast();
   const loginSchema = z.object({
     email: z.string().email(),
-    password: z.string().min(6),
+    password: z.string().min(MIN_PASSWORD_LENGTH),
   });
   const form = useForm<z.infer<typeof loginSchema>>({
     resolver: zodResolver(loginSchema),
@@ -77,7 +78,7 @@ export default function SignInPage() {
                 <FormControl>
                   <Input placeholder="" {...field} type="password" />
                 </FormControl>
-                <FormDescription>Your password must be at least 6 characters long.</FormDescription>
+                <FormDescription>Your password must be at least {MIN_PASSWORD_LENGTH} characters long.</FormDescription>
                 <FormMessage id="password-message" />
               </FormItem>
             )}

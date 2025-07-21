@@ -36,7 +36,7 @@ export const auth = betterAuth({
           return { data: { ...user, customField: "value" } };
         },
         after: async (user) => {
-          console.log("[auth] user created", user);
+          console.log("[auth] user created", user.email);
           console.log("[auth] creating bank account");
           await bankAccountService.createBankAccount({
             userId: user.id,

@@ -11,6 +11,7 @@ import { AlertCircle } from "lucide-react";
 
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Input } from "@/components/ui/input";
+import { MIN_PASSWORD_LENGTH } from "@/constants";
 
 import { UserSchema } from "@/domain/user-domain/user-schema";
 import { authClient } from "@/lib/auth-client";
@@ -107,15 +108,7 @@ export function RegisterForm() {
               <FormControl>
                 <Input placeholder="" {...field} type="password" />
               </FormControl>
-              <FormDescription>
-                Your password must be at least 6 characters long.{" "}
-                <span className="font-bold text-red-600">
-                  Do not use your personal passwords - database is not encrypted. Use
-                </span>
-                <span className="ml-2 rounded-lg bg-gray-800 p-1 px-2 font-mono font-semibold text-white">
-                  Password123456
-                </span>
-              </FormDescription>
+              <FormDescription>Your password must be at least {MIN_PASSWORD_LENGTH} characters long.</FormDescription>
               <FormMessage />
             </FormItem>
           )}
