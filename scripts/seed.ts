@@ -1,215 +1,122 @@
-import { Currency, PrismaClient, Sex, User } from "@prisma/client";
+import { Currency, PrismaClient } from "@prisma/client";
+import { auth } from "../auth";
 
-const users: {
-  data: { BankAccount: { create: { name: string; balance: number; number: string; currency: Currency } } } & Omit<
-    User,
-    "id"
-  >;
-}[] = [
+const prisma = new PrismaClient();
+
+const usersToSeed = [
+  // Rescue funds
   {
-    data: {
-      BankAccount: {
-        create: {
-          name: "ZÁCHRANÁŘSKÝ FOND [OSTRAVA!!!]",
-          balance: 0,
-          number: "555555555555/5555",
-          currency: "CZECHITOKEN" as Currency,
-        },
-      },
-      email: "zachranNas+praha@pejsekAKocicka.cz",
-      name: "[OSTRAVA!!!] Pejsek a Kočicka 🐶&🐱",
-      password: "PejsekAKocicka123",
-      sex: "MALE" as Sex,
-      apiKey: "11",
-      avatarConfig: `{"backgroundColor":["696AC9"],"eyebrows":["variant12"],"eyebrowsColor":["000000"],"eyes":["variant01"],"eyesColor":["000000"],"freckles":["variant01"],"frecklesColor":["000000"],"frecklesProbability":[null],"glasses":["variant03"],"glassesColor":["000000"],"glassesProbability":[null],"mouth":["happy05"],"mouthColor":["000000"],"nose":["variant06"],"noseColor":["000000"]}`,
-    },
+    email: "zachranNas+praha@pejsekAKocicka.cz",
+    name: "[OSTRAVA!!!] Pejsek a Kočicka 🐶&🐱",
+    password: "PejsekAKocicka123",
+    sex: "MALE",
+    avatarConfig:
+      '{"backgroundColor":["696AC9"],"eyebrows":["variant12"],"eyebrowsColor":["000000"],"eyes":["variant01"],"eyesColor":["000000"],"freckles":["variant01"],"frecklesColor":["000000"],"frecklesProbability":[null],"glasses":["variant03"],"glassesColor":["000000"],"glassesProbability":[null],"mouth":["happy05"],"mouthColor":["000000"],"nose":["variant06"],"noseColor":["000000"]}',
+    bankAccountNumber: "555555555555/5555",
+    apiKey: "11",
+    role: "user",
   },
   {
-    data: {
-      BankAccount: {
-        create: {
-          name: "ZÁCHRANÁŘSKÝ FOND [BRNO]",
-          balance: 0,
-          number: "444444444444/5555",
-          currency: "CZECHITOKEN" as Currency,
-        },
-      },
-      apiKey: "22",
-      email: "zachranNas+brno@pejsekAKocicka.cz",
-      name: "[BRNO] Pejsek a Kočička 🐶&🐱",
-      password: "PejsekAKocicka123",
-      sex: "MALE" as Sex,
-      avatarConfig: `{"backgroundColor":["0DC681"],"eyebrows":["variant12"],"eyebrowsColor":["000000"],"eyes":["variant01"],"eyesColor":["000000"],"freckles":["variant01"],"frecklesColor":["000000"],"frecklesProbability":[null],"glasses":["variant03"],"glassesColor":["000000"],"glassesProbability":[null],"mouth":["happy05"],"mouthColor":["000000"],"nose":["variant06"],"noseColor":["000000"]}`,
-    },
+    email: "zachranNas+brno@pejsekAKocicka.cz",
+    name: "[BRNO] Pejsek a Kočička 🐶&🐱",
+    password: "PejsekAKocicka123",
+    sex: "MALE",
+    avatarConfig:
+      '{"backgroundColor":["0DC681"],"eyebrows":["variant12"],"eyebrowsColor":["000000"],"eyes":["variant01"],"eyesColor":["000000"],"freckles":["variant01"],"frecklesColor":["000000"],"frecklesProbability":[null],"glasses":["variant03"],"glassesColor":["000000"],"glassesProbability":[null],"mouth":["happy05"],"mouthColor":["000000"],"nose":["variant06"],"noseColor":["000000"]}',
+    bankAccountNumber: "444444444444/5555",
+    apiKey: "22",
+    role: "user",
+  },
+  // Core team
+  {
+    email: "vojta@czechibank.ostrava.digital",
+    name: "Vojta 🦊 Cerveny",
+    password: "hello123456",
+    sex: "MALE",
+    avatarConfig:
+      '{"backgroundColor":["ff0000"],"eyebrows":["variant11"],"eyebrowsColor":["ffffff"],"eyes":["variant01"],"eyesColor":["ffffff"],"freckles":["variant01"],"frecklesColor":["ffffff"],"frecklesProbability":[null],"glasses":["variant01"],"glassesColor":["ffffff"],"glassesProbability":[null],"mouth":["happy04"],"mouthColor":["ffffff"],"nose":["variant04"],"noseColor":["ffffff"]}',
+    bankAccountNumber: "000000000001/5555",
+    apiKey: "33",
+    role: "admin",
   },
   {
-    data: {
-      BankAccount: {
-        create: {
-          name: "Secret bank account",
-          balance: 10000000,
-          number: "000000000001/5555",
-          currency: "CZECHITOKEN" as Currency,
-        },
-      },
-      email: "vojta@czechibank.ostrava.digital",
-      name: "Vojta 🦊 Cerveny",
-      password: "hello123456",
-      sex: "MALE" as Sex,
-      apiKey: "33",
-      avatarConfig: `{"backgroundColor":["ff0000"],"eyebrows":["variant11"],"eyebrowsColor":["ffffff"],"eyes":["variant01"],"eyesColor":["ffffff"],"freckles":["variant01"],"frecklesColor":["ffffff"],"frecklesProbability":[null],"glasses":["variant01"],"glassesColor":["ffffff"],"glassesProbability":[null],"mouth":["happy04"],"mouthColor":["ffffff"],"nose":["variant04"],"noseColor":["ffffff"]}`,
-    },
+    email: "simona@czechibank.ostrava.digital",
+    name: "Simona Humpolová",
+    password: "hello123456",
+    sex: "FEMALE",
+    avatarConfig:
+      '{"backgroundColor":["C4DD68"],"eyebrows":["variant12"],"eyebrowsColor":["000000"],"eyes":["variant01"],"eyesColor":["000000"],"freckles":["variant01"],"frecklesColor":["000000"],"frecklesProbability":[null],"glasses":["variant03"],"glassesColor":["000000"],"glassesProbability":[null],"mouth":["happy05"],"mouthColor":["000000"],"nose":["variant06"],"noseColor":["000000"]}',
+    bankAccountNumber: "000000000002/5555",
+    apiKey: "44",
+    role: "user",
   },
   {
-    data: {
-      BankAccount: {
-        create: {
-          name: "Secret bank account",
-          balance: 10000000,
-          number: "000000000002/5555",
-          currency: "CZECHITOKEN" as Currency,
-        },
-      },
-      email: "simona@czechibank.ostrava.digital",
-      name: "Simona Humpolová",
-      password: "hello123456",
-      sex: "FEMALE" as Sex,
-      apiKey: "44",
-      avatarConfig: `{"backgroundColor":["C4DD68"],"eyebrows":["variant12"],"eyebrowsColor":["000000"],"eyes":["variant01"],"eyesColor":["000000"],"freckles":["variant01"],"frecklesColor":["000000"],"frecklesProbability":[null],"glasses":["variant03"],"glassesColor":["000000"],"glassesProbability":[null],"mouth":["happy05"],"mouthColor":["000000"],"nose":["variant06"],"noseColor":["000000"]}`,
-    },
+    email: "vitalii@czechibank.ostrava.digital",
+    name: "Vitalii Postolov",
+    password: "hello123456",
+    sex: "MALE",
+    avatarConfig:
+      '{"backgroundColor":["ffe900"],"eyebrows":["variant12"],"eyebrowsColor":["000000"],"eyes":["variant01"],"eyesColor":["000000"],"freckles":["variant01"],"frecklesColor":["000000"],"frecklesProbability":[null],"glasses":["variant03"],"glassesColor":["000000"],"glassesProbability":[null],"mouth":["happy05"],"mouthColor":["000000"],"nose":["variant06"],"noseColor":["000000"]}',
+    bankAccountNumber: "000000000003/5555",
+    apiKey: "55",
+    role: "user",
   },
   {
-    data: {
-      BankAccount: {
-        create: {
-          name: "Secret bank account",
-          balance: 10000000,
-          number: "000000000003/5555",
-          currency: "CZECHITOKEN" as Currency,
-        },
-      },
-      email: "vitalii@czechibank.ostrava.digital",
-      name: "Vitalii Postolov",
-      password: "hello123456",
-      sex: "MALE" as Sex,
-      apiKey: "55",
-      avatarConfig: `{"backgroundColor":["ffe900"],"eyebrows":["variant12"],"eyebrowsColor":["000000"],"eyes":["variant01"],"eyesColor":["000000"],"freckles":["variant01"],"frecklesColor":["000000"],"frecklesProbability":[null],"glasses":["variant03"],"glassesColor":["000000"],"glassesProbability":[null],"mouth":["happy05"],"mouthColor":["000000"],"nose":["variant06"],"noseColor":["000000"]}`,
-    },
-  },
-  {
-    data: {
-      BankAccount: {
-        create: {
-          name: "Secret bank account",
-          balance: 10000000,
-          number: "000000000004/5555",
-          currency: "CZECHITOKEN" as Currency,
-        },
-      },
-      email: "michal@czechibank.ostrava.digital",
-      name: "Michal F.",
-      password: "hello123456",
-      sex: "MALE" as Sex,
-      apiKey: "66",
-      avatarConfig: `{"backgroundColor":["4699CD"],"eyebrows":["variant12"],"eyebrowsColor":["000000"],"eyes":["variant01"],"eyesColor":["000000"],"freckles":["variant01"],"frecklesColor":["000000"],"frecklesProbability":[null],"glasses":["variant03"],"glassesColor":["000000"],"glassesProbability":[null],"mouth":["happy05"],"mouthColor":["000000"],"nose":["variant06"],"noseColor":["000000"]}`,
-    },
+    email: "michal@czechibank.ostrava.digital",
+    name: "Michal F.",
+    password: "hello123456",
+    sex: "MALE",
+    avatarConfig:
+      '{"backgroundColor":["4699CD"],"eyebrows":["variant12"],"eyebrowsColor":["000000"],"eyes":["variant01"],"eyesColor":["000000"],"freckles":["variant01"],"frecklesColor":["000000"],"frecklesProbability":[null],"glasses":["variant03"],"glassesColor":["000000"],"glassesProbability":[null],"mouth":["happy05"],"mouthColor":["000000"],"nose":["variant06"],"noseColor":["000000"]}',
+    bankAccountNumber: "000000000004/5555",
+    apiKey: "66",
+    role: "user",
   },
 ];
 
-// Array of Lektors and Coordinators
-const lektorsAndCoordinators = [
-  {
-    name: "Chapčáková Dana",
-    email: "dana.chapcakova@czechitas.cz",
-  },
-  {
-    name: "Cihlářová Dita",
-    email: "dita.cihlarova@czechitas.cz",
-  },
-  {
-    name: "Kurníková Kamila",
-    email: "kamila.kurnikova@czechitas.cz",
-  },
-  {
-    name: "Fárka Michal",
-    email: "michal.farka@czechitas.cz",
-  },
-  {
-    name: "Grabcová Kateřina",
-    email: "katerina.grabcova@czechitas.cz",
-  },
-  {
-    name: "Hrdý Jakub",
-    email: "jakub.hrdy@czechitas.cz",
-  },
-  {
-    name: "Humpolová Simona",
-    email: "simona.humpolova@czechitas.cz",
-  },
-  {
-    name: "Koudelka Jiří",
-    email: "jiri.koudelka@czechitas.cz",
-  },
-  {
-    name: "Maiksnar Martin",
-    email: "martin.maiksnar@czechitas.cz",
-  },
-  {
-    name: "Pavelková Klára",
-    email: "klara.pavelkova@czechitas.cz",
-  },
-  {
-    name: "Pilátová Kateřina",
-    email: "katerina.pilatova@czechitas.cz",
-  },
-  {
-    name: "Postolov Vitalii",
-    email: "vitalii.postolov@czechitas.cz",
-  },
-  {
-    name: "Roller Vladimír",
-    email: "vladimir.roller@czechitas.cz",
-  },
-  {
-    name: "Šadibol Soňa",
-    email: "sona.sadibol@czechitas.cz",
-  },
-  {
-    name: "Sotolář Zdeněk",
-    email: "zdenek.sotolar@czechitas.cz",
-  },
-  {
-    name: "Šrámek Ondřej",
-    email: "ondrej.sramek@czechitas.cz",
-  },
-  {
-    name: "Veverka Pavel",
-    email: "pavel.veverka@czechitas.cz",
-  },
-];
+async function seedUsers() {
+  for (const userSeed of usersToSeed) {
+    try {
+      console.log(`[seed] Creating user: ${userSeed.email}`);
+      const response = await auth.api.createUser({
+        body: {
+          email: userSeed.email,
+          name: userSeed.name,
+          password: userSeed.password,
+          role: userSeed.role as "user" | "admin",
+        },
+      });
 
-// Convert Lektors and Coordinators to user data format
-const lektorUsers = lektorsAndCoordinators.map((user, index) => ({
-  data: {
-    BankAccount: {
-      create: {
-        name: `${user.name}'s Account`,
-        balance: 1000000, // Starting balance of 1M tokens
-        number: `${String(index + 10000).padStart(12, "0")}/5555`, // Unique account numbers starting from 10000
-        currency: "CZECHITOKEN" as Currency,
-      },
-    },
-    email: user.email,
-    name: user.name,
-    password: "czechitas123", // Default password for all users
-    sex: "MALE" as Sex, // Default sex, can be updated later
-    apiKey: String(index + 100), // Unique API keys
-    avatarConfig: `{"backgroundColor":["${Math.floor(Math.random() * 16777215).toString(16)}"],"eyebrows":["variant12"],"eyebrowsColor":["000000"],"eyes":["variant01"],"eyesColor":["000000"],"freckles":["variant01"],"frecklesColor":["000000"],"frecklesProbability":[null],"glasses":["variant03"],"glassesColor":["000000"],"glassesProbability":[null],"mouth":["happy05"],"mouthColor":["000000"],"nose":["variant06"],"noseColor":["000000"]}`,
-  },
-}));
+      const user = response.user;
 
-// Add lektor users to the main users array
-users.push(...lektorUsers);
+      console.log(`[seed] Creating API key for user: ${user.email}`);
+      const apiKey = await auth.api.createApiKey({ body: { userId: user.id } });
+
+      // Update bank account number
+      const bankAccount = await prisma.bankAccount.findFirst({ where: { userId: user.id } });
+      if (bankAccount) {
+        await prisma.bankAccount.update({
+          where: { id: bankAccount.id },
+          data: { number: userSeed.bankAccountNumber },
+        });
+        console.log(`[seed] Updated bank account number for user: ${user.email}`);
+      } else {
+        console.warn(`[seed] No bank account found for user: ${user.email}`);
+      }
+
+      // Update API key if deterministic value is needed
+      // TODO: @vojtech-cerveny - this is not working due the api keys are hashed in the DB, so we are not able to update them directly.
+      // and API-keys are generated on the fly, so we don't know the values - just after creation.
+      await prisma.apikey.update({
+        where: { id: apiKey.id },
+        data: { key: userSeed.apiKey },
+      });
+      console.log(`[seed] Updated API key for user: ${user.email}`);
+    } catch (error) {
+      console.error(`[seed] Error seeding user ${userSeed.email}:`, error);
+    }
+  }
+}
 
 // Helper function to generate deterministic random numbers
 function seededRandom(seed: number, offset: number = 0) {
@@ -256,8 +163,8 @@ function generateTransactionData(regularUsers: any[], totalTransactions: number)
     regularUsers.map((u) => ({
       id: u.id,
       name: u.name,
-      accountId: u.BankAccount[0].id,
-      balance: u.BankAccount[0].balance,
+      accountId: u.bankAccounts[0].id,
+      balance: u.bankAccounts[0].balance,
     })),
   );
 
@@ -308,12 +215,12 @@ function generateTransactionData(regularUsers: any[], totalTransactions: number)
         createdAt: transactionDate,
         amount,
         currency: "CZECHITOKEN" as Currency,
-        fromBankId: sender.BankAccount[0].id,
-        toBankId: receiver.BankAccount[0].id,
-        senderBalance: sender.BankAccount[0].balance - amount,
-        receiverBalance: receiver.BankAccount[0].balance + amount,
-        senderAccountId: sender.BankAccount[0].id,
-        receiverAccountId: receiver.BankAccount[0].id,
+        fromBankId: sender.bankAccounts[0].id,
+        toBankId: receiver.bankAccounts[0].id,
+        senderBalance: sender.bankAccounts[0].balance - amount,
+        receiverBalance: receiver.bankAccounts[0].balance + amount,
+        senderAccountId: sender.bankAccounts[0].id,
+        receiverAccountId: receiver.bankAccounts[0].id,
       });
     } catch (error) {
       console.error(`[${new Date().toISOString()}] Error generating transaction ${i}:`, error);
@@ -342,7 +249,7 @@ async function generateDeterministicTransactions(prisma: PrismaClient) {
 
   const allUsers = await prisma.user.findMany({
     include: {
-      BankAccount: true,
+      bankAccounts: true,
     },
   });
   console.log(`[${new Date().toISOString()}] Found ${allUsers.length} total users`);
@@ -350,7 +257,7 @@ async function generateDeterministicTransactions(prisma: PrismaClient) {
   // Filter out rescue fund accounts
   const regularUsers = allUsers.filter(
     (user) =>
-      !user.BankAccount[0].number.includes("555555555555") && !user.BankAccount[0].number.includes("444444444444"),
+      !user.bankAccounts[0].number.includes("555555555555") && !user.bankAccounts[0].number.includes("444444444444"),
   );
   console.log(`[${new Date().toISOString()}] Found ${regularUsers.length} regular users (excluding rescue funds)`);
 
@@ -417,48 +324,34 @@ async function generateDeterministicTransactions(prisma: PrismaClient) {
   }
 }
 
-async function prepareDb() {
-  console.log(`[${new Date().toISOString()}] Starting prepareDb...`);
-  const prisma = new PrismaClient();
+async function main() {
+  console.log("[seed] Starting seed script...");
   await prisma.$connect();
-  console.log(`[${new Date().toISOString()}] Connected to database`);
 
-  try {
-    // Clean up all data first
-    console.log(`[${new Date().toISOString()}] Cleaning up database...`);
-    await prisma.$transaction([
-      prisma.transaction.deleteMany(),
-      prisma.bankAccount.deleteMany(),
-      prisma.user.deleteMany(),
-    ]);
-    console.log(`[${new Date().toISOString()}] Database cleaned up`);
+  // Clean up all data first
+  console.log("[seed] Cleaning up database...");
+  await prisma.$transaction([
+    prisma.transaction.deleteMany(),
+    prisma.bankAccount.deleteMany(),
+    prisma.user.deleteMany(),
+  ]);
+  console.log("[seed] Database cleaned up");
 
-    // Create all users
-    for (const user of users) {
-      console.log(`[${new Date().toISOString()}] Creating user: ${user.data.email}`);
-      const createdUser = await prisma.user.upsert({
-        where: { email: user.data.email },
-        update: user.data,
-        create: user.data,
-      });
-      console.log(`[${new Date().toISOString()}] User created: ${createdUser.email}`);
-    }
+  // Seed users
+  await seedUsers();
 
-    // Generate transactions between Lektors and Coordinators
-    console.log(`[${new Date().toISOString()}] Starting to generate transactions between Lektors and Coordinators...`);
-    await generateDeterministicTransactions(prisma);
-    console.log(`[${new Date().toISOString()}] Finished all database operations`);
-  } catch (error) {
-    console.error(`[${new Date().toISOString()}] Error in prepareDb:`, error);
-  }
+  // Generate transactions (keep your existing logic here)
+  await generateDeterministicTransactions(prisma);
+
+  console.log("[seed] Finished all database operations");
 }
 
-console.log(`[${new Date().toISOString()}] Starting script...`);
-prepareDb()
+main()
   .catch((error) => {
-    console.error(`[${new Date().toISOString()}] Fatal error:`, error);
+    console.error("[seed] Fatal error:", error);
   })
   .finally(() => {
-    console.log(`[${new Date().toISOString()}] Script finished`);
+    prisma.$disconnect();
+    console.log("[seed] Script finished");
     process.exit(0);
   });
