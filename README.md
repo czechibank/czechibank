@@ -76,3 +76,7 @@ Check [NextJS app structure](https://nextjs.org/docs/getting-started/project-str
 - `app/api` is special folder for API responses
 
 Check how you can handle `notFound`, `error` and [others pages](https://nextjs.org/docs/getting-started/project-structure#app-routing-conventions) - it is super simple.
+
+Usefull links:
+
+- [Better-auth + Prisma + Nextjs](https://www.prisma.io/docs/guides/betterauth-nextjs)
