@@ -1,20 +1,56 @@
-"use server";
-import { SignIn } from "./auth-components";
+"use client";
 
-import { headers } from "next/headers";
-import { auth } from "../../../auth";
-import UserButtonClient from "./user-button.client";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { useSession } from "@/lib/auth-client";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useEffect } from "react";
+import { Button } from "../ui/button";
+import { UserAvatar } from "../user/avatar";
+import { SignOut } from "./sign-out";
 
-// TODO: I tried to resolve problem with client component - better-auth has some problem with useSession
-// https://github.com/better-auth/better-auth/issues/1006
-export default async function UserButton() {
-  const session = await auth.api.getSession({
-    headers: await headers(), // you need to pass the headers object.
-  });
+export default function UserButton() {
+  const router = useRouter();
+  const { data: session, isPending } = useSession();
 
-  if (!session) {
-    return <SignIn />;
-  }
+  useEffect(() => {
+    if (!isPending && !session?.user) {
+      router.push("/signin");
+    }
+  }, [isPending, session, router]);
 
-  return <UserButtonClient session={session} />;
+  if (isPending) return <p className="mt-8 text-center">Loading...</p>;
+  if (!session?.user) return <Link href="/signin">Sign in</Link>;
+
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <div className="rounded-full border-2 border-solid border-slate-500 hover:border-slate-200">
+          <UserAvatar image={session.user.image ?? null} size={8} />
+        </div>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent className="w-56" align="end" forceMount>
+        <DropdownMenuLabel className="font-normal">
+          <div className="flex flex-col space-y-1">
+            <p className="leading-none">{session.user.name}</p>
+            <p className="text-xs leading-none text-muted-foreground">{session.user.email}</p>
+          </div>
+        </DropdownMenuLabel>
+        <DropdownMenuItem>
+          <Link href="/profile" className="w-full">
+            <Button className="w-full">Profile</Button>
+          </Link>
+        </DropdownMenuItem>
+        <DropdownMenuItem>
+          <SignOut className="w-full" />
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
 }
