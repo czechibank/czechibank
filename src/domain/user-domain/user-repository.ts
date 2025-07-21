@@ -1,26 +1,11 @@
 "use server";
 import prisma from "@/lib/db";
 import { ApiErrorCode, errorResponse, successResponse } from "@/lib/response";
-import { auth } from "../../../auth";
 
 /**
  * Custom user repository functions for logic not handled by better-auth.
  * All standard user CRUD/auth flows are handled by better-auth.
  */
-
-/**
- * Regenerates a user's API key (custom logic, not handled by better-auth).
- */
-export async function regenerateApiKey(userId: string) {
-  const user = await auth.api.updateApiKey({
-    body: {
-      userId: userId,
-      keyId: Math.random().toString(36).substring(2),
-    },
-  });
-
-  return successResponse("API key regenerated", user);
-}
 
 /**
  * Regenerates a user's avatar config (custom logic, not handled by better-auth).
@@ -56,4 +41,13 @@ export async function getUserByApiKey(apiKey: string) {
   });
 
   return user;
+}
+
+export async function getAllUsers() {
+  const users = await prisma.user.findMany({
+    include: {
+      bankAccounts: true,
+    },
+  });
+  return users;
 }

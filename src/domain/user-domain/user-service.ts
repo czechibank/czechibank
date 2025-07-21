@@ -1,6 +1,5 @@
 import { toast } from "@/components/ui/use-toast";
 import { authClient } from "@/lib/auth-client";
-import prisma from "@/lib/db";
 import { ApiErrorCode, errorResponse, successResponse } from "@/lib/response";
 import { generateRandomAvatarConfig } from "@/lib/utils";
 import { auth } from "../../../auth";
@@ -52,14 +51,6 @@ const userService = {
       }
       return errorResponse(error.message ?? "Unknown error", ApiErrorCode.OPERATION_FAILED);
     }
-
-    // console.log("[user-service] creating bank account");
-    // await bankAccountService.createBankAccount({
-    //   userId: data.user.id,
-    //   currency: "CZECHITOKEN",
-    //   name: "My Bank Account",
-    // });
-    // console.log("[user-service] bank account created");
 
     if (isAPI) {
       console.log("[user-service] creating api key");
@@ -117,20 +108,8 @@ const userService = {
   async signInUser(email: string, password: string) {
     const user = await auth.api.signInEmail({ body: { email, password } });
     console.log(user);
-    // if (error?.code === "user_not_found") {
-    //   return errorResponse("User not found", ApiErrorCode.NOT_FOUND);
-    // }
-    // if (error?.code === "invalid_credentials") {
-    //   return errorResponse("Invalid password", ApiErrorCode.INVALID_PASSWORD);
-    // }
-    return successResponse("User signed in", user);
-  },
 
-  /**
-   * Regenerates a user's API key using the repository (custom logic).
-   */
-  async regenerateApiKey(userId: string) {
-    return userRepository.regenerateApiKey(userId);
+    return successResponse("User signed in", user);
   },
 
   /**
@@ -143,15 +122,15 @@ const userService = {
   },
 
   /**
-   * Gets all users using better-auth admin API.
+   * Get all users from the DB with their bank accounts.
    */
   async getAllUsers() {
-    const result = await prisma.user.findMany({
-      include: {
-        bankAccounts: true,
-      },
-    });
-    return successResponse("Users found", result);
+    try {
+      const result = await userRepository.getAllUsers();
+      return successResponse("Users found", result);
+    } catch (error) {
+      return errorResponse("Error fetching users", ApiErrorCode.OPERATION_FAILED);
+    }
   },
 };
 
