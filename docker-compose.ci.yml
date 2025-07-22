@@ -24,6 +24,7 @@ services:
     depends_on:
       czechibankDb:
         condition: service_healthy
+    restart: "no"
 
   # Next.js Application
   web:
