@@ -33,8 +33,6 @@ services:
       dockerfile: Dockerfile
     depends_on:
       - prisma-migrate
-    ports:
-      - "3000:3000"
     environment:
       - DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@czechibankDb:5432/${POSTGRES_DB}
       - NODE_ENV=production
