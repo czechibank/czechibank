@@ -16,11 +16,9 @@ services:
       retries: 10
 
   prisma-migrate:
-    image: node:lts-alpine3.17
-    working_dir: /usr/src/app
-    volumes:
-      - .:/usr/src/app
-    command: npx prisma migrate deploy
+    build:
+      context: .
+      dockerfile: Dockerfile.migration
     environment:
       - DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@czechibankDb:5432/${POSTGRES_DB}
     depends_on:
