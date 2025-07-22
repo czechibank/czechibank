@@ -1,0 +1,47 @@
+version: "3.8"
+
+services:
+  # PostgreSQL Database
+  czechibankDb:
+    container_name: czechibank-db-ci
+    image: postgres:14.1-alpine
+    environment:
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_DB=${POSTGRES_DB}
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  prisma-migrate:
+    image: node:lts-alpine3.17
+    working_dir: /usr/src/app
+    volumes:
+      - .:/usr/src/app
+    command: npx prisma migrate deploy
+    environment:
+      - DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@czechibankDb:5432/${POSTGRES_DB}
+    depends_on:
+      czechibankDb:
+        condition: service_healthy
+
+  # Next.js Application
+  web:
+    container_name: czechibank-app-ci
+    build:
+      context: .
+      dockerfile: Dockerfile
+    depends_on:
+      prisma-migrate:
+        condition: service_completed_successfully
+    ports:
+      - "3000:3000"
+    environment:
+      - DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@czechibankDb:5432/${POSTGRES_DB}
+      - NODE_ENV=production
+      - NEXT_TELEMETRY_DISABLED=1
+      - PRISMA_CLI_BINARY_TARGETS=linux-musl-arm64-openssl-3.0.x
+      - DISCORD_WEBHOOK_URL=${DISCORD_WEBHOOK_URL}
+    restart: "no"
