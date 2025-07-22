@@ -14,6 +14,8 @@ services:
       interval: 5s
       timeout: 5s
       retries: 10
+    volumes:
+      - czechibank-db-data:/var/lib/postgresql/data
 
   prisma-migrate:
     build:
@@ -41,3 +43,6 @@ services:
       - PRISMA_CLI_BINARY_TARGETS=linux-musl-arm64-openssl-3.0.x
       - DISCORD_WEBHOOK_URL=${DISCORD_WEBHOOK_URL}
     restart: "no"
+
+volumes:
+  czechibank-db-data:
