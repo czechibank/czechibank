@@ -1,6 +1,14 @@
+import { execSync } from "child_process";
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   output: "standalone",
+
+  // Automatically inject the latest Git commit hash as an env variable
+  env: {
+    NEXT_PUBLIC_COMMIT_HASH: execSync("git rev-parse --short HEAD").toString().trim(),
+  },
+
   // distDir: "build",
   async headers() {
     return [
