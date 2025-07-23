@@ -30,7 +30,7 @@ const usersToSeed = [
   // Core team
   {
     email: "vojta@czechibank.ostrava.digital",
-    name: "Vojta 🦊 Cerveny",
+    name: "Vojta 🦊 🎉 Cerveny",
     password: "hello123456",
     sex: "MALE",
     avatarConfig:
