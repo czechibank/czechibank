@@ -34,13 +34,14 @@ import { DELETE, HEAD, OPTIONS, PATCH, POST, PUT } from "../routes";
  *                       description: API version
  */
 export async function GET(request: Request) {
+  const commitHash = process.env.NEXT_PUBLIC_COMMIT_HASH || "unknown";
   return Response.json(
     {
       message: "This is the best bank ever!",
       data: {
         date: new Date(),
         name: packageJson.name,
-        version: packageJson.version,
+        version: `${packageJson.version} (${commitHash})`,
       },
     },
     { status: 200 },

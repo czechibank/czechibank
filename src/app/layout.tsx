@@ -1,6 +1,7 @@
 import UserButton from "@/components/auth/user-button";
 import { ThemeProvider } from "@/components/theme-provider";
 import { ModeToggle } from "@/components/theme/toggle-button";
+import { AppFooter } from "@/components/ui/appFooter";
 import { Toaster } from "@/components/ui/toaster";
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
@@ -23,8 +24,9 @@ export default function RootLayout({
   return (
     <html lang="en">
       <Script defer data-domain="czechibank.ostrava.digital" src="https://plausible.ff0000.cz/js/script.js" />
-      <body>
-        <div className={inter.className + " min-h-screen w-full min-w-full px-4 py-4 pb-10 sm:px-6 md:max-w-3xl"}>
+      <body className="flex min-h-screen flex-col">
+        {/* <div className={inter.className + " min-h-screen w-full min-w-full px-4 py-4 pb-10 sm:px-6 md:max-w-3xl"}> */}
+        <div className={inter.className + " w-full min-w-full flex-grow px-4 py-4 pb-10 sm:px-6 md:max-w-3xl"}>
           <ThemeProvider attribute="class" defaultTheme="system">
             <div className="flex flex-row items-center justify-between">
               <Link href={"/"} className="flex flex-row items-center space-x-2">
@@ -38,8 +40,9 @@ export default function RootLayout({
             </div>
             <div className="mx-auto max-w-3xl">{children}</div>
           </ThemeProvider>
-          <Toaster />
         </div>
+        <Toaster />
+        <AppFooter />
       </body>
     </html>
   );
