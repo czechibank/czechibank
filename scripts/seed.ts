@@ -1,3 +1,4 @@
+import { Role } from "@/lib/permissions";
 import { Currency, PrismaClient } from "@prisma/client";
 import { auth } from "../auth";
 
@@ -83,7 +84,7 @@ async function seedUsers() {
           email: userSeed.email,
           name: userSeed.name,
           password: userSeed.password,
-          role: userSeed.role as "user" | "admin",
+          role: userSeed.role as Role,
         },
       });
 

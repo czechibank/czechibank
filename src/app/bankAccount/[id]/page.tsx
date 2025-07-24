@@ -11,20 +11,6 @@ import { headers } from "next/headers";
 import { notFound, redirect } from "next/navigation";
 import { auth } from "../../../../auth";
 
-type Session = {
-  user: {
-    id: string;
-    email: string;
-    name: string;
-    apiKey: string;
-    sex: "MALE" | "FEMALE";
-    avatarConfig: string;
-  };
-  expires: string;
-  iat: number;
-  exp: number;
-};
-
 export default async function BankAccountPage(props: { params: Promise<{ id: string }> }) {
   const params = await props.params;
   const session = await auth.api.getSession({
@@ -83,10 +69,7 @@ export default async function BankAccountPage(props: { params: Promise<{ id: str
                 <TransactionTranfer
                   bankAccountNumber={bankAccount.data.number}
                   userId={session.user.id}
-                  allUsers={allUsers.data.map((user) => ({
-                    ...user,
-                    BankAccount: user.bankAccounts,
-                  }))}
+                  allUsers={allUsers.data}
                   balance={bankAccount.data.balance}
                 />
               )}

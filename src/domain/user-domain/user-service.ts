@@ -4,8 +4,8 @@ import { ApiErrorCode, errorResponse, successResponse } from "@/lib/response";
 import { generateRandomAvatarConfig } from "@/lib/utils";
 import { auth } from "../../../auth";
 import * as userRepository from "./user-repository";
+import type { CreateUserSchema } from "./user-schema";
 import { UserSchema } from "./user-schema";
-
 /**
  * Service layer for user domain. Orchestrates between better-auth, repositories, and other services.
  */
@@ -13,7 +13,7 @@ const userService = {
   /**
    * Creates a user using better-auth and initializes a bank account.
    */
-  async createUserFromEmail(userData: { email: string; name: string; password: string }, isAPI: boolean = false) {
+  async createUserFromEmail(userData: CreateUserSchema, isAPI: boolean = false) {
     console.log(userData);
     const parsedUser = UserSchema.safeParse(userData);
     if (!parsedUser.success) {

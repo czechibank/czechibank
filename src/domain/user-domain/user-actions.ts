@@ -2,6 +2,7 @@
 
 import { authClient } from "@/lib/auth-client";
 import { redirect } from "next/navigation";
+import { CreateUserSchema } from "./user-schema";
 import userService from "./user-service";
 
 export async function processUserRegistration(formData: FormData) {
@@ -9,7 +10,7 @@ export async function processUserRegistration(formData: FormData) {
     email: formData.get("email") as string,
     name: formData.get("name") as string,
     password: formData.get("password") as string,
-  };
+  } satisfies CreateUserSchema;
 
   const response = await userService.createUserFromEmail(userData);
   if (!response.success) {
