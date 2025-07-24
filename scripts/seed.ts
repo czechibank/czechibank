@@ -212,16 +212,19 @@ function generateTransactionData(regularUsers: any[], totalTransactions: number)
         console.log(`[${new Date().toISOString()}] Generated ${i} transactions so far...`);
       }
 
+      const receiverAccount = receiver.bankAccounts[0];
+      const senderAccount = sender.bankAccounts[0];
+
       transactions.push({
         createdAt: transactionDate,
         amount,
-        currency: "CZECHITOKEN" as Currency,
-        fromBankId: sender.bankAccounts[0].id,
-        toBankId: receiver.bankAccounts[0].id,
-        senderBalance: sender.bankAccounts[0].balance - amount,
-        receiverBalance: receiver.bankAccounts[0].balance + amount,
-        senderAccountId: sender.bankAccounts[0].id,
-        receiverAccountId: receiver.bankAccounts[0].id,
+        currency: "CZECHITOKEN",
+        fromBankId: senderAccount.id,
+        toBankId: receiverAccount.id,
+        senderBalance: senderAccount.balance - amount,
+        receiverBalance: receiverAccount.balance + amount,
+        senderAccountId: senderAccount.id,
+        receiverAccountId: receiverAccount.id,
       });
     } catch (error) {
       console.error(`[${new Date().toISOString()}] Error generating transaction ${i}:`, error);
@@ -288,7 +291,7 @@ async function generateDeterministicTransactions(prisma: PrismaClient) {
               data: {
                 createdAt: transaction.createdAt,
                 amount: transaction.amount,
-                currency: transaction.currency,
+                currency: transaction.currency as Currency,
                 fromBankId: transaction.fromBankId,
                 toBankId: transaction.toBankId,
               },
