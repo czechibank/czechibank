@@ -20,7 +20,7 @@ import { useState } from "react";
 
 export default function CreateApiKey() {
   const router = useRouter();
-  const [isLoading, setIsLoading] = useState(false);
+  const [isCreating, setInCreating] = useState(false);
   const [newApiKey, setNewApiKey] = useState<string | null>(null);
   const [isOpen, setIsOpen] = useState(false);
 
@@ -40,7 +40,7 @@ export default function CreateApiKey() {
   };
 
   const handleSubmit = (data: FormData) => {
-    setIsLoading(true);
+    setInCreating(true);
     setNewApiKey(null);
 
     const name = data.get("name") as string;
@@ -51,7 +51,7 @@ export default function CreateApiKey() {
         description: "Please provide a name for the API key",
         variant: "destructive",
       });
-      setIsLoading(false);
+      setInCreating(false);
       return;
     }
 
@@ -69,7 +69,7 @@ export default function CreateApiKey() {
             description: "Your new API key has been created successfully",
           });
           router.refresh();
-          setIsLoading(false);
+          setInCreating(false);
         },
         onError: (error) => {
           console.error(error);
@@ -77,7 +77,7 @@ export default function CreateApiKey() {
             description: "Failed to create API key",
             variant: "destructive",
           });
-          setIsLoading(false);
+          setInCreating(false);
         },
       },
     );
@@ -120,8 +120,8 @@ export default function CreateApiKey() {
               <Button type="button" variant="outline" onClick={() => setIsOpen(false)}>
                 Cancel
               </Button>
-              <Button type="submit" disabled={isLoading}>
-                {isLoading ? "Creating..." : "Create API Key"}
+              <Button type="submit" disabled={isCreating}>
+                {isCreating ? "Creating..." : "Create API Key"}
               </Button>
             </div>
           </form>

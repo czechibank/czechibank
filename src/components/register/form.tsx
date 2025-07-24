@@ -6,7 +6,6 @@ import { z } from "zod";
 
 import { Button } from "@/components/ui/button";
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { AlertCircle } from "lucide-react";
 
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
@@ -42,7 +41,7 @@ export function RegisterForm() {
     const formData = new FormData();
     Object.entries(data).forEach(([key, value]) => formData.append(key, value as string));
 
-    authClient.signUp.email(
+    await authClient.signUp.email(
       {
         email: data.email,
         password: data.password,
@@ -126,7 +125,8 @@ export function RegisterForm() {
             </FormItem>
           )}
         />
-        <FormField
+        {/* TODO: @vojtech-cerveny We removed sex field for now due better-auth issues, but we can implement it later */}
+        {/* <FormField
           control={form.control}
           name="sex"
           render={({ field }) => (
@@ -146,7 +146,7 @@ export function RegisterForm() {
               <FormMessage />
             </FormItem>
           )}
-        />
+        /> */}
         <Button type="submit">Register</Button>
         {serverResponse && !serverResponse.success && (
           <Alert variant="destructive">

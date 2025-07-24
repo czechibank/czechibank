@@ -35,39 +35,29 @@ export default function ProfileClientPage({ user, apiKeys }: { user: User; apiKe
 
   const handleGenerateAvatar = async () => {
     setIsUpdatingAvatar(true);
-    try {
-      const avatarConfig = generateRandomAvatarConfig();
+    const avatarConfig = generateRandomAvatarConfig();
 
-      await authClient.updateUser(
-        {
-          image: JSON.stringify(avatarConfig),
+    await authClient.updateUser(
+      {
+        image: JSON.stringify(avatarConfig),
+      },
+      {
+        onSuccess: () => {
+          toast({
+            description: "Avatar updated successfully!",
+            duration: 2000,
+          });
+          router.refresh();
         },
-        {
-          onSuccess: () => {
-            toast({
-              description: "Avatar updated successfully!",
-              duration: 2000,
-            });
-            router.refresh();
-          },
-          onError: (error) => {
-            console.error("Failed to update avatar:", error);
-            toast({
-              description: "Failed to update avatar",
-              variant: "destructive",
-            });
-          },
+        onError: (error) => {
+          console.error("Failed to update avatar:", error);
+          toast({
+            description: "Failed to update avatar",
+            variant: "destructive",
+          });
         },
-      );
-    } catch (error) {
-      console.error("Error updating avatar:", error);
-      toast({
-        description: "Failed to update avatar",
-        variant: "destructive",
-      });
-    } finally {
-      setIsUpdatingAvatar(false);
-    }
+      },
+    );
   };
 
   return (
