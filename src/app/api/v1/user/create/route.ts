@@ -2,8 +2,9 @@ export { DELETE, HEAD, OPTIONS, PATCH, PUT } from "../../routes";
 
 import { UserSchema } from "@/domain/user-domain/user-schema";
 
+import apikeyService from "@/domain/apikey/apikey-service";
+import userService from "@/domain/user-domain/user-service";
 import { validateEventHandler } from "@/lib/response";
-import { auth } from "../../../../../../auth";
 import { ApiError, handleErrors } from "../../routes";
 
 /**
@@ -54,23 +55,10 @@ export async function POST(request: Request) {
     if ("error" in parsedUser) {
       return Response.json(parsedUser, { status: 422 });
     }
+    const createdUser = await userService.server.createUser(parsedUser, "user");
+    const apiKey = await apikeyService.server.createApiKey(createdUser.user.id);
 
-    const response = await auth.api.createUser({
-      body: {
-        email: parsedUser.email,
-        password: parsedUser.password,
-        name: parsedUser.name,
-        role: "user",
-      },
-    });
-
-    const apiKey = await auth.api.createApiKey({
-      body: {
-        userId: response.user.id,
-      },
-    });
-
-    return Response.json({ ...response.user, apiKey: apiKey.key }, { status: 201 });
+    return Response.json({ ...createdUser.user, apiKey: apiKey.key }, { status: 201 });
   } catch (error) {
     // TODO: @vojtech-cerveny - handle better-auth - we can reuse their ApiErrorCodes etc.
     // https://www.better-auth.com/docs/concepts/api#error-handling

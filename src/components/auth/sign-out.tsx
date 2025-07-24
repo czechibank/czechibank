@@ -1,6 +1,6 @@
 "use client";
 
-import { authClient } from "@/lib/auth-client";
+import userService from "@/domain/user-domain/user-service";
 import { useRouter } from "next/navigation";
 import { Button } from "../ui/button";
 
@@ -13,11 +13,12 @@ export function SignOut(props: React.ComponentPropsWithRef<typeof Button>) {
       className="flex w-full"
       {...props}
       onClick={async () => {
-        await authClient.signOut({
-          fetchOptions: {
-            onSuccess: () => {
-              router.push("/");
-            },
+        await userService.client.signOut({
+          onSuccess: () => {
+            router.push("/");
+          },
+          onError: (error) => {
+            console.log(error);
           },
         });
       }}

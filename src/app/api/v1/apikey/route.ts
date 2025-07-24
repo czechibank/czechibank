@@ -1,5 +1,5 @@
+import apikeyService from "@/domain/apikey/apikey-service";
 import { headers } from "next/headers";
-import { auth } from "../../../../../auth";
 import { checkUserAuthOrThrowError } from "../server-actions";
 
 export async function GET(request: Request) {
@@ -8,7 +8,7 @@ export async function GET(request: Request) {
     return Response.json(user, { status: 401 });
   }
 
-  const apiKeys = await auth.api.listApiKeys({ headers: await headers() });
+  const apiKeys = await apikeyService.server.listUserApiKey(await headers());
 
   return Response.json(apiKeys);
 }

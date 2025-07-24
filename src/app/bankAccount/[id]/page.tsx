@@ -9,13 +9,10 @@ import userService from "@/domain/user-domain/user-service";
 import { RocketIcon } from "lucide-react";
 import { headers } from "next/headers";
 import { notFound, redirect } from "next/navigation";
-import { auth } from "../../../../auth";
 
 export default async function BankAccountPage(props: { params: Promise<{ id: string }> }) {
   const params = await props.params;
-  const session = await auth.api.getSession({
-    headers: await headers(), // you need to pass the headers object.
-  });
+  const session = await userService.server.getSession(await headers());
 
   if (!session) {
     redirect("/signin");
@@ -24,7 +21,7 @@ export default async function BankAccountPage(props: { params: Promise<{ id: str
   if (!bankAccount.success) {
     notFound();
   }
-  const allUsers = await userService.getAllUsers();
+  const allUsers = await userService.server.getAllUsers();
 
   if (!session || !bankAccount) {
     <h1 className="my-8 scroll-m-20 text-4xl font-extrabold tracking-tight lg:text-5xl">404</h1>;

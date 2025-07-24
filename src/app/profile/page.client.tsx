@@ -5,15 +5,22 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { toast } from "@/components/ui/use-toast";
 import { UserAvatar } from "@/components/user/avatar";
+import userService from "@/domain/user-domain/user-service";
 import { authClient, useSession } from "@/lib/auth-client";
 import { generateRandomAvatarConfig } from "@/lib/utils";
-import { Apikey, User } from "@prisma/client";
+import { Apikey } from "@prisma/client";
 import { KeyIcon, SettingsIcon, UserIcon } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import CreateApiKey from "../../components/profile/create-api-key";
 
-export default function ProfileClientPage({ user, apiKeys }: { user: User; apiKeys: Apikey[] }) {
+export default function ProfileClientPage({
+  user,
+  apiKeys,
+}: {
+  user: typeof authClient.$Infer.Session.user;
+  apiKeys: Omit<Apikey, "key">[];
+}) {
   const { data: session, isPending, error } = useSession();
   const router = useRouter();
   const [isUpdatingAvatar, setIsUpdatingAvatar] = useState(false);
@@ -37,10 +44,8 @@ export default function ProfileClientPage({ user, apiKeys }: { user: User; apiKe
     setIsUpdatingAvatar(true);
     const avatarConfig = generateRandomAvatarConfig();
 
-    await authClient.updateUser(
-      {
-        image: JSON.stringify(avatarConfig),
-      },
+    await userService.client.updateUser(
+      { image: JSON.stringify(avatarConfig) },
       {
         onSuccess: () => {
           toast({
@@ -77,7 +82,7 @@ export default function ProfileClientPage({ user, apiKeys }: { user: User; apiKe
         </CardHeader>
         <CardContent className="space-y-6">
           <div className="flex items-start space-x-4">
-            <UserAvatar image={user.image} size={10} />
+            <UserAvatar image={user.image || null} size={10} />
             <div className="flex-1 space-y-4">
               <div>
                 <Label className="text-sm font-medium text-muted-foreground">Name</Label>

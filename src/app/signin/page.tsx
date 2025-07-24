@@ -11,18 +11,16 @@ import { Input } from "@/components/ui/input";
 
 import { useToast } from "@/components/ui/use-toast";
 import { MIN_PASSWORD_LENGTH } from "@/constants";
-import { authClient } from "@/lib/auth-client";
+import { LoginSchema } from "@/domain/user-domain/user-schema";
+import userService from "@/domain/user-domain/user-service";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 
 export default function SignInPage() {
   const { toast } = useToast();
-  const loginSchema = z.object({
-    email: z.string().email(),
-    password: z.string().min(MIN_PASSWORD_LENGTH),
-  });
-  const form = useForm<z.infer<typeof loginSchema>>({
-    resolver: zodResolver(loginSchema),
+
+  const form = useForm<z.infer<typeof LoginSchema>>({
+    resolver: zodResolver(LoginSchema),
     defaultValues: {
       email: "",
       password: "",
@@ -30,18 +28,21 @@ export default function SignInPage() {
   });
   const router = useRouter();
   const action: () => void = form.handleSubmit(async (data) => {
-    await authClient.signIn.email(
+    await userService.client.signIn(
       { email: data.email, password: data.password },
       {
         onSuccess: () => {
-          console.log("success");
+          toast({
+            title: "Success",
+            description: "You are signed in",
+          });
           router.push("/");
         },
         onError: (error) => {
           form.resetField("password");
           toast({
             title: "Error",
-            description: error.error.message,
+            description: error?.error.message,
             variant: "destructive",
           });
         },

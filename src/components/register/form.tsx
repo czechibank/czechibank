@@ -13,7 +13,7 @@ import { Input } from "@/components/ui/input";
 import { MIN_PASSWORD_LENGTH } from "@/constants";
 
 import { UserSchema } from "@/domain/user-domain/user-schema";
-import { authClient } from "@/lib/auth-client";
+import userService from "@/domain/user-domain/user-service";
 import { Response } from "@/lib/response";
 import { generateRandomAvatarConfig } from "@/lib/utils";
 import { redirect } from "next/navigation";
@@ -34,14 +34,14 @@ export function RegisterForm() {
     resolver: zodResolver(ExtendedUserSchema),
     defaultValues: {
       name: "",
+      email: "",
+      password: "",
+      confirmPassword: "",
     },
   });
 
-  const action: () => void = form.handleSubmit(async (data) => {
-    const formData = new FormData();
-    Object.entries(data).forEach(([key, value]) => formData.append(key, value as string));
-
-    await authClient.signUp.email(
+  const action: () => void = form.handleSubmit(async (data: z.infer<typeof ExtendedUserSchema>) => {
+    await userService.client.signUp(
       {
         email: data.email,
         password: data.password,
@@ -59,7 +59,7 @@ export function RegisterForm() {
         },
         onError: (error) => {
           toast({
-            title: "Error",
+            title: "Oh snap!Error",
             description: error.error.message,
           });
         },

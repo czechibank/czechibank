@@ -1,23 +1,18 @@
-import { Apikey, User } from "@prisma/client";
+import apikeyService from "@/domain/apikey/apikey-service";
+import userService from "@/domain/user-domain/user-service";
+import { Apikey } from "@prisma/client";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
-import { auth } from "../../../auth";
 import ProfileClientPage from "./page.client";
 
 export default async function ProfilePage() {
-  const session = await auth.api.getSession({
-    headers: await headers(),
-  });
+  const session = await userService.server.getSession(await headers());
 
   if (!session) {
     redirect("/signin");
   }
 
-  const apiKeys = (await auth.api.listApiKeys({
-    headers: await headers(),
-  })) as Apikey[];
+  const apiKeys = await apikeyService.server.listUserApiKey(await headers());
 
-  const user = session.user;
-
-  return <ProfileClientPage user={user as User} apiKeys={apiKeys} />;
+  return <ProfileClientPage user={session.user} apiKeys={apiKeys as Omit<Apikey, "key">[]} />;
 }

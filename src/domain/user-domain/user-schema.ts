@@ -8,3 +8,8 @@ export const UserSchema = z.object({
   name: z.string().trim().min(1, "Name cannot be empty or contain only spaces"),
   password: z.string().min(MIN_PASSWORD_LENGTH, `Password must be at least ${MIN_PASSWORD_LENGTH} characters long`),
 });
+
+export const LoginSchema = z.object({
+  email: z.string().email(),
+  password: z.string().min(MIN_PASSWORD_LENGTH, `Password must be at least ${MIN_PASSWORD_LENGTH} characters long`),
+});

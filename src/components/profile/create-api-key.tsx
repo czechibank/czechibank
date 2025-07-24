@@ -9,20 +9,34 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "@/components/ui/use-toast";
-import { authClient } from "@/lib/auth-client";
+import { CreateApiKeySchema } from "@/domain/apikey/apikey-schema";
+import apikeyService from "@/domain/apikey/apikey-service";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { Apikey } from "@prisma/client";
 import { CopyIcon, PlusIcon } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
 
 export default function CreateApiKey() {
   const router = useRouter();
   const [isCreating, setInCreating] = useState(false);
   const [newApiKey, setNewApiKey] = useState<string | null>(null);
   const [isOpen, setIsOpen] = useState(false);
+
+  // Setup react-hook-form with zod validation
+  const form = useForm<z.infer<typeof CreateApiKeySchema>>({
+    resolver: zodResolver(CreateApiKeySchema),
+    defaultValues: {
+      name: "",
+      expiresIn: undefined,
+    },
+  });
 
   const handleCopyClick = async () => {
     try {
@@ -39,26 +53,14 @@ export default function CreateApiKey() {
     }
   };
 
-  const handleSubmit = (data: FormData) => {
+  // New submit handler using react-hook-form
+  const onSubmit = async (data: z.infer<typeof CreateApiKeySchema>) => {
     setInCreating(true);
     setNewApiKey(null);
-
-    const name = data.get("name") as string;
-    const expiresIn = parseInt(data.get("expiresIn") as string);
-
-    if (!name.trim()) {
-      toast({
-        description: "Please provide a name for the API key",
-        variant: "destructive",
-      });
-      setInCreating(false);
-      return;
-    }
-
-    authClient.apiKey.create(
+    await apikeyService.client.createApiKey(
       {
-        name: name.trim(),
-        expiresIn: expiresIn ? expiresIn * 60 * 60 * 24 : undefined,
+        name: data.name,
+        expiresIn: data.expiresIn,
       },
       {
         onSuccess: (context) => {
@@ -72,10 +74,10 @@ export default function CreateApiKey() {
           setInCreating(false);
         },
         onError: (error) => {
-          console.error(error);
           toast({
-            description: "Failed to create API key",
+            description: `Failed to create API key due to an error: ${error?.error?.message}`,
             variant: "destructive",
+            title: "Error",
           });
           setInCreating(false);
         },
@@ -101,30 +103,53 @@ export default function CreateApiKey() {
         </DialogHeader>
 
         {!newApiKey ? (
-          <form action={handleSubmit} className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="name">API Key Name</Label>
-              <Input id="name" name="name" placeholder="e.g., Production API Key" required />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="expiresIn">Expires In (days, optional)</Label>
-              <Input
-                id="expiresIn"
-                type="number"
-                name="expiresIn"
-                placeholder="Leave empty for no expiration"
-                min="1"
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+              <FormField
+                control={form.control}
+                name="name"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>API Key Name</FormLabel>
+                    <FormControl>
+                      <Input placeholder="e.g., Production API Key" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
               />
-            </div>
-            <div className="flex justify-end space-x-2">
-              <Button type="button" variant="outline" onClick={() => setIsOpen(false)}>
-                Cancel
-              </Button>
-              <Button type="submit" disabled={isCreating}>
-                {isCreating ? "Creating..." : "Create API Key"}
-              </Button>
-            </div>
-          </form>
+              <FormField
+                control={form.control}
+                name="expiresIn"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Expires In (days, optional)</FormLabel>
+                    <FormControl>
+                      <Input
+                        type="number"
+                        placeholder="Leave empty for no expiration"
+                        min="1"
+                        value={field.value === undefined ? "" : field.value}
+                        onChange={(e) => {
+                          const val = e.target.value;
+                          field.onChange(val === "" ? undefined : Number(val));
+                        }}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <div className="flex justify-end space-x-2">
+                <Button type="button" variant="outline" onClick={() => setIsOpen(false)}>
+                  Cancel
+                </Button>
+                <Button type="submit" disabled={isCreating}>
+                  {isCreating ? "Creating..." : "Create API Key"}
+                </Button>
+              </div>
+            </form>
+          </Form>
         ) : (
           <div className="space-y-4">
             <div className="space-y-2">

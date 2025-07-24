@@ -1,7 +1,7 @@
 "use client";
 
 import { useToast } from "@/components/ui/use-toast";
-import { authClient } from "@/lib/auth-client";
+import apikeyService from "@/domain/apikey/apikey-service";
 import { Apikey } from "@prisma/client";
 import { CalendarIcon, EyeIcon, EyeOffIcon, TrashIcon } from "lucide-react";
 import { useRouter } from "next/navigation";
@@ -11,36 +11,31 @@ import { Button } from "../ui/button";
 import { Card, CardContent } from "../ui/card";
 import { Label } from "../ui/label";
 
-export function ApiKeyCard({ apiKey }: { apiKey: Apikey }) {
+export function ApiKeyCard({ apiKey }: { apiKey: Omit<Apikey, "key"> }) {
   const { toast } = useToast();
   const router = useRouter();
   const [showKey, setShowKey] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
 
-  const handleDelete = () => {
+  const handleDelete = async () => {
     setIsDeleting(true);
-    authClient.apiKey.delete(
-      {
-        keyId: apiKey.id,
+    await apikeyService.client.deleteApiKey(apiKey.id, {
+      onSuccess: () => {
+        toast({
+          description: `API key "${apiKey.name}" has been deleted.`,
+          duration: 3000,
+        });
+        router.refresh();
       },
-      {
-        onSuccess: () => {
-          toast({
-            description: `API key "${apiKey.name}" has been deleted.`,
-            duration: 3000,
-          });
-          router.refresh();
-        },
-        onError: (error) => {
-          console.error(error);
-          toast({
-            description: "Failed to delete API key",
-            variant: "destructive",
-          });
-          setIsDeleting(false);
-        },
+      onError: (error) => {
+        console.error(error);
+        toast({
+          description: "Failed to delete API key",
+          variant: "destructive",
+        });
+        setIsDeleting(false);
       },
-    );
+    });
   };
 
   const isExpired = apiKey.expiresAt && new Date() > apiKey.expiresAt;
