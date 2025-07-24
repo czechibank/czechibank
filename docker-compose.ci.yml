@@ -14,18 +14,19 @@ services:
       interval: 5s
       timeout: 5s
       retries: 10
+    volumes:
+      - czechibank-db-data:/var/lib/postgresql/data
 
   prisma-migrate:
-    image: node:lts-alpine3.17
-    working_dir: /usr/src/app
-    volumes:
-      - .:/usr/src/app
-    command: npx prisma migrate deploy
+    build:
+      context: .
+      dockerfile: Dockerfile.migration
     environment:
       - DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@czechibankDb:5432/${POSTGRES_DB}
     depends_on:
       czechibankDb:
         condition: service_healthy
+    restart: "no"
 
   # Next.js Application
   web:
@@ -34,10 +35,7 @@ services:
       context: .
       dockerfile: Dockerfile
     depends_on:
-      prisma-migrate:
-        condition: service_completed_successfully
-    ports:
-      - "3000:3000"
+      - prisma-migrate
     environment:
       - DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@czechibankDb:5432/${POSTGRES_DB}
       - NODE_ENV=production
@@ -45,3 +43,6 @@ services:
       - PRISMA_CLI_BINARY_TARGETS=linux-musl-arm64-openssl-3.0.x
       - DISCORD_WEBHOOK_URL=${DISCORD_WEBHOOK_URL}
     restart: "no"
+
+volumes:
+  czechibank-db-data:
