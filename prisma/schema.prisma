@@ -1,47 +1,32 @@
+generator client {
+  provider      = "prisma-client-js"
+  output        = "../node_modules/.prisma/client"
+  binaryTargets = ["native", "linux-musl-arm64-openssl-3.0.x", "linux-musl"]
+}
+
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
-generator client {
-  provider      = "prisma-client-js"
-  binaryTargets = ["native", "linux-musl-arm64-openssl-3.0.x", "linux-musl"]
-  output        = "../node_modules/.prisma/client"
-}
-
-enum Sex {
-  MALE
-  FEMALE
-}
-
 model User {
-  id            String   @id
+  id            String        @id
   name          String
-  email         String
+  email         String        @unique
   emailVerified Boolean
   image         String?
   createdAt     DateTime
   updatedAt     DateTime
+  banExpires    DateTime?
+  banReason     String?
+  banned        Boolean?
+  role          String?
+  bankAccounts  BankAccount[]
+  accounts      Account[]
+  apikeys       Apikey[]
+  sessions      Session[]
 
-  sessions     Session[]
-  accounts     Account[]
-  bankAccounts BankAccount[]
-
-  role       String?
-  banned     Boolean?
-  banReason  String?
-  banExpires DateTime?
-
-  apikeys Apikey[]
-
-  @@unique([email])
   @@map("user")
-}
-
-enum Currency {
-  CZECHITOKEN
-  CZK
-  USD
 }
 
 model BankAccount {
@@ -49,39 +34,37 @@ model BankAccount {
   number          String        @unique
   name            String
   currency        Currency      @default(CZECHITOKEN)
-  user            User          @relation(fields: [userId], references: [id])
   userId          String
-  // Remove or rename the duplicate Transaction field
-  inTransactions  Transaction[] @relation(name: "ToAccount")
-  outTransactions Transaction[] @relation(name: "FromAccount")
   balance         Float         @default(100000)
+  user            User          @relation(fields: [userId], references: [id])
+  outTransactions Transaction[] @relation("FromAccount")
+  inTransactions  Transaction[] @relation("ToAccount")
 }
 
 model Transaction {
   id         String      @id @default(cuid())
   amount     Float
   currency   Currency
-  from       BankAccount @relation(name: "FromAccount", fields: [fromBankId], references: [id])
   fromBankId String
-  to         BankAccount @relation(name: "ToAccount", fields: [toBankId], references: [id])
   toBankId   String
   createdAt  DateTime    @default(now())
   updatedAt  DateTime    @updatedAt
+  from       BankAccount @relation("FromAccount", fields: [fromBankId], references: [id])
+  to         BankAccount @relation("ToAccount", fields: [toBankId], references: [id])
 }
 
 model Session {
   id             String   @id
   expiresAt      DateTime
-  token          String
+  token          String   @unique
   createdAt      DateTime
   updatedAt      DateTime
   ipAddress      String?
   userAgent      String?
   userId         String
-  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   impersonatedBy String?
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  @@unique([token])
   @@map("session")
 }
 
@@ -90,7 +73,6 @@ model Account {
   accountId             String
   providerId            String
   userId                String
-  user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   accessToken           String?
   refreshToken          String?
   idToken               String?
@@ -100,6 +82,7 @@ model Account {
   password              String?
   createdAt             DateTime
   updatedAt             DateTime
+  user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("account")
 }
@@ -122,7 +105,6 @@ model Apikey {
   prefix              String?
   key                 String
   userId              String
-  user                User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   refillInterval      Int?
   refillAmount        Int?
   lastRefillAt        DateTime?
@@ -138,6 +120,18 @@ model Apikey {
   updatedAt           DateTime
   permissions         String?
   metadata            String?
+  user                User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("apikey")
+}
+
+enum Sex {
+  MALE
+  FEMALE
+}
+
+enum Currency {
+  CZECHITOKEN
+  CZK
+  USD
 }
