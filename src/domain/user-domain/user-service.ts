@@ -1,10 +1,17 @@
 import { authClient } from "@/lib/auth-client";
 import { Role } from "@/lib/permissions";
 import { ApiErrorCode, errorResponse, successResponse } from "@/lib/response";
+import { User } from "@prisma/client";
 import { ErrorContext } from "better-auth/react";
 import { auth } from "../../../auth";
 import * as userRepository from "./user-repository";
 import type { CreateUserSchema } from "./user-schema";
+
+type onSuccessOnErrorType = {
+  onSuccess: () => void;
+  onError: (error?: ErrorContext) => void;
+};
+
 /**
  * Service layer for user domain. Orchestrates between better-auth, repositories, and other services.
  */
@@ -16,10 +23,7 @@ const userService = {
      * @param onSuccess - The function to call when the user is signed in.
      * @param onError - The function to call when the user is not signed in.
      */
-    async signIn(
-      user: { email: string; password: string },
-      { onSuccess, onError }: { onSuccess: () => void; onError: (error: ErrorContext) => void },
-    ) {
+    async signIn(user: { email: string; password: string }, { onSuccess, onError }: onSuccessOnErrorType) {
       await authClient.signIn.email(
         { email: user.email, password: user.password },
         {
@@ -37,7 +41,7 @@ const userService = {
      */
     async signUp(
       user: { email: string; password: string; name: string; image: string },
-      { onSuccess, onError }: { onSuccess: () => void; onError: (error: ErrorContext) => void },
+      { onSuccess, onError }: onSuccessOnErrorType,
     ) {
       await authClient.signUp.email(
         {
@@ -57,14 +61,11 @@ const userService = {
      * @param onSuccess - The function to call when the user is updated
      * @param onError - The function to call when the user is not updated
      */
-    async updateUser(
-      user: { image: string },
-      { onSuccess, onError }: { onSuccess: () => void; onError: (error?: ErrorContext) => void },
-    ) {
+    async updateUser(user: Pick<User, "image">, { onSuccess, onError }: onSuccessOnErrorType) {
       await authClient.updateUser({ image: user.image }, { onSuccess, onError });
     },
 
-    async signOut({ onSuccess, onError }: { onSuccess: () => void; onError: (error?: ErrorContext) => void }) {
+    async signOut({ onSuccess, onError }: onSuccessOnErrorType) {
       await authClient.signOut({
         fetchOptions: {
           onSuccess,
@@ -98,7 +99,7 @@ const userService = {
           email: user.email,
           password: user.password,
           name: user.name,
-          role,
+          role: "admin" as Role,
         },
       });
     },

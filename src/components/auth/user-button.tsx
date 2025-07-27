@@ -46,10 +46,14 @@ export default function UserButton() {
           <Link href="/profile" className="w-full">
             <Button className="w-full">Profile</Button>
           </Link>
-          <Link href="/profile" className="w-full">
-            <Button className="w-full">Administration</Button>
-          </Link>
         </DropdownMenuItem>
+        {session.user.role === "admin" ? (
+          <DropdownMenuItem>
+            <Link href="/administration" className="w-full">
+              <Button className="w-full">Administration</Button>
+            </Link>
+          </DropdownMenuItem>
+        ) : null}
         <DropdownMenuItem>
           <SignOut className="w-full" />
         </DropdownMenuItem>
