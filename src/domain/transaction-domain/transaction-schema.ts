@@ -17,17 +17,32 @@ export const AmountSchema = z
   })
   .transform((val) => roundAmount(val, 3));
 
+// AmountSchema with balance validation for frontend forms
+export const AmountWithBalanceSchema = (balance: number) =>
+  z.preprocess(
+    (val) => (typeof val === "string" ? Number(val.replace(",", ".")) : val),
+    AmountSchema.refine((val: number) => val <= balance, {
+      message: `Amount must be less than or equal to your balance (${balance})`,
+    }),
+  );
+
+// Reusable bank number validation schema
+export const BankNumberSchema = z
+  .string()
+  .endsWith("5555")
+  .length(17, "Bank number must be exactly in format 1111222233334444/5555");
+
 // Schema for the actual transaction creation logic in the service
 export const CreateTransactionNumberToNumberSchema = z.object({
   amount: AmountSchema,
   currency: z.custom<Currency>(),
-  toBankNumber: z.string().endsWith("5555").length(17, "Bank number must be exactly in format 1111222233334444/5555"),
+  toBankNumber: BankNumberSchema,
   userId: z.string(),
-  fromBankNumber: z.string(),
+  fromBankNumber: BankNumberSchema,
 });
 
 // Schema specifically for validating the incoming API request body
 export const ApiTransactionCreateSchema = z.object({
   amount: AmountSchema,
-  toBankNumber: z.string().endsWith("5555").length(17, "Bank number must be exactly in format 1111222233334444/5555"),
+  toBankNumber: BankNumberSchema,
 });

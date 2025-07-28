@@ -2,7 +2,7 @@
 
 import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { sendMoneyToBankNumberAction } from "@/domain/transaction-domain/transaction-action";
-import { AmountSchema } from "@/domain/transaction-domain/transaction-schema";
+import { AmountWithBalanceSchema, BankNumberSchema } from "@/domain/transaction-domain/transaction-schema";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Prisma } from "@prisma/client";
 import { useForm } from "react-hook-form";
@@ -41,13 +41,8 @@ export function TransactionTranfer({
     });
 
   const transferScheme = z.object({
-    toBankNumber: z.string().endsWith("5555").length(17, "Bank number must be exactly in format 1111222233334444/5555"),
-    amount: z.preprocess(
-      (val) => (typeof val === "string" ? Number(val.replace(",", ".")) : val),
-      AmountSchema.refine((val: number) => val <= balance, {
-        message: `Amount must be less than or equal to your balance (${balance})`,
-      }),
-    ),
+    toBankNumber: BankNumberSchema,
+    amount: AmountWithBalanceSchema(balance),
   });
 
   type TransferFormValues = {
