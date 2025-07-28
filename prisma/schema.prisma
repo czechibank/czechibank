@@ -125,11 +125,6 @@ model Apikey {
   @@map("apikey")
 }
 
-enum Sex {
-  MALE
-  FEMALE
-}
-
 enum Currency {
   CZECHITOKEN
   CZK

@@ -10,7 +10,6 @@ const usersToSeed = [
     email: "zachranNas+praha@pejsekAKocicka.cz",
     name: "[OSTRAVA!!!] Pejsek a Kočicka 🐶&🐱",
     password: "PejsekAKocicka123",
-    sex: "MALE",
     avatarConfig:
       '{"backgroundColor":["696AC9"],"eyebrows":["variant12"],"eyebrowsColor":["000000"],"eyes":["variant01"],"eyesColor":["000000"],"freckles":["variant01"],"frecklesColor":["000000"],"frecklesProbability":[null],"glasses":["variant03"],"glassesColor":["000000"],"glassesProbability":[null],"mouth":["happy05"],"mouthColor":["000000"],"nose":["variant06"],"noseColor":["000000"]}',
     bankAccountNumber: "555555555555/5555",
@@ -21,7 +20,6 @@ const usersToSeed = [
     email: "zachranNas+brno@pejsekAKocicka.cz",
     name: "[BRNO] Pejsek a Kočička 🐶&🐱",
     password: "PejsekAKocicka123",
-    sex: "MALE",
     avatarConfig:
       '{"backgroundColor":["0DC681"],"eyebrows":["variant12"],"eyebrowsColor":["000000"],"eyes":["variant01"],"eyesColor":["000000"],"freckles":["variant01"],"frecklesColor":["000000"],"frecklesProbability":[null],"glasses":["variant03"],"glassesColor":["000000"],"glassesProbability":[null],"mouth":["happy05"],"mouthColor":["000000"],"nose":["variant06"],"noseColor":["000000"]}',
     bankAccountNumber: "444444444444/5555",
@@ -33,7 +31,6 @@ const usersToSeed = [
     email: "vojta@czechibank.ostrava.digital",
     name: "Vojta 🦊 🎉 Cerveny",
     password: "hello123456",
-    sex: "MALE",
     avatarConfig:
       '{"backgroundColor":["ff0000"],"eyebrows":["variant11"],"eyebrowsColor":["ffffff"],"eyes":["variant01"],"eyesColor":["ffffff"],"freckles":["variant01"],"frecklesColor":["ffffff"],"frecklesProbability":[null],"glasses":["variant01"],"glassesColor":["ffffff"],"glassesProbability":[null],"mouth":["happy04"],"mouthColor":["ffffff"],"nose":["variant04"],"noseColor":["ffffff"]}',
     bankAccountNumber: "000000000001/5555",
@@ -44,7 +41,6 @@ const usersToSeed = [
     email: "simona@czechibank.ostrava.digital",
     name: "Simona Humpolová",
     password: "hello123456",
-    sex: "FEMALE",
     avatarConfig:
       '{"backgroundColor":["C4DD68"],"eyebrows":["variant12"],"eyebrowsColor":["000000"],"eyes":["variant01"],"eyesColor":["000000"],"freckles":["variant01"],"frecklesColor":["000000"],"frecklesProbability":[null],"glasses":["variant03"],"glassesColor":["000000"],"glassesProbability":[null],"mouth":["happy05"],"mouthColor":["000000"],"nose":["variant06"],"noseColor":["000000"]}',
     bankAccountNumber: "000000000002/5555",
@@ -55,7 +51,6 @@ const usersToSeed = [
     email: "vitalii@czechibank.ostrava.digital",
     name: "Vitalii Postolov",
     password: "hello123456",
-    sex: "MALE",
     avatarConfig:
       '{"backgroundColor":["ffe900"],"eyebrows":["variant12"],"eyebrowsColor":["000000"],"eyes":["variant01"],"eyesColor":["000000"],"freckles":["variant01"],"frecklesColor":["000000"],"frecklesProbability":[null],"glasses":["variant03"],"glassesColor":["000000"],"glassesProbability":[null],"mouth":["happy05"],"mouthColor":["000000"],"nose":["variant06"],"noseColor":["000000"]}',
     bankAccountNumber: "000000000003/5555",
@@ -66,7 +61,6 @@ const usersToSeed = [
     email: "michal@czechibank.ostrava.digital",
     name: "Michal F.",
     password: "hello123456",
-    sex: "MALE",
     avatarConfig:
       '{"backgroundColor":["4699CD"],"eyebrows":["variant12"],"eyebrowsColor":["000000"],"eyes":["variant01"],"eyesColor":["000000"],"freckles":["variant01"],"frecklesColor":["000000"],"frecklesProbability":[null],"glasses":["variant03"],"glassesColor":["000000"],"glassesProbability":[null],"mouth":["happy05"],"mouthColor":["000000"],"nose":["variant06"],"noseColor":["000000"]}',
     bankAccountNumber: "000000000004/5555",

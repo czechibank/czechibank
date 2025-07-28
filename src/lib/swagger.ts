@@ -103,12 +103,6 @@ All responses follow a consistent format:
               example: "securepassword123",
               description: `User's password (min ${MIN_PASSWORD_LENGTH} characters)`,
             },
-            sex: {
-              type: "string",
-              enum: ["MALE", "FEMALE"],
-              example: "MALE",
-              description: "User's sex",
-            },
           },
           required: ["name", "email", "password"],
         },

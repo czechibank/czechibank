@@ -125,28 +125,6 @@ export function RegisterForm() {
             </FormItem>
           )}
         />
-        {/* TODO: @vojtech-cerveny We removed sex field for now due better-auth issues, but we can implement it later */}
-        {/* <FormField
-          control={form.control}
-          name="sex"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Gender</FormLabel>
-              <FormControl>
-                <Select onValueChange={field.onChange} defaultValue={field.value}>
-                  <SelectTrigger className="w-[180px]">
-                    <SelectValue placeholder="Select your gender" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="FEMALE">Female</SelectItem>
-                    <SelectItem value="MALE">Male</SelectItem>
-                  </SelectContent>
-                </Select>
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        /> */}
         <Button type="submit">Register</Button>
         {serverResponse && !serverResponse.success && (
           <Alert variant="destructive">
