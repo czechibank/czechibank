@@ -1,7 +1,7 @@
 import { z } from "zod";
 
 const envSchema = z.object({
-  DISCORD_WEBHOOK_URL: z.string(),
+  DISCORD_WEBHOOK_URL: z.string().url().optional(),
 });
 
 const env = envSchema.safeParse(process.env);
