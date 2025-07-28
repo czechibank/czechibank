@@ -58,7 +58,7 @@ export async function regenerateAvatarConfig(userId: string, avatarConfig: strin
       id: userId,
     },
     data: {
-      avatarConfig: JSON.stringify(avatarConfig),
+      avatarConfig: avatarConfig,
     },
   });
   if ("error" in user) {
