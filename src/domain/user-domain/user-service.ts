@@ -9,7 +9,7 @@ import type { CreateUserSchema } from "./user-schema";
 
 type onSuccessOnErrorType = {
   onSuccess: () => void;
-  onError: (error?: ErrorContext) => void;
+  onError: (error: ErrorContext) => void;
 };
 
 /**
