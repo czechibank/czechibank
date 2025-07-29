@@ -53,6 +53,7 @@ export default function ProfileClientPage({
             duration: 2000,
           });
           router.refresh();
+          setIsUpdatingAvatar(false);
         },
         onError: (error) => {
           console.error("Failed to update avatar:", error);
@@ -60,6 +61,7 @@ export default function ProfileClientPage({
             description: "Failed to update avatar",
             variant: "destructive",
           });
+          setIsUpdatingAvatar(false);
         },
       },
     );
