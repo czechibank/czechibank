@@ -2,11 +2,6 @@
 const nextConfig = {
   output: "standalone",
 
-  // Inject SOURCE_COMMIT from Coolify as a public environment variable
-  env: {
-    NEXT_PUBLIC_COMMIT_HASH: process.env.SOURCE_COMMIT,
-  },
-
   // distDir: "build",
   async headers() {
     return [
