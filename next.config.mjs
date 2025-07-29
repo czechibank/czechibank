@@ -1,12 +1,10 @@
-import { execSync } from "child_process";
-
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   output: "standalone",
 
-  // Automatically inject the latest Git commit hash as an env variable
+  // Inject SOURCE_COMMIT from Coolify as a public environment variable
   env: {
-    NEXT_PUBLIC_COMMIT_HASH: execSync("git rev-parse --short HEAD").toString().trim(),
+    NEXT_PUBLIC_COMMIT_HASH: process.env.SOURCE_COMMIT,
   },
 
   // distDir: "build",
