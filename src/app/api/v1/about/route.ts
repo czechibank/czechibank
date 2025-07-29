@@ -30,9 +30,11 @@ import { DELETE, HEAD, OPTIONS, PATCH, POST, PUT } from "../routes";
  *                     name:
  *                       type: string
  *                       description: API name
+ *                       example: czechibank
  *                     version:
  *                       type: string
- *                       description: API version
+ *                       description: API version and short commit hash
+ *                       example: 0.1.4 (abc1234)
  */
 export async function GET(request: Request) {
   // Use shortened commit hash from Coolify (SOURCE_COMMIT), fallback to Git when running locally, then "unknown"
