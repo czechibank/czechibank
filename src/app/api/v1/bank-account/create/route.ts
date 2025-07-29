@@ -1,8 +1,10 @@
 import { checkUserAuthOrThrowError } from "@/app/api/v1/server-actions";
 import { BankAccountSchema } from "@/domain/bankAccount-domain/ba-schema";
 import bankAccountService from "@/domain/bankAccount-domain/ba-service";
+import { withMissionChecking } from "@/lib/mission-middleware";
 import { ApiErrorCode, errorResponse, successResponse } from "@/lib/response";
-import { ApiError, handleErrors } from "../../routes";
+import { NextRequest, NextResponse } from "next/server";
+import { ApiError } from "../../routes";
 /**
  * @swagger
  * /bank-account/create:
@@ -46,17 +48,17 @@ import { ApiError, handleErrors } from "../../routes";
  *             schema:
  *               $ref: '#/components/schemas/Error'
  */
-export async function POST(request: Request) {
+async function POSTHandler(request: NextRequest) {
   try {
     const user = await checkUserAuthOrThrowError(request);
     if ("error" in user) {
-      return Response.json(user, { status: 401 });
+      return NextResponse.json(user, { status: 401 });
     }
     const body = await request.json();
     const parsedBody = BankAccountSchema.safeParse(body);
 
     if (!parsedBody.success) {
-      return Response.json(errorResponse(parsedBody.error.message, ApiErrorCode.VALIDATION_ERROR));
+      return NextResponse.json(errorResponse(parsedBody.error.message, ApiErrorCode.VALIDATION_ERROR));
     }
 
     const result = await bankAccountService.createBankAccount({
@@ -65,16 +67,20 @@ export async function POST(request: Request) {
       name: parsedBody.data.name || "New Bank Account",
     });
 
-    return Response.json(successResponse("Bank account created successfully", { bankAccount: result }), {
+    return NextResponse.json(successResponse("Bank account created successfully", { bankAccount: result }), {
       status: 201,
     });
   } catch (error) {
     if (error instanceof ApiError) {
-      return handleErrors(error);
+      return NextResponse.json(errorResponse(error.message, error.code, error.details), { status: error.statusCode });
     } else {
-      throw new ApiError("Internal Server Error", 500, ApiErrorCode.INTERNAL_ERROR, [
-        { code: ApiErrorCode.INTERNAL_ERROR, message: error instanceof Error ? error.message : "Unknown error" },
-      ]);
+      return NextResponse.json(errorResponse("Internal Server Error", ApiErrorCode.INTERNAL_ERROR), { status: 500 });
     }
   }
 }
+
+// Export the wrapped handler with mission checking
+export const POST = withMissionChecking(POSTHandler, {
+  logResults: true,
+  includeInResponse: true,
+});

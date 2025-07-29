@@ -2,6 +2,7 @@ import { checkUserAuthOrThrowError } from "@/app/api/v1/server-actions";
 import bankAccountService from "@/domain/bankAccount-domain/ba-service";
 import transactionService from "@/domain/transaction-domain/transaction-service";
 import { ApiTransactionCreateSchema } from "@/domain/transaction-domain/transation-schema";
+import { withMissionChecking } from "@/lib/mission-middleware";
 import { ApiErrorCode, errorResponse, validateEventHandler } from "@/lib/response";
 import { NextRequest, NextResponse } from "next/server";
 /**
@@ -53,7 +54,7 @@ import { NextRequest, NextResponse } from "next/server";
  *             schema:
  *               $ref: '#/components/schemas/Error'
  */
-export async function POST(request: NextRequest) {
+async function POSTHandler(request: NextRequest) {
   try {
     const user = await checkUserAuthOrThrowError(request);
     if ("error" in user) {
@@ -106,3 +107,9 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(errorResponse("Internal server error", "500"), { status: 500 });
   }
 }
+
+// Export the wrapped handler with mission checking
+export const POST = withMissionChecking(POSTHandler, {
+  logResults: true,
+  includeInResponse: true,
+});

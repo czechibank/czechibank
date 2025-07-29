@@ -20,10 +20,13 @@ model User {
   banReason     String?
   banned        Boolean?
   role          String?
+  superTokens   Int           @default(0)
   bankAccounts  BankAccount[]
   accounts      Account[]
   apikeys       Apikey[]
   sessions      Session[]
+  missionAchievements UserMissionAchievement[]
+  userRewards   UserReward[]
 
   @@map("user")
 }
@@ -122,6 +125,99 @@ model Apikey {
   user                User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("apikey")
+}
+
+// API Drop Missions Models
+
+model Mission {
+  id          String   @id @default(cuid())
+  name        String
+  description String
+  type        String   // "payload_validation", "rate_limit", "transaction_count", etc.
+  status      String   @default("active") // "active", "inactive"
+  
+  // API endpoint this mission targets
+  endpoint    String   // e.g., "/api/v1/transactions/create"
+  method      String   // "GET", "POST", "PUT", "DELETE"
+  
+  // Conditions
+  conditions  Json     // { 
+                       //   type: "payload_validation",
+                       //   requiredFields: ["amount", "toBankNumber"],
+                       //   exactValues: { amount: 222 },
+                       //   regexPatterns: { vaultName: "Emergency.*" }
+                       // }
+  
+  // Timing (optional)
+  timeWindow  Json?    // { startHour: 14, endHour: 14.5, daysOfWeek: [1,2,3,4,5] }
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  // Relations
+  rewards     MissionReward[]
+  achievements UserMissionAchievement[]
+  
+  @@map("mission")
+}
+
+model Reward {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  description String
+  superTokens Int      @default(0)
+  badgeName   String?
+  badgeIcon   String?
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  // Relations
+  missions    MissionReward[]
+  userRewards UserReward[]
+  
+  @@map("reward")
+}
+
+model MissionReward {
+  id        String   @id @default(cuid())
+  missionId String
+  rewardId  String
+  
+  // Relations
+  mission   Mission  @relation(fields: [missionId], references: [id], onDelete: Cascade)
+  reward    Reward   @relation(fields: [rewardId], references: [id])
+  
+  @@unique([missionId, rewardId])
+  @@map("mission_reward")
+}
+
+model UserMissionAchievement {
+  id        String   @id @default(cuid())
+  userId    String
+  missionId String
+  completedAt DateTime @default(now())
+  payload   Json?    // Store the actual API call payload that triggered completion
+  
+  // Relations
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  mission   Mission  @relation(fields: [missionId], references: [id], onDelete: Cascade)
+  
+  @@unique([userId, missionId])
+  @@map("user_mission_achievement")
+}
+
+model UserReward {
+  id        String   @id @default(cuid())
+  userId    String
+  rewardId  String
+  awardedAt DateTime @default(now())
+  
+  // Relations
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  reward    Reward   @relation(fields: [rewardId], references: [id])
+  
+  @@map("user_reward")
 }
 
 enum Currency {
