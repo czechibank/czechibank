@@ -1,3 +1,4 @@
+import { CreateDialog } from "@/components/bank-account/create-dialog";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { getBankAccountsByUserId } from "@/domain/bankAccount-domain/ba-repository";
 import { getSession } from "@/lib/auth";
@@ -23,6 +24,7 @@ export default async function Home() {
             <BankAccountCard bankAccount={ba} />
           </Link>
         ))}
+        <CreateDialog />
       </div>
     </main>
   );
