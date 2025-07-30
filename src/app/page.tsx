@@ -18,13 +18,15 @@ export default async function Home() {
   return (
     <main className="">
       <h1 className="mb-8 mt-10 text-3xl font-extrabold"> Hello {session.user.name}!</h1>
+      <div className="mb-4 flex justify-end">
+        <CreateDialog />
+      </div>
       <div className="grid grid-cols-2 gap-4">
         {bankAccounts.items.map((ba) => (
           <Link key={ba.id} href={`/bankAccount/${ba.id}`}>
             <BankAccountCard bankAccount={ba} />
           </Link>
         ))}
-        <CreateDialog />
       </div>
     </main>
   );

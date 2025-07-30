@@ -2,12 +2,17 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Plus } from "lucide-react";
 
 export function CreateDialog() {
   return (
     <Dialog>
       <DialogTrigger asChild>
-        <Button>Create new</Button>
+        <Button className="flex items-center gap-2">
+          <Plus className="h-4 w-4" />
+          Create new
+        </Button>
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>
@@ -20,7 +25,14 @@ export function CreateDialog() {
           </div>
           <div className="space-y-2">
             <Label htmlFor="currency">Currency</Label>
-            <Input id="currency" placeholder="e.g. USD" />
+            <Select>
+              <SelectTrigger id="currency">
+                <SelectValue placeholder="Select a currency" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="CZECHITOKEN">CZECHITOKEN</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
         </div>
         <DialogFooter>
