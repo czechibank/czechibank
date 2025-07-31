@@ -1,4 +1,5 @@
 import swaggerJsdoc from "swagger-jsdoc";
+import { MIN_PASSWORD_LENGTH } from "../constants";
 
 const options: swaggerJsdoc.Options = {
   definition: {
@@ -49,12 +50,47 @@ All responses follow a consistent format:
         User: {
           type: "object",
           properties: {
-            id: { type: "string", example: "usr_123", description: "Unique user identifier" },
-            name: { type: "string", example: "Jana Nováková", description: "User's full name" },
-            email: { type: "string", example: "jana@example.com", description: "User's email address" },
-            createdAt: { type: "string", format: "date-time", description: "When the user was created" },
+            id: { type: "string", example: "bFNcCQmAYJ2u4fODHT09QgLB7vkeSfhv", description: "Unique user identifier" },
+            name: { type: "string", example: "John Doe", description: "User's full name" },
+            email: { type: "string", example: "user@example.com", description: "User's email address" },
+            emailVerified: { type: "boolean", example: false, description: "Whether the user's email is verified" },
+            image: { type: ["string", "null"], example: null, description: "URL to user's profile image or null" },
+            createdAt: {
+              type: "string",
+              format: "date-time",
+              example: "2025-07-21T12:27:03.625Z",
+              description: "When the user was created",
+            },
+            updatedAt: {
+              type: "string",
+              format: "date-time",
+              example: "2025-07-21T12:27:03.625Z",
+              description: "When the user was last updated",
+            },
+            role: {
+              type: "string",
+              enum: ["user", "admin"],
+              example: "user",
+              description: "User's role (user or admin)",
+            },
+            banned: {
+              type: ["boolean", "null"],
+              example: null,
+              description: "Whether the user is banned (null if not set)",
+            },
+            banReason: {
+              type: ["string", "null"],
+              example: null,
+              description: "Reason for ban if banned, otherwise null",
+            },
+            banExpires: {
+              type: ["string", "null"],
+              format: "date-time",
+              example: null,
+              description: "Ban expiration date if banned, otherwise null",
+            },
           },
-          required: ["id", "name", "email"],
+          required: ["id", "name", "email", "emailVerified", "createdAt", "updatedAt", "role"],
         },
         UserCreate: {
           type: "object",
@@ -65,7 +101,7 @@ All responses follow a consistent format:
               type: "string",
               format: "password",
               example: "securepassword123",
-              description: "User's password (min 8 characters)",
+              description: `User's password (min ${MIN_PASSWORD_LENGTH} characters)`,
             },
           },
           required: ["name", "email", "password"],

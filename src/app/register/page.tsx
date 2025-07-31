@@ -1,10 +1,12 @@
 import { RegisterForm } from "@/components/register/form";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { getSession } from "@/lib/auth";
+import userService from "@/domain/user-domain/user-service";
+
 import { AlertCircle } from "lucide-react";
+import { headers } from "next/headers";
 
 export default async function RegisterPage() {
-  const session = await getSession();
+  const session = await userService.server.getSession(await headers());
 
   if (session) {
     return (

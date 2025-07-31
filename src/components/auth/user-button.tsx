@@ -1,3 +1,5 @@
+"use client";
+
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -5,30 +7,32 @@ import {
   DropdownMenuLabel,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import userService from "@/domain/user-domain/user.service";
-import { getSession } from "@/lib/auth";
+import { useSession } from "@/lib/auth-client";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useEffect } from "react";
 import { Button } from "../ui/button";
 import { UserAvatar } from "../user/avatar";
-import { SignIn } from "./auth-components";
 import { SignOut } from "./sign-out";
 
-export default async function UserButton() {
-  const session = await getSession();
+export default function UserButton() {
+  const router = useRouter();
+  const { data: session, isPending } = useSession();
 
-  if (!session?.user) return <SignIn />;
-  const userResponse = await userService.getUserById(session.user.id);
+  useEffect(() => {
+    if (!isPending && !session?.user) {
+      router.push("/signin");
+    }
+  }, [isPending, session, router]);
 
-  if (!userResponse.success) {
-    return <SignIn />;
-  }
+  if (isPending) return <p className="mt-8 text-center">Loading...</p>;
+  if (!session?.user) return <Link href="/signin">Sign in</Link>;
 
-  const user = userResponse.data;
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <div className="rounded-full border-2 border-solid border-slate-500 hover:border-slate-200">
-          <UserAvatar size={8} userAvatarConfig={user!.avatarConfig} />
+          <UserAvatar image={session.user.image ?? null} size={8} />
         </div>
       </DropdownMenuTrigger>
       <DropdownMenuContent className="w-56" align="end" forceMount>
@@ -43,6 +47,13 @@ export default async function UserButton() {
             <Button className="w-full">Profile</Button>
           </Link>
         </DropdownMenuItem>
+        {session.user.role === "admin" ? (
+          <DropdownMenuItem>
+            <Link href="/administration" className="w-full">
+              <Button className="w-full">Administration</Button>
+            </Link>
+          </DropdownMenuItem>
+        ) : null}
         <DropdownMenuItem>
           <SignOut className="w-full" />
         </DropdownMenuItem>

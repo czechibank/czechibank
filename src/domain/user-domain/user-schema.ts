@@ -1,8 +1,15 @@
+import { MIN_PASSWORD_LENGTH } from "@/constants";
 import { z } from "zod";
 
-export const UserSchema = z.object({
+const UserBaseSchema = z.object({
   email: z.string().email(),
-  name: z.string().trim().min(1, "Name cannot be empty or contain only spaces"),
-  password: z.string().min(6, "Password must be at least 6 characters long"),
-  sex: z.enum(["MALE", "FEMALE"]), // Adjust based on your requirements
+  password: z.string().min(MIN_PASSWORD_LENGTH, `Password must be at least ${MIN_PASSWORD_LENGTH} characters long`),
 });
+
+export const LoginSchema = UserBaseSchema;
+
+export const UserSchema = UserBaseSchema.extend({
+  name: z.string().trim().min(1, "Name cannot be empty or contain only spaces"),
+});
+
+export type CreateUserSchema = z.infer<typeof UserSchema>;

@@ -25,7 +25,7 @@ async function setupDatabase() {
     // Optional: Run seed if it exists
     try {
       console.log("Running seed...");
-      execSync("npx prisma db seed", { stdio: "inherit" });
+      execSync("pnpm db:seed", { stdio: "inherit" });
     } catch (error) {
       console.log("No seed script found or seed failed, continuing...");
     }

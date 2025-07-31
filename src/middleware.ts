@@ -56,5 +56,5 @@ export async function middleware(request: NextRequest) {
 
 // Configure which paths the middleware should run on
 export const config = {
-  matcher: ["/api/:path*", "/api/v1/:path*"],
+  matcher: ["/api/:path*", "/api/v1/:path*", "/api/((?!auth|_next).*)"],
 };

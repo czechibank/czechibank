@@ -57,13 +57,13 @@ export async function TransactionTable({ bankAccountId }: { bankAccountId: strin
             <TableRow key={transaction.id.padStart(10)}>
               <TableCell className=" font-medium">
                 <div className="flex flex-row items-center justify-start space-x-2">
-                  <UserAvatar size={8} userAvatarConfig={transaction.from.user.avatarConfig} />
+                  <UserAvatar size={8} image={transaction.from.user.image ?? null} />
                   <span>{transaction.from.user.name}</span>
                 </div>
               </TableCell>
               <TableCell className="">
                 <div className="flex flex-row items-center justify-start space-x-2">
-                  <UserAvatar size={8} userAvatarConfig={transaction.to.user.avatarConfig} />
+                  <UserAvatar size={8} image={transaction.to.user.image ?? null} />
                   <span>{transaction.to.user.name}</span>
                 </div>
               </TableCell>
