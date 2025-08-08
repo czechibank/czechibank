@@ -7,6 +7,7 @@ import { Inter } from "next/font/google";
 import Image from "next/image";
 import Link from "next/link";
 import Script from "next/script";
+import { Suspense } from "react";
 import "./globals.css";
 const inter = Inter({ subsets: ["latin"] });
 
@@ -15,7 +16,7 @@ export const metadata: Metadata = {
   description: "Best bank for YOU!",
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
@@ -28,12 +29,14 @@ export default function RootLayout({
           <ThemeProvider attribute="class" defaultTheme="system">
             <div className="flex flex-row items-center justify-between">
               <Link href={"/"} className="flex flex-row items-center space-x-2">
-                <Image src={`/logo.png`} alt={"Logo"} width="30" height="30" />
+                <Image src={`/logo.svg`} alt={"Logo"} width="40" height="40" />
                 <span className="text-2xl font-bold">CzechiBank</span>
               </Link>
               <div className="flex flex-1 items-center justify-end space-x-2 p-2">
                 <ModeToggle />
-                <UserButton />
+                <Suspense fallback={<div>Loading...</div>}>
+                  <UserButton />
+                </Suspense>
               </div>
             </div>
             <div className="mx-auto max-w-3xl">{children}</div>

@@ -1,13 +1,15 @@
 import { CreateDialog } from "@/components/bank-account/create-dialog";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { getBankAccountsByUserId } from "@/domain/bankAccount-domain/ba-repository";
-import { getSession } from "@/lib/auth";
+import userService from "@/domain/user-domain/user-service";
 import { BankAccount } from "@prisma/client";
+import { headers } from "next/headers";
 import Image from "next/image";
 import Link from "next/link";
 import { redirect } from "next/navigation";
+
 export default async function Home() {
-  const session = await getSession();
+  const session = await userService.server.getSession(await headers());
 
   if (!session) {
     redirect("/signin");

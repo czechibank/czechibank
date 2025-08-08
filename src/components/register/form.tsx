@@ -6,16 +6,19 @@ import { z } from "zod";
 
 import { Button } from "@/components/ui/button";
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { AlertCircle } from "lucide-react";
 
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Input } from "@/components/ui/input";
+import { MIN_PASSWORD_LENGTH } from "@/constants";
+
 import { UserSchema } from "@/domain/user-domain/user-schema";
-import userService from "@/domain/user-domain/user.service";
+import userService from "@/domain/user-domain/user-service";
 import { Response } from "@/lib/response";
+import { generateRandomAvatarConfig } from "@/lib/utils";
 import { redirect } from "next/navigation";
 import { useState } from "react";
+import { toast } from "../ui/use-toast";
 
 export function RegisterForm() {
   const [serverResponse, setServerResponse] = useState<Response<any> | null>(null);
@@ -31,17 +34,37 @@ export function RegisterForm() {
     resolver: zodResolver(ExtendedUserSchema),
     defaultValues: {
       name: "",
+      email: "",
+      password: "",
+      confirmPassword: "",
     },
   });
 
-  const action: () => void = form.handleSubmit(async (data) => {
-    const response = await userService.createUser(data);
-    setServerResponse(response);
-
-    if (response.success) {
-      form.reset();
-    }
-    redirect("/");
+  const action: () => void = form.handleSubmit(async (data: z.infer<typeof ExtendedUserSchema>) => {
+    await userService.client.signUp(
+      {
+        email: data.email,
+        password: data.password,
+        name: data.name,
+        image: JSON.stringify(generateRandomAvatarConfig()),
+      },
+      {
+        onSuccess: () => {
+          form.reset();
+          toast({
+            title: "Account created",
+            description: "You can create your first transaction now! 🎉",
+          });
+          redirect("/");
+        },
+        onError: (error) => {
+          toast({
+            title: "Oh snap!Error",
+            description: error.error.message,
+          });
+        },
+      },
+    );
   });
 
   return (
@@ -84,15 +107,7 @@ export function RegisterForm() {
               <FormControl>
                 <Input placeholder="" {...field} type="password" />
               </FormControl>
-              <FormDescription>
-                Your password must be at least 6 characters long.{" "}
-                <span className="font-bold text-red-600">
-                  Do not use your personal passwords - database is not encrypted. Use
-                </span>
-                <span className="ml-2 rounded-lg bg-gray-800 p-1 px-2 font-mono font-semibold text-white">
-                  Password123456
-                </span>
-              </FormDescription>
+              <FormDescription>Your password must be at least {MIN_PASSWORD_LENGTH} characters long.</FormDescription>
               <FormMessage />
             </FormItem>
           )}
@@ -105,27 +120,6 @@ export function RegisterForm() {
               <FormLabel>Confirm Password</FormLabel>
               <FormControl>
                 <Input placeholder="" {...field} type="password" />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        <FormField
-          control={form.control}
-          name="sex"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Gender</FormLabel>
-              <FormControl>
-                <Select onValueChange={field.onChange} defaultValue={field.value}>
-                  <SelectTrigger className="w-[180px]">
-                    <SelectValue placeholder="Select your gender" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="FEMALE">Female</SelectItem>
-                    <SelectItem value="MALE">Male</SelectItem>
-                  </SelectContent>
-                </Select>
               </FormControl>
               <FormMessage />
             </FormItem>

@@ -18,6 +18,7 @@ Techstack: NextJS (Typescript) + Prisma + Auth.js (email)
 
 ## Setup
 
+1. Make sure, that you have `pnpm`, not `npm`
 1. `cp .env.example .env` - and fill environment variables
 1. Run docker image with database
    - `docker compose up -d`
@@ -38,13 +39,9 @@ Prisma provides the best experience for your team to work and interact with data
 1. `npx prisma generate` - [link](https://www.prisma.io/docs/orm/prisma-client/setup-and-configuration/generating-prisma-client)
 2. `npx prisma dev` - migrate changes from `schema` to database
 
-### Auth.js
+### Better-Auth
 
-It take cares about session :) Thats all - you can add providers (Github, MS), so far it is setup with Google
-
-Check `./auth.ts` for more info or [official documentation](https://authjs.dev/getting-started/introduction)
-
-**Note:** After some time of development, it starts failing due too many clients to DB. I tried to fix it by adding prisma into singleton, but it didn't help. If you know how to resolve it, please fill the PR for it.
+<https://www.better-auth.com/>
 
 ### shadcn/ui
 
@@ -79,31 +76,7 @@ Check [NextJS app structure](https://nextjs.org/docs/getting-started/project-str
 - `app/api` is special folder for API responses
 
 Check how you can handle `notFound`, `error` and [others pages](https://nextjs.org/docs/getting-started/project-structure#app-routing-conventions) - it is super simple.
-**Hint**
 
-```jsx
+Usefull links:
 
-import { notFound } from "next/navigation";
-
-export default async function RemoteMdxPage({ params }: { params: { id: string } }) {
-  // pseudoCode - if it is not found, display notFound page
-  if(isInDatabase(params.id)){
-    return notFound();
-  }
-  return (
-    <SomeSuperComponent></SomeSuperComponent>
-  );
-}
-```
-
-```jsx
-// app/not-found.tsx
-export default function NotFound() {
-  return (
-    <main className="relative mt-16 flex w-full flex-col items-center justify-center">
-      <h1>404</h1>
-      <div>Nenalezeno</div>
-    </main>
-  );
-}
-```
+- [Better-auth + Prisma + Nextjs](https://www.prisma.io/docs/guides/betterauth-nextjs)

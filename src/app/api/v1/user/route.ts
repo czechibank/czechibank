@@ -42,8 +42,7 @@ export async function GET(request: Request) {
       return Response.json(user, { status: 401 });
     }
     // If no 'error' property, authentication was successful
-    const { password, ...userWithoutPassword } = user;
-    return Response.json(successResponse("User profile retrieved successfully", { user: userWithoutPassword }), {
+    return Response.json(successResponse("User profile retrieved successfully", user), {
       status: 200,
     });
   } catch (error) {
