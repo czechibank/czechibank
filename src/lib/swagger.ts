@@ -33,6 +33,10 @@ All responses follow a consistent format:
         description: "Local Development Server",
       },
       {
+        url: "https://develop.czechibank.ostrava.digital/api/v1",
+        description: "Development Server",
+      },
+      {
         url: "https://czechibank.ostrava.digital/api/v1",
         description: "Production Server",
       },
@@ -262,7 +266,13 @@ All responses follow a consistent format:
       },
     ],
   },
-  apis: ["./src/app/api/v1/**/*.ts", "./src/app/api/v1/**/*.tsx"],
+  apis: [
+    // Use absolute paths from project root
+    process.cwd() + "/src/app/api/v1/**/*.ts",
+    process.cwd() + "/src/app/api/v1/**/*.tsx",
+    // Also include the built files in case we're in production
+    process.cwd() + "/.next/server/app/api/v1/**/*.js",
+  ],
 };
 
 export const swaggerSpec = swaggerJsdoc(options);

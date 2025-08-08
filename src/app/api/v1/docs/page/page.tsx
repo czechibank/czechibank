@@ -92,7 +92,7 @@ const darkModeStyles = `
 
 export default function ApiDocs() {
   // Get the current URL and replace the path with the API docs endpoint
-  const apiDocsUrl = typeof window !== "undefined" ? `${window.location.origin}/api/v1/docs` : "/api/v1/docs";
+  const apiDocsUrl = "/api/v1/docs";
   const { theme } = useTheme();
   const isDarkMode = () => {
     if (theme === "dark") {
