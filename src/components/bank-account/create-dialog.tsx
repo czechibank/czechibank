@@ -25,9 +25,9 @@ export function CreateDialog() {
           </div>
           <div className="space-y-2">
             <Label htmlFor="currency">Currency</Label>
-            <Select>
+            <Select defaultValue="CZECHITOKEN">
               <SelectTrigger id="currency">
-                <SelectValue placeholder="Select a currency" />
+                <SelectValue />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="CZECHITOKEN">CZECHITOKEN</SelectItem>
