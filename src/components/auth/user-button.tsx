@@ -9,7 +9,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { useSession } from "@/lib/auth-client";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useEffect } from "react";
 import { Button } from "../ui/button";
 import { UserAvatar } from "../user/avatar";
@@ -18,8 +18,12 @@ import { SignOut } from "./sign-out";
 export default function UserButton() {
   const router = useRouter();
   const { data: session, isPending } = useSession();
+  const pathname = usePathname();
 
   useEffect(() => {
+    if (pathname.includes("/api/v1/docs")) {
+      return;
+    }
     if (!isPending && !session?.user) {
       router.push("/signin");
     }
