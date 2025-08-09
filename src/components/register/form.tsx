@@ -12,13 +12,15 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Input } from "@/components/ui/input";
 import { MIN_PASSWORD_LENGTH } from "@/constants";
 
+import { ToastAction } from "@/components/ui/toast";
 import { UserSchema } from "@/domain/user-domain/user-schema";
 import userService from "@/domain/user-domain/user-service";
 import { Response } from "@/lib/response";
 import { generateRandomAvatarConfig } from "@/lib/utils";
+import { ErrorContext } from "better-auth/react";
 import { redirect } from "next/navigation";
 import { useState } from "react";
-import { toast } from "../ui/use-toast";
+import { toast, Toast } from "../ui/use-toast";
 
 export function RegisterForm() {
   const [serverResponse, setServerResponse] = useState<Response<any> | null>(null);
@@ -57,11 +59,29 @@ export function RegisterForm() {
           });
           redirect("/");
         },
-        onError: (error) => {
-          toast({
-            title: "Oh snap!Error",
-            description: error.error.message,
-          });
+        onError: (error: ErrorContext): void => {
+          if (error.error.code === "USER_ALREADY_EXISTS") {
+            // Reset password fields if user already exists, because of the security reasons
+            form.resetField("password");
+            form.resetField("confirmPassword");
+
+            // Show toast with an option to sign in
+            toast({
+              title: "User with this e-mail already exists",
+              description: "Would you like to sign in instead?",
+              action: (
+                <ToastAction altText="Sign in" onClick={() => redirect("/signin")}>
+                  Sign in
+                </ToastAction>
+              ),
+            } satisfies Toast);
+          } else {
+            // Handle other errors
+            toast({
+              title: "Oh snap! Error",
+              description: error.error.message,
+            } satisfies Toast);
+          }
         },
       },
     );
