@@ -5,7 +5,7 @@ import { User } from "@prisma/client";
 import { ErrorContext } from "better-auth/react";
 import { auth } from "../../../auth";
 import * as userRepository from "./user-repository";
-import type { CreateUserSchema } from "./user-schema";
+import { CreateUserSchemaType, UserBaseSchemaType } from "./user-schema";
 
 type onSuccessOnErrorType = {
   onSuccess: () => void;
@@ -23,7 +23,7 @@ const userService = {
      * @param onSuccess - The function to call when the user is signed in.
      * @param onError - The function to call when the user is not signed in.
      */
-    async signIn(user: { email: string; password: string }, { onSuccess, onError }: onSuccessOnErrorType) {
+    async signIn(user: UserBaseSchemaType, { onSuccess, onError }: onSuccessOnErrorType) {
       await authClient.signIn.email(
         { email: user.email, password: user.password },
         {
@@ -39,10 +39,7 @@ const userService = {
      * @param onSuccess - The function to call when the user is signed up.
      * @param onError - The function to call when the user is not signed up.
      */
-    async signUp(
-      user: { email: string; password: string; name: string; image: string },
-      { onSuccess, onError }: onSuccessOnErrorType,
-    ) {
+    async signUp(user: CreateUserSchemaType, { onSuccess, onError }: onSuccessOnErrorType) {
       await authClient.signUp.email(
         {
           email: user.email,
@@ -93,7 +90,8 @@ const userService = {
      * @param role - The role of the user
      * @returns The user
      */
-    async createUser(user: CreateUserSchema, role: Role) {
+    // TODO - @vojtech-cerveny - do we want to use the "role" here?
+    async createUser(user: CreateUserSchemaType, role: Role) {
       return await auth.api.createUser({
         body: {
           email: user.email,

@@ -1,53 +1,49 @@
 "use client";
 
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm } from "react-hook-form";
-import { z } from "zod";
-
 import { Button } from "@/components/ui/button";
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-
 import { Input } from "@/components/ui/input";
-
-import { useToast } from "@/components/ui/use-toast";
+import { Toast, useToast } from "@/components/ui/use-toast";
 import { MIN_PASSWORD_LENGTH } from "@/constants";
-import { LoginSchema } from "@/domain/user-domain/user-schema";
+import { LoginSchema, LoginSchemaType, UserBaseSchemaType } from "@/domain/user-domain/user-schema";
 import userService from "@/domain/user-domain/user-service";
+import { zodResolver } from "@hookform/resolvers/zod";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { useForm } from "react-hook-form";
 
 export default function SignInPage() {
   const { toast } = useToast();
 
-  const form = useForm<z.infer<typeof LoginSchema>>({
+  const form = useForm<LoginSchemaType>({
     resolver: zodResolver(LoginSchema),
     defaultValues: {
       email: "",
       password: "",
-    },
+    } satisfies LoginSchemaType,
   });
+
   const router = useRouter();
-  const action: () => void = form.handleSubmit(async (data) => {
-    await userService.client.signIn(
-      { email: data.email, password: data.password },
-      {
-        onSuccess: () => {
-          toast({
-            title: "Success",
-            description: "You are signed in",
-          });
-          router.push("/");
-        },
-        onError: (error) => {
-          form.resetField("password");
-          toast({
-            title: "Error",
-            description: error?.error.message,
-            variant: "destructive",
-          });
-        },
+
+  const action: () => void = form.handleSubmit(async (data: UserBaseSchemaType): Promise<void> => {
+    await userService.client.signIn({ email: data.email, password: data.password } satisfies UserBaseSchemaType, {
+      onSuccess: () => {
+        toast({
+          title: "Success",
+          description: "You are signed in",
+        } satisfies Toast);
+        router.push("/");
       },
-    );
+      onError: (error) => {
+        form.resetField("password");
+
+        toast({
+          title: "Error",
+          description: error?.error.message,
+          variant: "destructive",
+        } satisfies Toast);
+      },
+    });
   });
 
   return (
