@@ -1,16 +1,13 @@
 import { authClient } from "@/lib/auth-client";
 import { Role } from "@/lib/permissions";
-import { ApiErrorCode, errorResponse, successResponse } from "@/lib/response";
+import { ApiErrorCode, ErrorResponse, errorResponse, SuccessResponse, successResponse } from "@/lib/response";
 import { User } from "@prisma/client";
-import { ErrorContext } from "better-auth/react";
 import { auth } from "../../../auth";
 import * as userRepository from "./user-repository";
 import type { CreateUserSchema } from "./user-schema";
 
-type onSuccessOnErrorType = {
-  onSuccess: () => void;
-  onError: (error: ErrorContext) => void;
-};
+import { ResponseSuccessErrorType } from "@/domain/shared-domain-types";
+import { UserWithRole } from "better-auth/plugins";
 
 /**
  * Service layer for user domain. Orchestrates between better-auth, repositories, and other services.
@@ -23,7 +20,10 @@ const userService = {
      * @param onSuccess - The function to call when the user is signed in.
      * @param onError - The function to call when the user is not signed in.
      */
-    async signIn(user: { email: string; password: string }, { onSuccess, onError }: onSuccessOnErrorType) {
+    async signIn(
+      user: { email: string; password: string },
+      { onSuccess, onError }: ResponseSuccessErrorType,
+    ): Promise<void> {
       await authClient.signIn.email(
         { email: user.email, password: user.password },
         {
@@ -41,8 +41,8 @@ const userService = {
      */
     async signUp(
       user: { email: string; password: string; name: string; image: string },
-      { onSuccess, onError }: onSuccessOnErrorType,
-    ) {
+      { onSuccess, onError }: ResponseSuccessErrorType,
+    ): Promise<void> {
       await authClient.signUp.email(
         {
           email: user.email,
@@ -61,11 +61,11 @@ const userService = {
      * @param onSuccess - The function to call when the user is updated
      * @param onError - The function to call when the user is not updated
      */
-    async updateUser(user: Pick<User, "image">, { onSuccess, onError }: onSuccessOnErrorType) {
+    async updateUser(user: Pick<User, "image">, { onSuccess, onError }: ResponseSuccessErrorType): Promise<void> {
       await authClient.updateUser({ image: user.image }, { onSuccess, onError });
     },
 
-    async signOut({ onSuccess, onError }: onSuccessOnErrorType) {
+    async signOut({ onSuccess, onError }: ResponseSuccessErrorType): Promise<void> {
       await authClient.signOut({
         fetchOptions: {
           onSuccess,
@@ -93,7 +93,7 @@ const userService = {
      * @param role - The role of the user
      * @returns The user
      */
-    async createUser(user: CreateUserSchema, role: Role) {
+    async createUser(user: CreateUserSchema, role: Role): Promise<{ user: UserWithRole }> {
       return await auth.api.createUser({
         body: {
           email: user.email,
@@ -108,7 +108,7 @@ const userService = {
      * Get all users from the DB with their bank accounts.
      * @returns The users with their bank accounts
      */
-    async getAllUsers() {
+    async getAllUsers(): Promise<SuccessResponse<any> | ErrorResponse> {
       try {
         const result = await userRepository.getAllUsers();
         return successResponse("Users found", result);

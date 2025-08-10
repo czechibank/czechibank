@@ -1,17 +1,17 @@
-import { FeatureType } from "@/app/administration/features.schema";
+import { FeatureType } from "@/domain/features-domain/features.schema";
 import { Role } from "@/lib/permissions";
 import { PrismaClient } from "@prisma/client";
 import { auth } from "../auth";
-import { adminUserToSeed } from "./seed-users";
 
 const prisma = new PrismaClient();
 
-export const featuresToSeed: FeatureType[] = [
+export const featuresToSeed: Omit<FeatureType, "id">[] = [
   {
     key: "SEND_MONEY_WITHOUT_ACCOUNT_BALANCE",
     name: "Allow sending with insufficient balance",
     description: "User can send money even when the account balance is insufficient.",
     toggle: false,
+    defaultToggle: false,
     category: ["BUG", "BANK_ACCOUNT"],
   },
   {
@@ -19,6 +19,7 @@ export const featuresToSeed: FeatureType[] = [
     name: "GIFs in transactions",
     description: "Enable sending GIFs along with money transfers.",
     toggle: true,
+    defaultToggle: true,
     category: ["FEATURE", "UI"],
   },
   {
@@ -26,51 +27,70 @@ export const featuresToSeed: FeatureType[] = [
     name: "Incorrect balance display",
     description: "Show an incorrect account balance (simulate calculation bug).",
     toggle: false,
+    defaultToggle: false,
     category: ["BUG", "UI", "BANK_ACCOUNT"],
   },
 ];
 
-export async function seedFeatures() {
-  try {
-    const baseAdminUserToSeed = adminUserToSeed;
-    // get the admin user created in the seed-users script
-    let adminUser = await prisma.user.findFirst({
+export async function seedAdminUser() {
+  const baseAdminUserToSeed = {
+    email: "app_admin@email.com",
+    name: "App Admin",
+    password: "app_admin",
+    avatarConfig:
+      '{"backgroundColor":["C4DD68"],"eyebrows":["variant12"], eyebrowsColor":["000000"],"eyes":["variant01"],"eyesColor":["000000"],"freckles":["variant01"],"frecklesColor":["000000"],"frecklesProbability":[null],"glasses":["variant03"],"glassesColor":["000000"],"glassesProbability":[null],"mouth":["happy05"],"mouthColor":["000000"],"nose":["variant06"],"noseColor":["000000"]}',
+    bankAccountNumber: "000000000000/5555",
+    apiKey: "app_admin_key",
+    role: "admin",
+  };
+
+  // get the admin user created in the seed-users script
+  let adminUser = await prisma.user.findFirst({
+    where: {
+      email: baseAdminUserToSeed.email,
+    },
+  });
+
+  console.log(JSON.stringify(adminUser));
+
+  if (!adminUser) {
+    // seed the admin user if it does not exist
+    await auth.api.createUser({
+      body: {
+        email: baseAdminUserToSeed.email,
+        name: baseAdminUserToSeed.name,
+        password: baseAdminUserToSeed.password,
+        role: baseAdminUserToSeed.role as Role,
+      },
+    });
+
+    adminUser = await prisma.user.findFirst({
       where: {
         email: baseAdminUserToSeed.email,
       },
     });
+  }
 
+  return adminUser;
+}
+
+export async function seedFeatures() {
+  try {
+    const adminUser = await seedAdminUser();
     if (!adminUser) {
-      // seed the admin user if it does not exist
-      await auth.api.createUser({
-        body: {
-          email: baseAdminUserToSeed.email,
-          name: baseAdminUserToSeed.name,
-          password: baseAdminUserToSeed.password,
-          role: baseAdminUserToSeed.role as Role,
-        },
-      });
-
-      adminUser = await prisma.user.findFirst({
-        where: {
-          email: baseAdminUserToSeed.email,
-        },
-      });
-
-      if (!adminUser) {
-        console.error("[features seed] Admin user not found after creation.");
-        return;
-      }
+      console.error("[features seed] Admin user not found after creation.");
+      return;
     }
 
     for (const feature of featuresToSeed) {
-      console.log(`[features seed] Seeding feature ${feature.key}.`);
+      console.log(`[features seed] Seeding feature ${adminUser.id}.`);
       await prisma.feature.create({
         data: {
           key: feature.key,
           name: feature.name,
           description: feature.description,
           toggle: feature.toggle,
+          defaultToggle: feature.defaultToggle,
           category: feature.category,
           userId: adminUser.id,
         },
