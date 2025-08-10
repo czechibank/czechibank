@@ -7,6 +7,16 @@ const prisma = new PrismaClient();
 const usersToSeed = [
   // Rescue funds
   {
+    email: "app_admin@email.com",
+    name: "App Admin",
+    password: "app_admin",
+    avatarConfig:
+      '{"backgroundColor":["C4DD68"],"eyebrows":["variant12"], eyebrowsColor":["000000"],"eyes":["variant01"],"eyesColor":["000000"],"freckles":["variant01"],"frecklesColor":["000000"],"frecklesProbability":[null],"glasses":["variant03"],"glassesColor":["000000"],"glassesProbability":[null],"mouth":["happy05"],"mouthColor":["000000"],"nose":["variant06"],"noseColor":["000000"]}',
+    bankAccountNumber: "000000000000/5555",
+    apiKey: "app_admin_key",
+    role: "admin",
+  },
+  {
     email: "zachranNas+praha@pejsekAKocicka.cz",
     name: "[OSTRAVA!!!] Pejsek a Kočicka 🐶&🐱",
     password: "PejsekAKocicka123",
