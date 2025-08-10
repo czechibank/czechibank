@@ -13,38 +13,15 @@ import { SettingsIcon } from "lucide-react";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import z, { ZodBoolean, ZodDefault } from "zod";
+import { featuresToSeed } from "../../../scripts/seed-features";
 
 export default function AdministrationClientPage({ user }: { user: User }) {
   type FeaturesFlagsValues = { [p: string]: boolean };
 
   const featureFlags: AllFeaturesType = {
-    SEND_MONEY_WITHOUT_ACCOUNT_BALANCE: {
-      key: "SEND_MONEY_WITHOUT_ACCOUNT_BALANCE",
-      name: "Allow sending with insufficient balance",
-      description: "User can send money even when the account balance is insufficient.",
-      toggle: false,
-      category: ["BUG", "BANK_ACCOUNT"],
-      lastChangedBy: "adminUser1",
-      lastChangedAt: "2025-08-09T10:00:00Z",
-    },
-    GIFS_IN_TRANSACTIONS: {
-      key: "GIFS_IN_TRANSACTIONS",
-      name: "GIFs in transactions",
-      description: "Enable sending GIFs along with money transfers.",
-      toggle: true,
-      category: ["FEATURE", "UI"],
-      lastChangedBy: "adminUser2",
-      lastChangedAt: "2025-08-08T14:32:00Z",
-    },
-    BUG_INCORRECT_BALANCE_DISPLAY: {
-      key: "BUG_INCORRECT_BALANCE_DISPLAY",
-      name: "Incorrect balance display",
-      description: "Show an incorrect account balance (simulate calculation bug).",
-      toggle: false,
-      category: ["BUG", "UI", "BANK_ACCOUNT"],
-      lastChangedBy: "adminUser1",
-      lastChangedAt: "2025-08-07T09:15:00Z",
-    },
+    SEND_MONEY_WITHOUT_ACCOUNT_BALANCE: featuresToSeed[0],
+    GIFS_IN_TRANSACTIONS: featuresToSeed[1],
+    BUG_INCORRECT_BALANCE_DISPLAY: featuresToSeed[2],
   };
 
   // generate the form default values based on the feature flags

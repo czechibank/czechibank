@@ -4,18 +4,21 @@ import { auth } from "../auth";
 
 const prisma = new PrismaClient();
 
+export const adminUserToSeed = {
+  email: "app_admin@email.com",
+  name: "App Admin",
+  password: "app_admin",
+  avatarConfig:
+    '{"backgroundColor":["C4DD68"],"eyebrows":["variant12"], eyebrowsColor":["000000"],"eyes":["variant01"],"eyesColor":["000000"],"freckles":["variant01"],"frecklesColor":["000000"],"frecklesProbability":[null],"glasses":["variant03"],"glassesColor":["000000"],"glassesProbability":[null],"mouth":["happy05"],"mouthColor":["000000"],"nose":["variant06"],"noseColor":["000000"]}',
+  bankAccountNumber: "000000000000/5555",
+  apiKey: "app_admin_key",
+  role: "admin",
+};
+
 const usersToSeed = [
+  // Admin user
+  adminUserToSeed,
   // Rescue funds
-  {
-    email: "app_admin@email.com",
-    name: "App Admin",
-    password: "app_admin",
-    avatarConfig:
-      '{"backgroundColor":["C4DD68"],"eyebrows":["variant12"], eyebrowsColor":["000000"],"eyes":["variant01"],"eyesColor":["000000"],"freckles":["variant01"],"frecklesColor":["000000"],"frecklesProbability":[null],"glasses":["variant03"],"glassesColor":["000000"],"glassesProbability":[null],"mouth":["happy05"],"mouthColor":["000000"],"nose":["variant06"],"noseColor":["000000"]}',
-    bankAccountNumber: "000000000000/5555",
-    apiKey: "app_admin_key",
-    role: "admin",
-  },
   {
     email: "zachranNas+praha@pejsekAKocicka.cz",
     name: "[OSTRAVA!!!] Pejsek a Kočicka 🐶&🐱",
@@ -82,7 +85,7 @@ const usersToSeed = [
 async function seedUsers() {
   for (const userSeed of usersToSeed) {
     try {
-      console.log(`[seed] Creating user: ${userSeed.email}`);
+      console.log(`[users seed] Creating user: ${userSeed.email}`);
       const response = await auth.api.createUser({
         body: {
           email: userSeed.email,
@@ -94,7 +97,7 @@ async function seedUsers() {
 
       const user = response.user;
 
-      console.log(`[seed] Creating API key for user: ${user.email}`);
+      console.log(`[users seed] Creating API key for user: ${user.email}`);
       const apiKey = await auth.api.createApiKey({ body: { userId: user.id } });
 
       // Update bank account number
@@ -104,9 +107,9 @@ async function seedUsers() {
           where: { id: bankAccount.id },
           data: { number: userSeed.bankAccountNumber },
         });
-        console.log(`[seed] Updated bank account number for user: ${user.email}`);
+        console.log(`[users seed] Updated bank account number for user: ${user.email}`);
       } else {
-        console.warn(`[seed] No bank account found for user: ${user.email}`);
+        console.warn(`[users seed] No bank account found for user: ${user.email}`);
       }
 
       // Update API key if deterministic value is needed
@@ -116,9 +119,9 @@ async function seedUsers() {
         where: { id: apiKey.id },
         data: { key: userSeed.apiKey },
       });
-      console.log(`[seed] Updated API key for user: ${user.email}`);
+      console.log(`[users seed] Updated API key for user: ${user.email}`);
     } catch (error) {
-      console.error(`[seed] Error seeding user ${userSeed.email}:`, error);
+      console.error(`[users seed] Error seeding user ${userSeed.email}:`, error);
     }
   }
 }
@@ -333,17 +336,17 @@ async function generateDeterministicTransactions(prisma: PrismaClient) {
 }
 
 async function main() {
-  console.log("[seed] Starting seed script...");
+  console.log("[users seed] Starting seed script...");
   await prisma.$connect();
 
   // Clean up all data first
-  console.log("[seed] Cleaning up database...");
+  console.log("[users seed] Cleaning up database...");
   await prisma.$transaction([
     prisma.transaction.deleteMany(),
     prisma.bankAccount.deleteMany(),
     prisma.user.deleteMany(),
   ]);
-  console.log("[seed] Database cleaned up");
+  console.log("[users seed] Database cleaned up");
 
   // Seed users
   await seedUsers();
@@ -351,15 +354,15 @@ async function main() {
   // Generate transactions (keep your existing logic here)
   await generateDeterministicTransactions(prisma);
 
-  console.log("[seed] Finished all database operations");
+  console.log("[users seed] Finished all database operations");
 }
 
 main()
   .catch((error) => {
-    console.error("[seed] Fatal error:", error);
+    console.error("[users seed] Fatal error:", error);
   })
   .finally(() => {
     prisma.$disconnect();
-    console.log("[seed] Script finished");
+    console.log("[users seed] Script finished");
     process.exit(0);
   });
