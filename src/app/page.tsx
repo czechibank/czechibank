@@ -9,11 +9,13 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 
 export default async function Home() {
-  const session = await userService.server.getSession(await headers());
+  const apikeyHeaders = await headers();
+  const session = await userService.server.getSession(apikeyHeaders);
 
   if (!session) {
     redirect("/signin");
   }
+  const { id, token, userId, expiresAt, createdAt, updatedAt, ipAddress, userAgent } = session.session;
 
   const bankAccounts = await getBankAccountsByUserId(session.user.id);
 
@@ -21,7 +23,18 @@ export default async function Home() {
     <main className="">
       <h1 className="mb-8 mt-10 text-3xl font-extrabold"> Hello {session.user.name}!</h1>
       <div className="mb-4 flex justify-end">
-        <CreateDialog />
+        <CreateDialog
+          session={{
+            id,
+            token,
+            userId,
+            expiresAt,
+            createdAt,
+            updatedAt,
+            ipAddress,
+            userAgent,
+          }}
+        />
       </div>
       <div className="grid grid-cols-2 gap-4">
         {bankAccounts.items.map((ba) => (

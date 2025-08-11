@@ -1,20 +1,28 @@
-export async function createBankAccountAction(data: { name: string; currency: string }) {
+import { Currency } from "@prisma/client";
+import bankAccountService from "./ba-service";
+
+interface Session {
+  userId: string;
+}
+
+const validCurrencies = Object.values(Currency); // ['CZECHITOKEN', 'CZK', 'USD']
+
+function isValidCurrency(value: string): value is Currency {
+  return validCurrencies.includes(value as Currency);
+}
+
+export async function createBankAccountAction(data: { name: string; currency: string }, session: Session) {
   try {
-    const res = await fetch("/api/v1/bank-account/create-auth-cookie-only", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(data),
-      credentials: "include",
-    });
-
-    if (!res.ok) {
-      const error = await res.json();
-      return { success: false, error };
+    if (!isValidCurrency(data.currency)) {
+      return { success: false, error: `Invalid currency: ${data.currency}` };
     }
-
-    const result = await res.json();
-    return { success: true, data: result.data.bankAccount };
+    const bankAccount = await bankAccountService.createBankAccount({
+      userId: session.userId,
+      currency: data.currency as Currency,
+      name: data.name,
+    });
+    return { success: true, data: bankAccount };
   } catch (err) {
-    return { success: false, error: err };
+    return { success: false, error: err instanceof Error ? err.message : err };
   }
 }

@@ -16,10 +16,15 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useToast } from "@/components/ui/use-toast";
 import { createBankAccountAction } from "@/domain/bankAccount-domain/ba-actions";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { Session } from "better-auth";
 import { Plus } from "lucide-react";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
+
+interface CreateDialogProps {
+  session: Session;
+}
 
 const createBankAccountSchema = z.object({
   name: z.string().min(1, "Account name is required"),
@@ -28,7 +33,14 @@ const createBankAccountSchema = z.object({
 
 type FormData = z.infer<typeof createBankAccountSchema>;
 
-export function CreateDialog() {
+function getErrorMessage(error: unknown): string {
+  if (error && typeof error === "object" && "message" in error && typeof (error as any).message === "string") {
+    return (error as any).message;
+  }
+  return String(error) || "Unknown error";
+}
+
+export function CreateDialog({ session }: CreateDialogProps) {
   const [open, setOpen] = useState(false);
   const { toast } = useToast();
 
@@ -41,7 +53,7 @@ export function CreateDialog() {
   });
 
   async function onSubmit(data: FormData) {
-    const response = await createBankAccountAction(data);
+    const response = await createBankAccountAction(data, session);
     if (response.success) {
       toast({
         title: "Bank Account Created",
@@ -53,7 +65,7 @@ export function CreateDialog() {
       toast({
         variant: "destructive",
         title: "Failed to create account",
-        description: response.error?.message || "Unknown error",
+        description: getErrorMessage(response.error),
       });
     }
   }
@@ -73,7 +85,7 @@ export function CreateDialog() {
         </DialogHeader>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 py-4">
           <div className="space-y-2">
-            <Label htmlFor="accountName">Account Name</Label>
+            <Label htmlFor="name">Account Name</Label>
             <Input
               id="name"
               {...form.register("name")}
