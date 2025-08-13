@@ -16,14 +16,19 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useToast } from "@/components/ui/use-toast";
 import { createBankAccountAction } from "@/domain/bankAccount-domain/ba-actions";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Session } from "better-auth";
 import { Plus } from "lucide-react";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 
-interface CreateDialogProps {
+interface Session {
+  token: string;
+  userId: string;
+  name: string;
+}
+interface CreateBankAccountDialogProps {
   session: Session;
+  onCreated?: (newBankAccount: any) => void;
 }
 
 const createBankAccountSchema = z.object({
@@ -40,7 +45,7 @@ function getErrorMessage(error: unknown): string {
   return String(error) || "Unknown error";
 }
 
-export function CreateDialog({ session }: CreateDialogProps) {
+export function CreateDialog({ session, onCreated }: CreateBankAccountDialogProps) {
   const [open, setOpen] = useState(false);
   const { toast } = useToast();
 
@@ -61,6 +66,7 @@ export function CreateDialog({ session }: CreateDialogProps) {
       });
       form.reset();
       setOpen(false);
+      if (onCreated) onCreated(response.data);
     } else {
       toast({
         variant: "destructive",
