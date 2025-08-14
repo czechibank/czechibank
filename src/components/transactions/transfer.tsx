@@ -77,7 +77,9 @@ export function TransactionTranfer({
         ),
       });
     } else {
-      const errorMessage = response.error.details!.map((detail) => detail.message).join(", ");
+      const errorMessage = response.error.details
+        ? response.error.details.map((detail) => detail.message).join(", ")
+        : response.error.message || "Transaction failed";
       toast({
         title: "💸 Transaction failed!",
         description: errorMessage,

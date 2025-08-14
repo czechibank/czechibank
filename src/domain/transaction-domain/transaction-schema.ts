@@ -7,11 +7,8 @@ import { roundAmount } from "../../lib/utils";
 // Backend: Scientific notation is still something what is handled - request.json() transforms it to number before our validation
 export const AmountSchema = z
   .number()
-  .min(0.001, "Number must be greater than 0.001")
+  .min(0.001, "Number must be greater or equal to 0.001")
   .max(Number.MAX_SAFE_INTEGER, "Amount must be less than or equal to 9007199254740991 due security reasons.")
-  .refine((val) => !val.toString().toLowerCase().includes("e"), {
-    message: "Scientific notation is not allowed",
-  })
   .refine((val) => /^\d+(\.\d{1,3})?$/.test(val.toString()), {
     message: "Use amount with max. 3 decimal places (e.g. 1.234)",
   })
