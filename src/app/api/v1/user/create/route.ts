@@ -7,6 +7,7 @@ import { withValidatedJSON } from "@/lib/api/validation";
 import { validateEventHandler } from "@/lib/response";
 import { APIError } from "better-auth/api";
 import { NextRequest } from "next/server";
+import { handleErrors } from "../../routes";
 
 /**
  * @swagger
@@ -63,12 +64,8 @@ export const POST = withValidatedJSON(async (request: NextRequest, body) => {
     // TODO: @vojtech-cerveny - handle better-auth - we can reuse their ApiErrorCodes etc.
     // https://www.better-auth.com/docs/concepts/api#error-handling
 
-    // if (error instanceof BetterAuthAPIError) {
-    //   const newError = new ApiError(error.message, error.statusCode, ApiErrorCode.EMAIL_ALREADY_EXISTS);
-    //   return handleErrors(newError);
-    // }
     if (error instanceof APIError) {
-      return Response.json({ error: error.message }, { status: error.statusCode });
+      return handleErrors(error);
     } else {
       return Response.json({ error: "Internal Server Error", message: String(error) }, { status: 500 });
     }

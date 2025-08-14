@@ -1,10 +1,16 @@
 import { errorResponse } from "@/lib/response";
+import { APIError } from "better-auth/api";
 import { NextResponse } from "next/server";
 import { ApiError } from "./api-error";
 
 export { ApiError };
 
-export async function handleErrors(error: ApiError) {
+export async function handleErrors(error: ApiError | APIError) {
+  if (error instanceof APIError) {
+    return Response.json(errorResponse(error.message, error.status.toString(), undefined), {
+      status: error.statusCode,
+    });
+  }
   return Response.json(errorResponse(error.message, error.code, error.details), { status: error.statusCode });
 }
 
