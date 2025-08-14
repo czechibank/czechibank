@@ -108,31 +108,6 @@ export async function getBankAccountByNumber(bankNumber: string) {
   return bankAccount;
 }
 
-export async function getBankAccountByAPIKey(apiKey: string) {
-  const bankAccount = await prisma.bankAccount.findFirst({
-    where: {
-      user: {
-        apiKey: apiKey,
-      },
-    },
-    // include: {
-    //   user: true,
-    // },
-    select: {
-      id: true,
-      balance: true,
-      currency: true,
-      name: true,
-    },
-  });
-
-  if (!bankAccount) {
-    throw new Error("Bank account not found");
-  }
-
-  return bankAccount;
-}
-
 export async function deleteBankAccount(bankAccountId: string) {
   const bankAccount = await prisma.bankAccount.delete({
     where: {

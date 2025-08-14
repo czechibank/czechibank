@@ -1,34 +1,31 @@
+generator client {
+  provider      = "prisma-client-js"
+  binaryTargets = ["native", "linux-musl-arm64-openssl-3.0.x", "linux-musl", "linux-musl-openssl-3.0.x"]
+}
+
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
-generator client {
-  provider      = "prisma-client-js"
-  binaryTargets = ["native", "linux-musl-arm64-openssl-3.0.x", "linux-musl"]
-  output        = "../node_modules/.prisma/client"
-}
-
-enum Sex {
-  MALE
-  FEMALE
-}
-
 model User {
-  id           String        @id @default(cuid())
-  name         String
-  email        String        @unique
-  sex          Sex
-  password     String
-  BankAccount  BankAccount[]
-  apiKey       String        @default(cuid())
-  avatarConfig String
-}
+  id            String        @id
+  name          String
+  email         String        @unique
+  emailVerified Boolean
+  image         String?
+  createdAt     DateTime
+  updatedAt     DateTime
+  banExpires    DateTime?
+  banReason     String?
+  banned        Boolean?
+  role          String?
+  bankAccounts  BankAccount[]
+  accounts      Account[]
+  apikeys       Apikey[]
+  sessions      Session[]
 
-enum Currency {
-  CZECHITOKEN
-  CZK
-  USD
+  @@map("user")
 }
 
 model BankAccount {
@@ -36,22 +33,99 @@ model BankAccount {
   number          String        @unique
   name            String
   currency        Currency      @default(CZECHITOKEN)
-  user            User          @relation(fields: [userId], references: [id])
   userId          String
-  // Remove or rename the duplicate Transaction field
-  inTransactions  Transaction[] @relation(name: "ToAccount")
-  outTransactions Transaction[] @relation(name: "FromAccount")
   balance         Float         @default(100000)
+  user            User          @relation(fields: [userId], references: [id])
+  outTransactions Transaction[] @relation("FromAccount")
+  inTransactions  Transaction[] @relation("ToAccount")
 }
 
 model Transaction {
   id         String      @id @default(cuid())
   amount     Float
   currency   Currency
-  from       BankAccount @relation(name: "FromAccount", fields: [fromBankId], references: [id])
   fromBankId String
-  to         BankAccount @relation(name: "ToAccount", fields: [toBankId], references: [id])
   toBankId   String
   createdAt  DateTime    @default(now())
   updatedAt  DateTime    @updatedAt
+  from       BankAccount @relation("FromAccount", fields: [fromBankId], references: [id])
+  to         BankAccount @relation("ToAccount", fields: [toBankId], references: [id])
+}
+
+model Session {
+  id             String   @id
+  expiresAt      DateTime
+  token          String   @unique
+  createdAt      DateTime
+  updatedAt      DateTime
+  ipAddress      String?
+  userAgent      String?
+  userId         String
+  impersonatedBy String?
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("session")
+}
+
+model Account {
+  id                    String    @id
+  accountId             String
+  providerId            String
+  userId                String
+  accessToken           String?
+  refreshToken          String?
+  idToken               String?
+  accessTokenExpiresAt  DateTime?
+  refreshTokenExpiresAt DateTime?
+  scope                 String?
+  password              String?
+  createdAt             DateTime
+  updatedAt             DateTime
+  user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("account")
+}
+
+model Verification {
+  id         String    @id
+  identifier String
+  value      String
+  expiresAt  DateTime
+  createdAt  DateTime?
+  updatedAt  DateTime?
+
+  @@map("verification")
+}
+
+model Apikey {
+  id                  String    @id
+  name                String?
+  start               String?
+  prefix              String?
+  key                 String
+  userId              String
+  refillInterval      Int?
+  refillAmount        Int?
+  lastRefillAt        DateTime?
+  enabled             Boolean?
+  rateLimitEnabled    Boolean?
+  rateLimitTimeWindow Int?
+  rateLimitMax        Int?
+  requestCount        Int?
+  remaining           Int?
+  lastRequest         DateTime?
+  expiresAt           DateTime?
+  createdAt           DateTime
+  updatedAt           DateTime
+  permissions         String?
+  metadata            String?
+  user                User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("apikey")
+}
+
+enum Currency {
+  CZECHITOKEN
+  CZK
+  USD
 }

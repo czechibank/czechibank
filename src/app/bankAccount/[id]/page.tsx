@@ -4,28 +4,15 @@ import { TransactionTranfer } from "@/components/transactions/transfer";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Meteors } from "@/components/ui/meteors";
 import bankAccountService from "@/domain/bankAccount-domain/ba-service";
-import userService from "@/domain/user-domain/user.service";
-import { getSession } from "@/lib/auth";
-import { RocketIcon } from "lucide-react";
-import { notFound, redirect } from "next/navigation";
+import userService from "@/domain/user-domain/user-service";
 
-type Session = {
-  user: {
-    id: string;
-    email: string;
-    name: string;
-    apiKey: string;
-    sex: "MALE" | "FEMALE";
-    avatarConfig: string;
-  };
-  expires: string;
-  iat: number;
-  exp: number;
-};
+import { RocketIcon } from "lucide-react";
+import { headers } from "next/headers";
+import { notFound, redirect } from "next/navigation";
 
 export default async function BankAccountPage(props: { params: Promise<{ id: string }> }) {
   const params = await props.params;
-  const session: Session = await getSession();
+  const session = await userService.server.getSession(await headers());
 
   if (!session) {
     redirect("/signin");
@@ -34,7 +21,7 @@ export default async function BankAccountPage(props: { params: Promise<{ id: str
   if (!bankAccount.success) {
     notFound();
   }
-  const allUsers = await userService.getAllUsers();
+  const allUsers = await userService.server.getAllUsers();
 
   if (!session || !bankAccount) {
     <h1 className="my-8 scroll-m-20 text-4xl font-extrabold tracking-tight lg:text-5xl">404</h1>;
@@ -75,15 +62,14 @@ export default async function BankAccountPage(props: { params: Promise<{ id: str
               <CardTitle>Transfer your money</CardTitle>
             </CardHeader>
             <CardContent>
-              <TransactionTranfer
-                bankAccountNumber={bankAccount.data.number}
-                userId={session.user.id}
-                allUsers={allUsers.data.data.map((user) => ({
-                  ...user,
-                  BankAccount: user.BankAccount,
-                }))}
-                balance={bankAccount.data.balance}
-              />
+              {allUsers.success && (
+                <TransactionTranfer
+                  bankAccountNumber={bankAccount.data.number}
+                  userId={session.user.id}
+                  allUsers={allUsers.data}
+                  balance={bankAccount.data.balance}
+                />
+              )}
             </CardContent>
           </Card>
         </div>
