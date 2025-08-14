@@ -34,7 +34,7 @@ export default function CreateApiKey() {
     resolver: zodResolver(CreateApiKeySchema),
     defaultValues: {
       name: "",
-      expiresIn: undefined,
+      expiresInDays: undefined,
     },
   });
 
@@ -60,7 +60,7 @@ export default function CreateApiKey() {
     await apikeyService.client.createApiKey(
       {
         name: data.name,
-        expiresIn: data.expiresIn,
+        expiresInDays: data.expiresInDays,
       },
       {
         onSuccess: (context) => {
@@ -120,7 +120,7 @@ export default function CreateApiKey() {
               />
               <FormField
                 control={form.control}
-                name="expiresIn"
+                name="expiresInDays"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Expires In (days, optional)</FormLabel>
