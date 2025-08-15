@@ -55,7 +55,7 @@ export function RegisterForm() {
             title: "Account created",
             description: "You can create your first transaction now! 🎉",
           });
-          redirect("/");
+          redirect("/register/success");
         },
         onError: (error) => {
           toast({
