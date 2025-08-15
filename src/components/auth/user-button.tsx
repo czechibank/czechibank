@@ -42,13 +42,13 @@ export default function UserButton() {
             <p className="text-xs leading-none text-muted-foreground">{session.user.email}</p>
           </div>
         </DropdownMenuLabel>
-        <DropdownMenuItem>
+        <DropdownMenuItem asChild>
           <Link href="/profile" className="w-full">
             <Button className="w-full">Profile</Button>
           </Link>
         </DropdownMenuItem>
         {session.user.role === "admin" ? (
-          <DropdownMenuItem>
+          <DropdownMenuItem asChild>
             <Link href="/administration" className="w-full">
               <Button className="w-full">Administration</Button>
             </Link>
