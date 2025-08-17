@@ -1,5 +1,20 @@
 "use client";
+import { useEffect, useState } from "react";
+
 export default function RegisterSuccessPage() {
+  const [isDark, setIsDark] = useState(false);
+
+  useEffect(() => {
+    const checkTheme = () => {
+      setIsDark(document.documentElement.classList.contains("dark"));
+    };
+    checkTheme();
+    document.addEventListener("click", checkTheme);
+    return () => {
+      document.removeEventListener("click", checkTheme);
+    };
+  }, []);
+
   return (
     <div>
       <style jsx>{`
@@ -10,17 +25,25 @@ export default function RegisterSuccessPage() {
           width: 100vw;
           height: 100vh;
           z-index: -1;
-          /* Nový gradient je přidán jako první, aby překryl obrázek */
+        }
+        .light-bg-money {
           background-image:
             radial-gradient(ellipse 70% 50% at center, transparent 0%, rgba(255, 255, 255, 0.9) 98%),
             url("/bg-money.png");
           background-repeat: repeat;
           background-size: auto;
         }
+
+        .dark-bg-money {
+          background-image:
+            radial-gradient(ellipse 70% 50% at center, #000000e6 0%, #000000ff 100%), url("/bg-money.png");
+          background-repeat: repeat;
+          background-size: auto;
+        }
       `}</style>
-      <div className="bg-money"></div>
+      <div className={isDark ? "bg-money dark-bg-money" : "bg-money light-bg-money"}></div>
       <div className="flex min-h-screen w-full items-center justify-center">
-        <div className="w-full max-w-sm rounded-lg bg-white p-8 text-center shadow-lg">
+        <div className="w-full max-w-sm -translate-y-20 rounded-lg bg-white p-8 text-center shadow-lg dark:bg-gray-900">
           <div className="mb-4 flex justify-center">
             <div className="flex h-16 w-16 items-center justify-center rounded-full bg-[#ff007B] p-2">
               <svg
