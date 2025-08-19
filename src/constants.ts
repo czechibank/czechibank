@@ -6,6 +6,6 @@ export const RATE_LIMIT = {
 };
 
 export const SESSION = {
-  EXPIRES_IN: 60 * 60 * 15, // 15 minutes
-  UPDATE_AGE: 60 * 60 * 5, // 5 minutes (every 5 minutes the session expiration is updated)
+  EXPIRES_IN: 60 * 60, // 1 hour
+  UPDATE_AGE: 60 * 30, // 30 minutes (every 30 minutes the session expiration is updated)
 };
