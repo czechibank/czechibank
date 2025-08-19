@@ -59,6 +59,11 @@ export function RegisterForm() {
           form.resetField("confirmPassword");
 
           if (error.error.code === "USER_ALREADY_EXISTS") {
+            form.setError("email", {
+              type: "manual",
+              message: "This email is already exists",
+            });
+
             // Show toast with an option to sign in
             toast({
               title: "User with this email already exists",
