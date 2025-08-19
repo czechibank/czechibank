@@ -54,11 +54,11 @@ export function RegisterForm() {
           redirect("/");
         },
         onError: (error: ErrorContext): void => {
-          if (error.error.code === "USER_ALREADY_EXISTS") {
-            // Reset password fields if user already exists, because of the security reasons
-            form.resetField("password");
-            form.resetField("confirmPassword");
+          // Reset password fields if user already exists, because of the security reasons
+          form.resetField("password");
+          form.resetField("confirmPassword");
 
+          if (error.error.code === "USER_ALREADY_EXISTS") {
             // Show toast with an option to sign in
             toast({
               title: "User with this email already exists",
