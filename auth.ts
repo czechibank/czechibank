@@ -17,6 +17,7 @@ export const auth = betterAuth({
     expiresIn: SESSION.EXPIRES_IN,
     updateAge: SESSION.UPDATE_AGE,
   },
+  telemetry: { enabled: false },
   plugins: [
     apiKey({
       rateLimit: {
