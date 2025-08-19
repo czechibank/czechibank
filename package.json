@@ -3,8 +3,8 @@
   "version": "0.1.4",
   "private": true,
   "scripts": {
-    "dev": "next dev --turbopack",
-    "build": "prisma generate && next build",
+    "dev": "npm run db:seed:features && next dev --turbopack",
+    "build": "prisma generate && next build && npm run db:seed:features",
     "post:build": "mkdir build/standalone/.next && cp -r public build/standalone/ && cp -r .next/static build/standalone/.next/",
     "start": "next start",
     "lint": "next lint",
