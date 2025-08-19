@@ -1,6 +1,9 @@
 import { z } from "zod";
 
-// add NEW FEATURES here - it will propagate into seed of features and all schemas
+/**
+ * add NEW FEATURES here - it will propagate into seed of features and all schemas
+ * - after adding new feature, you have to run "db:seed:features" script
+ */
 export const availableFeatures: Omit<FeatureType, "id">[] = [
   {
     key: "SEND_MONEY_WITHOUT_ACCOUNT_BALANCE",
@@ -16,7 +19,7 @@ export const availableFeatures: Omit<FeatureType, "id">[] = [
     description: "Enable sending GIFs along with money transfers.",
     toggle: true,
     defaultToggle: true,
-    category: ["FEATURE", "UI"],
+    category: ["UI"],
   },
   {
     key: "BUG_INCORRECT_BALANCE_DISPLAY",
@@ -38,6 +41,10 @@ export const FeatureSchema = z.object({
   category: z.array(z.string()),
   lastChangedBy: z.string().optional(),
   lastChangedAt: z.string().optional(),
+});
+
+export const AllFeaturesSchema = z.object({
+  features: z.array(FeatureSchema),
 });
 
 export type FeatureType = z.infer<typeof FeatureSchema>;
