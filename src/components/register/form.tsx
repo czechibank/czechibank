@@ -39,6 +39,7 @@ export function RegisterForm() {
       confirmPassword: "",
     },
   });
+  console.log(form.formState.errors);
 
   const action: () => void = form.handleSubmit(async (data: z.infer<typeof ExtendedUserSchema>) => {
     await userService.client.signUp(
@@ -79,7 +80,7 @@ export function RegisterForm() {
                 Full name <span className="text-red-500">*</span>
               </FormLabel>
               <FormControl>
-                <Input placeholder="" {...field} />
+                <Input placeholder="" {...field} aria-required="true" aria-invalid={!!form.formState.errors.name} />
               </FormControl>
               <FormDescription>This is your public display name. In format Firstname Lastname</FormDescription>
               <FormMessage />
@@ -95,7 +96,7 @@ export function RegisterForm() {
                 Email <span className="text-red-500">*</span>
               </FormLabel>
               <FormControl>
-                <Input placeholder="" {...field} />
+                <Input placeholder="" {...field} aria-required="true" aria-invalid={!!form.formState.errors.email} />
               </FormControl>
               <FormDescription>Email for sign in</FormDescription>
               <FormMessage />
@@ -111,7 +112,13 @@ export function RegisterForm() {
                 Password <span className="text-red-500">*</span>
               </FormLabel>
               <FormControl>
-                <Input placeholder="" {...field} type="password" />
+                <Input
+                  placeholder=""
+                  {...field}
+                  type="password"
+                  aria-required="true"
+                  aria-invalid={!!form.formState.errors.password}
+                />
               </FormControl>
               <FormDescription>Your password must be at least {MIN_PASSWORD_LENGTH} characters long.</FormDescription>
               <FormMessage />
@@ -127,7 +134,13 @@ export function RegisterForm() {
                 Confirm Password <span className="text-red-500">*</span>
               </FormLabel>
               <FormControl>
-                <Input placeholder="" {...field} type="password" />
+                <Input
+                  placeholder=""
+                  {...field}
+                  type="password"
+                  aria-required="true"
+                  aria-invalid={!!form.formState.errors.confirmPassword}
+                />
               </FormControl>
               <FormMessage />
             </FormItem>
