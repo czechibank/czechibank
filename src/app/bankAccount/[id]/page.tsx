@@ -1,11 +1,13 @@
 "use server";
 import { TransactionTable } from "@/components/transactions/table";
-import { TransactionTranfer } from "@/components/transactions/transfer";
+import { TransactionTransfer } from "@/components/transactions/transfer";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Meteors } from "@/components/ui/meteors";
 import bankAccountService from "@/domain/bankAccount-domain/ba-service";
 import userService from "@/domain/user-domain/user-service";
 
+import featuresService from "@/domain/features-domain/features-service";
+import { FeaturesKeysEnum, FeatureType } from "@/domain/features-domain/features.schema";
 import { RocketIcon } from "lucide-react";
 import { headers } from "next/headers";
 import { notFound, redirect } from "next/navigation";
@@ -22,11 +24,21 @@ export default async function BankAccountPage(props: { params: Promise<{ id: str
     notFound();
   }
   const allUsers = await userService.server.getAllUsers();
+  const allFeatures = await featuresService.server.getAllFeatures();
 
-  if (!session || !bankAccount) {
+  // simulate a bug in the balance display
+  function getBankBalance(balance: number, features: FeatureType[]): string {
+    if (featuresService.client.getFeatureToggle(FeaturesKeysEnum.BUG_INCORRECT_BALANCE_DISPLAY, features)) {
+      balance = balance * (Math.random() * (10 - 0.1) + 0.1);
+    }
+
+    return balance.toFixed(1);
+  }
+
+  if (!session || !bankAccount || !allFeatures) {
     <h1 className="my-8 scroll-m-20 text-4xl font-extrabold tracking-tight lg:text-5xl">404</h1>;
   }
-  if (bankAccount.success) {
+  if (bankAccount.success && allFeatures.success) {
     return (
       <div className="flex flex-col gap-4">
         <h1 className="my-8 scroll-m-20 text-4xl font-extrabold tracking-tight lg:text-5xl">{bankAccount.data.name}</h1>
@@ -48,7 +60,7 @@ export default async function BankAccountPage(props: { params: Promise<{ id: str
               <div className="flex-none">
                 <div className="flex scroll-m-20 flex-col items-center justify-end">
                   <span className="bg-clip-text text-7xl font-extrabold tracking-tight text-transparent text-white lg:text-6xl">
-                    {bankAccount.data.balance.toFixed(1)}
+                    {getBankBalance(bankAccount.data.balance, allFeatures.data)}
                   </span>
                   <span className="bg-clip-text text-4xl font-bold tracking-tight text-transparent text-white lg:text-3xl">
                     {bankAccount.data.currency}
@@ -62,12 +74,13 @@ export default async function BankAccountPage(props: { params: Promise<{ id: str
               <CardTitle>Transfer your money</CardTitle>
             </CardHeader>
             <CardContent>
-              {allUsers.success && (
-                <TransactionTranfer
+              {allUsers.success && allFeatures.success && (
+                <TransactionTransfer
                   bankAccountNumber={bankAccount.data.number}
                   userId={session.user.id}
                   allUsers={allUsers.data}
                   balance={bankAccount.data.balance}
+                  features={allFeatures.data}
                 />
               )}
             </CardContent>

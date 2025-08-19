@@ -1,6 +1,8 @@
 "use client";
 
 import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import featuresService from "@/domain/features-domain/features-service";
+import { FeaturesKeysEnum, FeatureType } from "@/domain/features-domain/features.schema";
 import { sendMoneyToBankNumberAction } from "@/domain/transaction-domain/transaction-action";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Prisma } from "@prisma/client";
@@ -18,16 +20,18 @@ type UserWithBankAccounts = Prisma.UserGetPayload<{
   };
 }>;
 
-export function TransactionTranfer({
+export function TransactionTransfer({
   userId,
   bankAccountNumber,
   balance,
   allUsers,
+  features,
 }: {
   userId: string;
   allUsers: UserWithBankAccounts[];
   balance: number;
   bankAccountNumber: string;
+  features: FeatureType[];
 }) {
   console.log(userId, bankAccountNumber, balance);
   const { toast } = useToast();
@@ -40,9 +44,17 @@ export function TransactionTranfer({
       return a.name.localeCompare(b.name);
     });
 
+  // feature toggle to allow sending more money than the balance
+  function getAmountSchemaToCheck() {
+    if (featuresService.client.getFeatureToggle(FeaturesKeysEnum.SEND_MONEY_WITHOUT_ACCOUNT_BALANCE, features)) {
+      return z.coerce.number().min(0);
+    }
+    return z.coerce.number().min(0).max(balance);
+  }
+
   const transferScheme = z.object({
     toBankNumber: z.string(),
-    amount: z.coerce.number().min(0).max(balance),
+    amount: getAmountSchemaToCheck(),
     // .refine((value) => {
     //   // const decimalPart = value.toString().split('.')[1];
     //   // return decimalPart === undefined || decimalPart.length === 1;
@@ -72,12 +84,19 @@ export function TransactionTranfer({
     });
 
     if (response.success) {
-      toast({
-        title: "💸 Transaction created!",
-        description: (
-          <img src="https://media4.giphy.com/media/v1.Y2lkPTc5MGI3NjExbGw2OXB2cmMydW1kb3k5cnpub2x4bm02bmhzZm9lb3E3ZTRxdnhwNCZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/l0HFkA6omUyjVYqw8/giphy.gif" />
-        ),
-      });
+      // feature to show GIFs in toast
+      if (featuresService.client.getFeatureToggle(FeaturesKeysEnum.GIFS_IN_TRANSACTIONS, features)) {
+        toast({
+          title: "💸 Transaction created!",
+          description: (
+            <img src="https://media4.giphy.com/media/v1.Y2lkPTc5MGI3NjExbGw2OXB2cmMydW1kb3k5cnpub2x4bm02bmhzZm9lb3E3ZTRxdnhwNCZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/l0HFkA6omUyjVYqw8/giphy.gif" />
+          ),
+        });
+      } else {
+        toast({
+          title: "💸 Transaction created!",
+        });
+      }
     } else {
       toast({
         title: "💸 Transaction failed!",

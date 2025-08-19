@@ -1,36 +1,10 @@
-import { FeatureType } from "@/domain/features-domain/features.schema";
+import { availableFeatures } from "@/domain/features-domain/features.schema";
 import { Role } from "@/lib/permissions";
 import { PrismaClient } from "@prisma/client";
+import { cloneDeep } from "lodash";
 import { auth } from "../auth";
 
 const prisma = new PrismaClient();
-
-export const featuresToSeed: Omit<FeatureType, "id">[] = [
-  {
-    key: "SEND_MONEY_WITHOUT_ACCOUNT_BALANCE",
-    name: "Allow sending with insufficient balance",
-    description: "User can send money even when the account balance is insufficient.",
-    toggle: false,
-    defaultToggle: false,
-    category: ["BUG", "BANK_ACCOUNT"],
-  },
-  {
-    key: "GIFS_IN_TRANSACTIONS",
-    name: "GIFs in transactions",
-    description: "Enable sending GIFs along with money transfers.",
-    toggle: true,
-    defaultToggle: true,
-    category: ["FEATURE", "UI"],
-  },
-  {
-    key: "BUG_INCORRECT_BALANCE_DISPLAY",
-    name: "Incorrect balance display",
-    description: "Show an incorrect account balance (simulate calculation bug).",
-    toggle: false,
-    defaultToggle: false,
-    category: ["BUG", "UI", "BANK_ACCOUNT"],
-  },
-];
 
 export async function seedAdminUser() {
   const baseAdminUserToSeed = {
@@ -82,6 +56,7 @@ export async function seedFeatures() {
       return;
     }
 
+    const featuresToSeed = cloneDeep(availableFeatures);
     for (const feature of featuresToSeed) {
       console.log(`[features seed] Seeding feature ${adminUser.id}.`);
       await prisma.feature.create({
