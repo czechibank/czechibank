@@ -27,10 +27,12 @@ export default function RegisterSuccessPage() {
             <CardTitle>Registration Successful!</CardTitle>
           </CardHeader>
           <CardContent>
-            <CardDescription>You can now log in and start using Czechitoken.</CardDescription>{" "}
+            <CardDescription>You can now log in and start using Czechitoken.</CardDescription>
           </CardContent>
           <CardFooter>
-            <Button className="w-full">Log in</Button>
+            <a href="/" className="w-full">
+              <Button className="w-full">Continue to the app</Button>
+            </a>
           </CardFooter>
         </Card>
       </div>
