@@ -39,6 +39,7 @@ export function RegisterForm() {
       confirmPassword: "",
     },
   });
+  console.log(form.formState.errors);
 
   const action: () => void = form.handleSubmit(async (data: z.infer<typeof ExtendedUserSchema>) => {
     await userService.client.signUp(
@@ -75,9 +76,11 @@ export function RegisterForm() {
           name="name"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Full name</FormLabel>
+              <FormLabel>
+                Full name <span className="text-red-500">*</span>
+              </FormLabel>
               <FormControl>
-                <Input placeholder="" {...field} />
+                <Input placeholder="" {...field} aria-required="true" aria-invalid={!!form.formState.errors.name} />
               </FormControl>
               <FormDescription>This is your public display name. In format Firstname Lastname</FormDescription>
               <FormMessage />
@@ -89,9 +92,11 @@ export function RegisterForm() {
           name="email"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Email</FormLabel>
+              <FormLabel>
+                Email <span className="text-red-500">*</span>
+              </FormLabel>
               <FormControl>
-                <Input placeholder="" {...field} />
+                <Input placeholder="" {...field} aria-required="true" aria-invalid={!!form.formState.errors.email} />
               </FormControl>
               <FormDescription>Email for sign in</FormDescription>
               <FormMessage />
@@ -103,9 +108,17 @@ export function RegisterForm() {
           name="password"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Password</FormLabel>
+              <FormLabel>
+                Password <span className="text-red-500">*</span>
+              </FormLabel>
               <FormControl>
-                <Input placeholder="" {...field} type="password" />
+                <Input
+                  placeholder=""
+                  {...field}
+                  type="password"
+                  aria-required="true"
+                  aria-invalid={!!form.formState.errors.password}
+                />
               </FormControl>
               <FormDescription>Your password must be at least {MIN_PASSWORD_LENGTH} characters long.</FormDescription>
               <FormMessage />
@@ -117,9 +130,17 @@ export function RegisterForm() {
           name="confirmPassword"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Confirm Password</FormLabel>
+              <FormLabel>
+                Confirm Password <span className="text-red-500">*</span>
+              </FormLabel>
               <FormControl>
-                <Input placeholder="" {...field} type="password" />
+                <Input
+                  placeholder=""
+                  {...field}
+                  type="password"
+                  aria-required="true"
+                  aria-invalid={!!form.formState.errors.confirmPassword}
+                />
               </FormControl>
               <FormMessage />
             </FormItem>

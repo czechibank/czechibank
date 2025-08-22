@@ -99,7 +99,7 @@ const userService = {
           email: user.email,
           password: user.password,
           name: user.name,
-          role: "admin" as Role,
+          role: role,
         },
       });
     },

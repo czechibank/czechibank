@@ -72,6 +72,10 @@ const transactionService = {
         return "error" in fromBankAccount ? fromBankAccount : toBankAccount;
       }
 
+      if (fromBankAccount.data.balance < amount) {
+        return errorResponse("Insufficient balance", ApiErrorCode.INSUFFICIENT_BALANCE);
+      }
+
       const result = await repository.sendMoney({
         fromBankId: fromBankAccount.data.id,
         toBankId: toBankAccount.data.id,

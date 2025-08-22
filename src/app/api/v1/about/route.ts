@@ -1,4 +1,5 @@
 import packageJson from "@/../package.json";
+import { execSync } from "child_process";
 import { DELETE, HEAD, OPTIONS, PATCH, POST, PUT } from "../routes";
 
 /**
@@ -29,18 +30,31 @@ import { DELETE, HEAD, OPTIONS, PATCH, POST, PUT } from "../routes";
  *                     name:
  *                       type: string
  *                       description: API name
+ *                       example: czechibank
  *                     version:
  *                       type: string
- *                       description: API version
+ *                       description: API version and short commit hash
+ *                       example: 0.1.4 (abc1234)
  */
 export async function GET(request: Request) {
+  // Use shortened commit hash from Coolify (SOURCE_COMMIT), fallback to Git when running locally, then "unknown"
+  let commitHash =
+    process.env.SOURCE_COMMIT?.substring(0, 7) ||
+    (() => {
+      try {
+        return execSync("git rev-parse --short HEAD").toString().trim();
+      } catch {
+        return "unknown";
+      }
+    })();
+
   return Response.json(
     {
       message: "This is the best bank ever!",
       data: {
         date: new Date(),
         name: packageJson.name,
-        version: packageJson.version,
+        version: `${packageJson.version} (${commitHash})`,
       },
     },
     { status: 200 },
