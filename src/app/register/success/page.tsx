@@ -30,14 +30,7 @@ export default function RegisterSuccessPage() {
             <CardDescription>You can now log in and start using Czechitoken.</CardDescription>{" "}
           </CardContent>
           <CardFooter>
-            {/*   <a href="/profile">
-              <button className="w-full rounded-xl bg-[#ff007B] p-2 font-bold text-white hover:bg-[#d60068]">
-                Log in  </a>
-              </button> */}
-
-            <Button variant="outline" size="sm" className="w-full">
-              Log in
-            </Button>
+            <Button className="w-full">Log in</Button>
           </CardFooter>
         </Card>
       </div>
