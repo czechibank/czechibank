@@ -52,6 +52,13 @@ import { NextRequest, NextResponse } from "next/server";
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/Error'
+ *      500:
+ *        description: Internal server error
+ *        content:
+ *          application/json:
+ *            schema:
+ *              $ref: '#/components/schemas/Error'
+ *
  */
 export async function POST(request: NextRequest) {
   try {
@@ -68,14 +75,12 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(validatedBody, { status: 400 });
     }
 
-    const { amount, toBankNumber } = validatedBody;
+    const { amount, toBankNumber, fromBankNumber } = validatedBody;
 
     const userBankAccounts = await bankAccountService.getMyBankAccounts(user.id, { page: 1, limit: 1 });
     if ("error" in userBankAccounts || userBankAccounts.data.items.length === 0) {
       return NextResponse.json(errorResponse("No bank account found for user", "400"), { status: 400 });
     }
-
-    const fromBankNumber = userBankAccounts.data.items[0].number;
 
     const result = await transactionService.sendMoneyToBankNumber({
       amount,
