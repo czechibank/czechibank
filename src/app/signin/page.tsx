@@ -57,9 +57,11 @@ export default function SignInPage() {
             name="email"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Email</FormLabel>
+                <FormLabel>
+                  Email <span className="text-red-500">*</span>
+                </FormLabel>
                 <FormControl>
-                  <Input placeholder="" {...field} />
+                  <Input placeholder="" {...field} aria-required="true" aria-invalid={!!form.formState.errors.email} />
                 </FormControl>
                 <FormDescription>Email for sign in</FormDescription>
                 <FormMessage id="email-message" />
@@ -71,9 +73,17 @@ export default function SignInPage() {
             name="password"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Password</FormLabel>
+                <FormLabel>
+                  Password <span className="text-red-500">*</span>
+                </FormLabel>
                 <FormControl>
-                  <Input placeholder="" {...field} type="password" />
+                  <Input
+                    placeholder=""
+                    {...field}
+                    aria-required="true"
+                    aria-invalid={!!form.formState.errors.password}
+                    type="password"
+                  />
                 </FormControl>
                 <FormDescription>Your password must be at least {MIN_PASSWORD_LENGTH} characters long.</FormDescription>
                 <FormMessage id="password-message" />

@@ -5,6 +5,7 @@ import { UserSchema } from "@/domain/user-domain/user-schema";
 import userService from "@/domain/user-domain/user-service";
 import { Role } from "@/lib/permissions";
 import { validateEventHandler } from "@/lib/response";
+import { APIError } from "better-auth/api";
 import { z } from "zod";
 import { ApiError, handleErrors } from "../../routes";
 
@@ -69,7 +70,7 @@ export async function POST(request: Request) {
     //   const newError = new ApiError(error.message, error.statusCode, ApiErrorCode.EMAIL_ALREADY_EXISTS);
     //   return handleErrors(newError);
     // }
-    if (error instanceof ApiError) {
+    if (error instanceof ApiError || error instanceof APIError) {
       return handleErrors(error);
     } else {
       return Response.json({ error: "Internal Server Error", message: error }, { status: 500 });
