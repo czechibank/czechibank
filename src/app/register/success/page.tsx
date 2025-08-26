@@ -1,11 +1,12 @@
 "use client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import Link from "next/link";
 
 export default function RegisterSuccessPage() {
   return (
     <div>
-      <div className="flex min-h-screen w-full items-center justify-center">
+      <div className="mt-16 flex w-full items-center justify-center">
         <Card className="w-full max-w-sm  p-8 text-center shadow-2xl dark:shadow-[0_4px_24px_0_rgba(255,255,255,0.05)]">
           <CardHeader>
             <div className="mb-4 flex justify-center">
@@ -30,9 +31,9 @@ export default function RegisterSuccessPage() {
             <CardDescription>You can now log in and start using Czechitoken.</CardDescription>
           </CardContent>
           <CardFooter>
-            <a href="/" className="w-full">
+            <Link href="/" className="w-full">
               <Button className="w-full">Continue to the app</Button>
-            </a>
+            </Link>
           </CardFooter>
         </Card>
       </div>
