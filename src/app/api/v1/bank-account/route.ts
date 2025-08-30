@@ -81,13 +81,26 @@ import { ApiError, DELETE, HEAD, PATCH, POST, PUT, handleErrors } from "../route
  *             schema:
  *               $ref: '#/components/schemas/Error'
  */
+
 export async function GET(request: Request) {
   try {
     console.log("GET /bank-account/route.ts");
-    const user = await checkUserAuthOrThrowError(request);
-    if ("error" in user) {
-      return Response.json(user, { status: 401 });
+    // 1️⃣ Authenticate user
+    let user;
+    try {
+      user = await checkUserAuthOrThrowError(request);
+      if ("error" in user) {
+        return Response.json(user, { status: 401 });
+      }
+    } catch (authErr) {
+      return Response.json(
+        errorResponse("Authentication failed", ApiErrorCode.UNAUTHORIZED, [
+          { code: ApiErrorCode.UNAUTHORIZED, message: (authErr as Error).message },
+        ]),
+        { status: 401 },
+      );
     }
+
     const { searchParams } = new URL(request.url);
     const page = parseInt(searchParams.get("page") || "1");
     const limit = parseInt(searchParams.get("limit") || "10");
@@ -105,12 +118,34 @@ export async function GET(request: Request) {
       );
     }
 
-    const result = await bankAccountService.getMyBankAccounts(user.id, { page, limit });
+    // Fetch bank accounts from service
+    let result;
+    try {
+      result = await bankAccountService.getMyBankAccounts(user.id, { page, limit });
+    } catch (serviceErr) {
+      return Response.json(
+        errorResponse("Failed to fetch bank accounts", ApiErrorCode.INTERNAL_ERROR, [
+          { code: ApiErrorCode.INTERNAL_ERROR, message: (serviceErr as Error).message },
+        ]),
+        { status: 500 },
+      );
+    }
 
+    // Check if service returned error
     if ("error" in result) {
       return Response.json(result);
     }
 
+    if (!result.data || !Array.isArray(result.data.items)) {
+      return Response.json(
+        errorResponse("Invalid data from bank account service", ApiErrorCode.INTERNAL_ERROR, [
+          { code: ApiErrorCode.INTERNAL_ERROR, message: "Missing or invalid data property" },
+        ]),
+        { status: 500 },
+      );
+    }
+
+    // Return successful response
     return Response.json(
       successResponse(
         "Bank accounts retrieved successfully",

@@ -22,6 +22,14 @@ export type PaginatedResult<T> = {
   limit: number;
 };
 
+// find active accounts starting with a name
+export async function findActiveBankAccountsByUser(userId: string, startsWith?: string) {
+  return prisma.bankAccount.findMany({
+    where: { userId, isActive: true, name: startsWith ? { startsWith } : undefined },
+    select: { id: true, name: true },
+  });
+}
+
 export async function getBankAccountsByUserId(
   userId: string,
   { page = 1, limit = 10 }: PaginationParams = {},
@@ -30,18 +38,19 @@ export async function getBankAccountsByUserId(
 
   const skip = (page - 1) * limit;
 
+  const whereClause = {
+    userId,
+    isActive: true,
+  };
+
   const [bankAccounts, total] = await Promise.all([
     prisma.bankAccount.findMany({
-      where: {
-        userId: userId,
-      },
+      where: whereClause,
       skip,
       take: limit,
     }),
     prisma.bankAccount.count({
-      where: {
-        userId: userId,
-      },
+      where: whereClause,
     }),
   ]);
 
@@ -68,6 +77,7 @@ export async function createBankAccount({
       currency: currency,
       name: name,
       number: generateRandomDigits(12) + "/5555",
+      isActive: true,
     },
     include: {
       user: {
@@ -92,6 +102,7 @@ export async function getBankAccountByIdAndUserId(bankAccountId: string, userId:
     where: {
       id: bankAccountId,
       userId: userId,
+      isActive: true,
     },
   });
 
@@ -102,6 +113,7 @@ export async function getBankAccountByNumber(bankNumber: string) {
   const bankAccount = await prisma.bankAccount.findFirst({
     where: {
       number: bankNumber,
+      isActive: true,
     },
   });
 
@@ -109,10 +121,11 @@ export async function getBankAccountByNumber(bankNumber: string) {
 }
 
 export async function deleteBankAccount(bankAccountId: string) {
-  const bankAccount = await prisma.bankAccount.delete({
+  const bankAccount = await prisma.bankAccount.update({
     where: {
       id: bankAccountId,
     },
+    data: { isActive: false },
   });
 
   return bankAccount;
@@ -123,6 +136,9 @@ export async function getAllBankAccounts({ page = 1, limit = 10 }: PaginationPar
 > {
   const skip = (page - 1) * limit;
 
+  const whereClause = {
+    isActive: true,
+  };
   const [bankAccounts, total] = await Promise.all([
     prisma.bankAccount.findMany({
       select: {
@@ -137,13 +153,14 @@ export async function getAllBankAccounts({ page = 1, limit = 10 }: PaginationPar
           },
         },
       },
+      where: whereClause,
       skip,
       take: limit,
       orderBy: {
         number: "asc",
       },
     }),
-    prisma.bankAccount.count(),
+    prisma.bankAccount.count({ where: whereClause }),
   ]);
 
   return {
@@ -152,4 +169,25 @@ export async function getAllBankAccounts({ page = 1, limit = 10 }: PaginationPar
     page,
     limit,
   };
+}
+
+export async function updateBankAccountName(id: string, newName: string): Promise<BankAccount> {
+  const updated = await prisma.bankAccount.update({
+    where: { id },
+    data: { name: newName },
+    include: {
+      user: {
+        select: {
+          name: true,
+          email: true,
+        },
+      },
+    },
+  });
+
+  if (!updated) {
+    throw new Error("Failed to update bank account name");
+  }
+
+  return updated;
 }

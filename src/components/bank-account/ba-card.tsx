@@ -3,15 +3,18 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { BankAccount } from "@prisma/client";
 import Image from "next/image";
+import CustomSession from "../../../types/session-betterAuth";
 import { DeleteBankAccountButton } from "./delete-ba-button";
+import { RenameDialog } from "./rename-ba-dialog";
 
 interface Props {
   bankAccount: BankAccount;
-  session: { token: string; userId: string; name: string };
+  session: Pick<CustomSession, "token" | "userId" | "name">;
   onDelete?: () => void;
+  onRename?: () => void;
 }
 
-export default function BankAccountCard({ bankAccount, session, onDelete }: Props) {
+export default function BankAccountCard({ bankAccount, session, onDelete, onRename }: Props) {
   return (
     <Card className="w-max-[400px] group relative duration-300 hover:shadow-md">
       <div className="absolute right-2 top-2 opacity-0 transition-opacity group-hover:opacity-100">
@@ -26,7 +29,19 @@ export default function BankAccountCard({ bankAccount, session, onDelete }: Prop
         />
       </div>
       <CardHeader>
-        <CardTitle>{bankAccount.name}</CardTitle>
+        <div className="flex w-full items-center justify-between">
+          <CardTitle>
+            <div className="flex gap-2">
+              {bankAccount.name}
+              <RenameDialog
+                bankAccountId={bankAccount.id}
+                currentName={bankAccount.name}
+                session={session}
+                onRenamed={onRename}
+              />
+            </div>
+          </CardTitle>
+        </div>
         <CardDescription>{bankAccount.currency}</CardDescription>
       </CardHeader>
       <CardContent>

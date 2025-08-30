@@ -14,20 +14,16 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/components/ui/use-toast";
-import { createBankAccountAction } from "@/domain/bankAccount-domain/ba-actions";
+import bankAccountService from "@/domain/bankAccount-domain/ba-service";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Plus } from "lucide-react";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
-
-interface Session {
-  token: string;
-  userId: string;
-  name: string;
-}
+import CustomSession from "../../../types/session-betterAuth";
+import { ShimmerOverlay } from "../ui/shimmer-overlay";
 interface CreateBankAccountDialogProps {
-  session: Session;
+  session: Pick<CustomSession, "token" | "userId" | "name">;
   onCreated?: (newBankAccount: any) => void;
 }
 
@@ -48,6 +44,7 @@ function getErrorMessage(error: unknown): string {
 export function CreateDialog({ session, onCreated }: CreateBankAccountDialogProps) {
   const [open, setOpen] = useState(false);
   const { toast } = useToast();
+  const [isLoading, setIsLoading] = useState(false);
 
   const form = useForm<FormData>({
     resolver: zodResolver(createBankAccountSchema),
@@ -58,21 +55,41 @@ export function CreateDialog({ session, onCreated }: CreateBankAccountDialogProp
   });
 
   async function onSubmit(data: FormData) {
-    const response = await createBankAccountAction(data, session);
-    if (response.success) {
-      toast({
-        title: "Bank Account Created",
-        description: `Account "${data.name}" created successfully!`,
+    setIsLoading(true);
+    try {
+      const response = await bankAccountService.createBankAccount({
+        userId: session.userId,
+        currency: data.currency,
+        name: data.name,
       });
-      form.reset();
-      setOpen(false);
-      if (onCreated) onCreated(response.data);
-    } else {
+
+      //simulate loading delay
+      // await new Promise((res) => setTimeout(res, 1000));
+
+      if (response.success) {
+        toast({
+          title: "Bank Account Created",
+          description: `Account "${data.name}" created successfully!`,
+        });
+        form.reset();
+        setOpen(false);
+        onCreated?.(response.data);
+      } else {
+        toast({
+          variant: "destructive",
+          title: "Failed to create account",
+          description: getErrorMessage(response.message),
+        });
+      }
+    } catch (error) {
       toast({
         variant: "destructive",
-        title: "Failed to create account",
-        description: getErrorMessage(response.error),
+        title: "Unexpected error",
+        description: getErrorMessage(error),
       });
+    } finally {
+      // keep shimmer visible until after UI updates
+      setTimeout(() => setIsLoading(false), 1000);
     }
   }
 
@@ -120,6 +137,7 @@ export function CreateDialog({ session, onCreated }: CreateBankAccountDialogProp
             </Button>
           </DialogFooter>
         </form>
+        {isLoading && <ShimmerOverlay width="100%" height="100%" borderRadius="0.5rem" />}
       </DialogContent>
     </Dialog>
   );

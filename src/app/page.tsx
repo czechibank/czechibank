@@ -3,15 +3,12 @@ import { getBankAccountsByUserId } from "@/domain/bankAccount-domain/ba-reposito
 import userService from "@/domain/user-domain/user-service";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
-
 export default async function Home() {
-  const apikeyHeaders = await headers();
-  const session = await userService.server.getSession(apikeyHeaders);
+  const session = await userService.server.getSession(await headers());
 
   if (!session) {
     redirect("/signin");
   }
-  const { id, token, userId, expiresAt, createdAt, updatedAt, ipAddress, userAgent } = session.session;
 
   const bankAccounts = await getBankAccountsByUserId(session.user.id);
 

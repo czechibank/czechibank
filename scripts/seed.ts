@@ -88,11 +88,11 @@ async function seedUsers() {
       const apiKey = await auth.api.createApiKey({ body: { userId: user.id } });
 
       // Update bank account number
-      const bankAccount = await prisma.bankAccount.findFirst({ where: { userId: user.id } });
+      const bankAccount = await prisma.bankAccount.findFirst({ where: { userId: user.id, isActive: true } });
       if (bankAccount) {
         await prisma.bankAccount.update({
           where: { id: bankAccount.id },
-          data: { number: userSeed.bankAccountNumber },
+          data: { number: userSeed.bankAccountNumber, isActive: true },
         });
         console.log(`[seed] Updated bank account number for user: ${user.email}`);
       } else {
@@ -155,12 +155,15 @@ function generateTransactionData(regularUsers: any[], totalTransactions: number)
   // Log user information for debugging
   console.log(
     `[${new Date().toISOString()}] Regular users:`,
-    regularUsers.map((u) => ({
-      id: u.id,
-      name: u.name,
-      accountId: u.bankAccounts[0].id,
-      balance: u.bankAccounts[0].balance,
-    })),
+    regularUsers.map((u) => {
+      const activeBA = u.bankAccounts.find((ba: any) => ba.isActive);
+      return {
+        id: u.id,
+        name: u.name,
+        accountId: activeBA?.id,
+        balance: activeBA?.balance,
+      };
+    }),
   );
 
   for (let i = 0; i < totalTransactions; i++) {
@@ -205,10 +208,18 @@ function generateTransactionData(regularUsers: any[], totalTransactions: number)
       if (i % 100 === 0) {
         console.log(`[${new Date().toISOString()}] Generated ${i} transactions so far...`);
       }
+      //@Silviczka TODO clean
+      // const receiverAccount = receiver.bankAccounts[0];
+      // const senderAccount = sender.bankAccounts[0];
 
-      const receiverAccount = receiver.bankAccounts[0];
-      const senderAccount = sender.bankAccounts[0];
-
+      const senderAccount = sender.bankAccounts.find((ba: any) => ba.isActive);
+      const receiverAccount = receiver.bankAccounts.find((ba: any) => ba.isActive);
+      if (!senderAccount || !receiverAccount) {
+        console.warn(
+          `[${new Date().toISOString()}] Skipping transaction ${i + 1} - sender or receiver has no active account`,
+        );
+        continue; // Skip this transaction safely
+      }
       transactions.push({
         createdAt: transactionDate,
         amount,
@@ -247,7 +258,7 @@ async function generateDeterministicTransactions(prisma: PrismaClient) {
 
   const allUsers = await prisma.user.findMany({
     include: {
-      bankAccounts: true,
+      bankAccounts: { where: { isActive: true } },
     },
   });
   console.log(`[${new Date().toISOString()}] Found ${allUsers.length} total users`);
@@ -255,7 +266,9 @@ async function generateDeterministicTransactions(prisma: PrismaClient) {
   // Filter out rescue fund accounts
   const regularUsers = allUsers.filter(
     (user) =>
-      !user.bankAccounts[0].number.includes("555555555555") && !user.bankAccounts[0].number.includes("444444444444"),
+      user.bankAccounts.length > 0 &&
+      !user.bankAccounts[0].number.includes("555555555555") &&
+      !user.bankAccounts[0].number.includes("444444444444"),
   );
   console.log(`[${new Date().toISOString()}] Found ${regularUsers.length} regular users (excluding rescue funds)`);
 

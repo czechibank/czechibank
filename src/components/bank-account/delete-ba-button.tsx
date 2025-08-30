@@ -2,20 +2,18 @@
 
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/use-toast";
-import { deleteBankAccountAction } from "@/domain/bankAccount-domain/ba-actions";
+import bankAccountService from "@/domain/bankAccount-domain/ba-service";
 import { TrashIcon } from "lucide-react";
-import { useState } from "react";
-
-interface Session {
-  token: string;
-  userId: string;
-  name: string;
-}
+import { Suspense, useState } from "react";
+import CustomSession from "../../../types/session-betterAuth";
 interface DeleteBankAccountButtonProps {
   bankAccountId: string;
-  session: Session;
-
+  session: Pick<CustomSession, "token" | "userId" | "name">;
   onDeleted?: () => void;
+}
+
+function Spinner() {
+  return <div className="h-4 w-4 animate-spin rounded-full border-b-2 border-white"></div>;
 }
 
 export function DeleteBankAccountButton({ bankAccountId, session, onDeleted }: DeleteBankAccountButtonProps) {
@@ -27,19 +25,21 @@ export function DeleteBankAccountButton({ bankAccountId, session, onDeleted }: D
 
     setIsLoading(true);
     try {
-      const response = await deleteBankAccountAction(bankAccountId, session);
+      const response = await bankAccountService.deleteBankAccount(bankAccountId, session.userId);
 
-      if ("data" in response && response.data) {
+      if (response.success) {
         toast({
           title: "Bank account deleted",
-          description: "The bank account was successfully deleted.",
+          description: response.message,
         });
+        //simulate delay for spinner to show
+        // await new Promise((res) => setTimeout(res, 1000));
         onDeleted?.();
-      } else if ("error" in response) {
+      } else {
         toast({
           variant: "destructive",
           title: "Failed to delete",
-          description: response.error.message || "Unknown error",
+          description: response.message || "Unknown error",
         });
       }
     } catch (error) {
@@ -49,17 +49,35 @@ export function DeleteBankAccountButton({ bankAccountId, session, onDeleted }: D
         description: error instanceof Error ? error.message : "Unknown error",
       });
     } finally {
-      setIsLoading(false);
+      // keep shimmer visible until after UI updates
+      setTimeout(() => setIsLoading(false), 1000);
     }
   }
 
   return (
-    <Button variant="destructive" size="sm" onClick={handleDelete} disabled={isLoading} className="ml-2">
-      {isLoading ? (
-        <div className="h-4 w-4 animate-spin rounded-full border-b-2 border-white"></div>
-      ) : (
-        <TrashIcon className="h-4 w-4" />
-      )}
-    </Button>
+    <Suspense
+      fallback={
+        <Button variant="destructive" size="sm" disabled className="ml-2">
+          <Spinner />
+        </Button>
+      }
+    >
+      <Button
+        variant="destructive"
+        size="sm"
+        onClick={(e) => {
+          e.preventDefault();
+          handleDelete();
+        }}
+        disabled={isLoading}
+        className="ml-2"
+      >
+        {isLoading ? (
+          <div className="h-4 w-4 animate-spin rounded-full border-b-2 border-white"></div>
+        ) : (
+          <TrashIcon className="h-4 w-4" />
+        )}
+      </Button>
+    </Suspense>
   );
 }
