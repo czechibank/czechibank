@@ -1,11 +1,12 @@
 export { DELETE, HEAD, OPTIONS, PATCH, PUT } from "../../routes";
 
-import { UserSchema } from "@/domain/user-domain/user-schema";
-
 import apikeyService from "@/domain/apikey/apikey-service";
+import { UserSchema } from "@/domain/user-domain/user-schema";
 import userService from "@/domain/user-domain/user-service";
+import { Role } from "@/lib/permissions";
 import { validateEventHandler } from "@/lib/response";
 import { APIError } from "better-auth/api";
+import { z } from "zod";
 import { ApiError, handleErrors } from "../../routes";
 
 /**
@@ -53,10 +54,11 @@ export async function POST(request: Request) {
   try {
     const body = await request.json();
     const parsedUser = await validateEventHandler(UserSchema, body);
-    if ("error" in parsedUser) {
+    const parsedUserRole = await validateEventHandler(z.object({ role: z.string() }), body);
+    if ("error" in parsedUser || "error" in parsedUserRole) {
       return Response.json(parsedUser, { status: 422 });
     }
-    const createdUser = await userService.server.createUser(parsedUser, "user");
+    const createdUser = await userService.server.createUser(parsedUser, parsedUserRole.role as Role);
     const apiKey = await apikeyService.server.createApiKey(createdUser.user.id);
 
     return Response.json({ ...createdUser.user, apiKey: apiKey.key }, { status: 201 });
