@@ -88,7 +88,9 @@ export default function ProfileClientPage({
             <div className="flex-1 space-y-4">
               <div>
                 <Label className="text-sm font-medium text-muted-foreground">Name</Label>
-                <p className="text-lg font-semibold">{user.name}</p>
+                <p className="text-lg font-semibold" data-testid="userName">
+                  {user.name}
+                </p>
               </div>
               <div>
                 <Label className="text-sm font-medium text-muted-foreground">Email</Label>

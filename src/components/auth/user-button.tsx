@@ -31,7 +31,10 @@ export default function UserButton() {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <div className="rounded-full border-2 border-solid border-slate-500 hover:border-slate-200">
+        <div
+          className="rounded-full border-2 border-solid border-slate-500 hover:border-slate-200"
+          data-testid="avatarCtxMenu"
+        >
           <UserAvatar image={session.user.image ?? null} size={8} />
         </div>
       </DropdownMenuTrigger>
