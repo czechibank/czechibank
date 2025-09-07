@@ -19,7 +19,7 @@ export default function BankAccountCard({ bankAccount, session, onDelete, onRena
     <Card className="w-max-[400px] group relative duration-300 hover:shadow-md">
       <div className="absolute right-2 top-2 opacity-0 transition-opacity group-hover:opacity-100">
         <DeleteBankAccountButton
-          bankAccountId={bankAccount.id}
+          bankAccount={bankAccount}
           session={{
             token: session.token,
             userId: session.userId,

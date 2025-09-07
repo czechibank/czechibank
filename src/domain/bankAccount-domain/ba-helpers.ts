@@ -1,10 +1,30 @@
+import { ApiErrorCode } from "@/lib/response";
 import { BankAccount } from "@prisma/client";
 import * as repository from "./ba-repository";
 
 export async function enforceMinActiveBankAccount(userId: string) {
   const activeAccounts = await repository.getBankAccountsByUserId(userId, {});
   if (activeAccounts.total <= 1) {
-    throw new Error("Cannot delete the last active bank account");
+    throw {
+      code: ApiErrorCode.BAD_REQUEST,
+      message: "Cannot delete the last active bank account",
+    };
+  }
+}
+
+export async function enforceZeroBalance(bankAccount: BankAccount) {
+  if (!bankAccount) {
+    throw {
+      code: ApiErrorCode.NOT_FOUND,
+      message: "Bank account not found",
+    };
+  }
+
+  if (bankAccount.balance > 0) {
+    throw {
+      code: ApiErrorCode.NON_ZERO_BALANCE,
+      message: "Cannot delete account with non-zero balance",
+    };
   }
 }
 

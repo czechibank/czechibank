@@ -1,5 +1,6 @@
 import { checkUserAuthOrThrowError } from "@/app/api/v1/server-actions";
 import bankAccountService from "@/domain/bankAccount-domain/ba-service";
+import { mapErrorCodeToStatus } from "@/lib/api-error-status-map";
 import { ApiErrorCode, successResponse, validateEventHandler } from "@/lib/response";
 import { z } from "zod";
 import { ApiError, handleErrors } from "../../routes";
@@ -168,27 +169,23 @@ export async function GET(request: Request, context: { params: Promise<{ id: str
     });
     const parsedId = await validateEventHandler(schema, { id });
     if ("error" in parsedId) {
-      return Response.json(parsedId, { status: 422 });
+      const status = mapErrorCodeToStatus(parsedId.error.code as ApiErrorCode);
+      return Response.json(parsedId, { status });
     }
 
     const user = await checkUserAuthOrThrowError(request);
     if ("error" in user) {
-      return Response.json(user, { status: 401 });
+      const status = mapErrorCodeToStatus(user.error.code as ApiErrorCode);
+      return Response.json(user, { status });
     }
     const bankAccountResponse = await bankAccountService.getBankAccountById(parsedId.id, user.id);
 
-    if ("error" in bankAccountResponse && bankAccountResponse.error.code === ApiErrorCode.NOT_FOUND) {
-      return Response.json(bankAccountResponse, { status: 404 });
-    }
-
     if ("error" in bankAccountResponse) {
-      return Response.json(bankAccountResponse, { status: 500 });
+      const status = mapErrorCodeToStatus(bankAccountResponse.error.code as ApiErrorCode);
+      return Response.json(bankAccountResponse, { status });
     }
 
-    return Response.json(
-      successResponse("Bank account retrieved successfully", { bankAccount: bankAccountResponse.data }),
-      { status: 200 },
-    );
+    return Response.json(bankAccountResponse, { status: 200 });
   } catch (error) {
     if (error instanceof ApiError) {
       return handleErrors(error);
@@ -224,10 +221,11 @@ export async function DELETE(request: Request, context: { params: Promise<{ id: 
       ]);
     }
 
-    const result = await bankAccountService.deleteBankAccount(id, user.id);
+    const result = await bankAccountService.deleteBankAccount(bankAccount, user.id);
 
     if ("error" in result) {
-      return Response.json(result);
+      const status = mapErrorCodeToStatus(result.error.code as ApiErrorCode);
+      return Response.json(result, { status });
     }
     // Verify that isActive is actually false
     if (result.data.isActive !== false) {

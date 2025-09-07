@@ -1,6 +1,6 @@
 import { ApiErrorCode, ErrorResponse, errorResponse, SuccessResponse, successResponse } from "@/lib/response";
 import { BankAccount } from "@prisma/client";
-import { enforceMinActiveBankAccount, getUniqueBankAccountName } from "./ba-helpers";
+import { enforceMinActiveBankAccount, enforceZeroBalance, getUniqueBankAccountName } from "./ba-helpers";
 import * as repository from "./ba-repository";
 
 type Pagination = {
@@ -11,36 +11,6 @@ type BankAccountSummary = {
   id: string;
   name: string;
 };
-
-// // Enforces that a user must always have at least 1 active bank account
-// async function enforceMinActiveBankAccount(userId: string) {
-//   const activeAccounts = await repository.getBankAccountsByUserId(userId, {});
-//   if (activeAccounts.total <= 1) {
-//     throw new Error("Cannot delete the last active bank account");
-//   }
-// }
-
-// //auto rename duplicates of already existing BA names
-// export async function getUniqueBankAccountName(
-//   baseName: string,
-//   userId: string,
-//   currentAccountId?: string,
-// ): Promise<string> {
-//   const existingAccounts: BankAccountSummary[] = await repository.findActiveBankAccountsByUser(userId, baseName);
-
-//   // Exclude the account being renamed
-//   const filteredAccounts = currentAccountId
-//     ? existingAccounts.filter((ba) => ba.id !== currentAccountId)
-//     : existingAccounts;
-
-//   const used = new Set(filteredAccounts.map((ba) => parseInt(ba.name.match(/\((\d+)\)$/)?.[1] || "0", 10)));
-//   if (!used.has(0)) {
-//     return baseName;
-//   }
-//   let nextNumber = 1;
-//   while (used.has(nextNumber)) nextNumber++;
-//   return `${baseName}(${String(nextNumber).padStart(2, "0")})`;
-// }
 
 const bankAccountService = {
   async createBankAccount(
@@ -87,13 +57,25 @@ const bankAccountService = {
     return successResponse("Bank accounts retrieved successfully", bankAccounts);
   },
 
-  async deleteBankAccount(id: string, userId: string): Promise<SuccessResponse<BankAccount> | ErrorResponse> {
+  async deleteBankAccount(
+    bankAccount: BankAccount,
+    userId: string,
+  ): Promise<SuccessResponse<BankAccount> | ErrorResponse> {
     try {
       await enforceMinActiveBankAccount(userId);
-
-      const deletedBankAccount = await repository.deleteBankAccount(id);
+      await enforceZeroBalance(bankAccount);
+      const deletedBankAccount = await repository.deleteBankAccount(bankAccount.id);
       return successResponse("Bank account deleted successfully", deletedBankAccount);
     } catch (error: any) {
+      if (error?.code === ApiErrorCode.BAD_REQUEST) {
+        return errorResponse(error.message, ApiErrorCode.BAD_REQUEST);
+      }
+      if (error?.code === ApiErrorCode.NON_ZERO_BALANCE) {
+        return errorResponse(error.message, ApiErrorCode.NON_ZERO_BALANCE);
+      }
+      if (error?.code === ApiErrorCode.NOT_FOUND) {
+        return errorResponse(error.message, ApiErrorCode.NOT_FOUND);
+      }
       return errorResponse(error?.message || "Failed to delete bank account", ApiErrorCode.INTERNAL_ERROR);
     }
   },
@@ -106,6 +88,15 @@ const bankAccountService = {
       }
       return successResponse("Bank account retrieved successfully", bankAccount);
     } catch (error: any) {
+      if (error?.code === ApiErrorCode.BAD_REQUEST) {
+        return errorResponse(error.message, ApiErrorCode.BAD_REQUEST);
+      }
+      if (error?.code === ApiErrorCode.INSUFFICIENT_BALANCE) {
+        return errorResponse(error.message, ApiErrorCode.INSUFFICIENT_BALANCE);
+      }
+      if (error?.code === ApiErrorCode.NOT_FOUND) {
+        return errorResponse(error.message, ApiErrorCode.NOT_FOUND);
+      }
       return errorResponse(error?.message || "Bank account not found", ApiErrorCode.NOT_FOUND);
     }
   },

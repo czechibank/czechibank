@@ -22,7 +22,7 @@ export type PaginatedResult<T> = {
   limit: number;
 };
 
-// find active accounts starting with a name
+// find active accounts starting with a name for rename
 export async function findActiveBankAccountsByUser(userId: string, startsWith?: string) {
   return prisma.bankAccount.findMany({
     where: { userId, isActive: true, name: startsWith ? { startsWith } : undefined },

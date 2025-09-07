@@ -208,9 +208,6 @@ function generateTransactionData(regularUsers: any[], totalTransactions: number)
       if (i % 100 === 0) {
         console.log(`[${new Date().toISOString()}] Generated ${i} transactions so far...`);
       }
-      //@Silviczka TODO clean
-      // const receiverAccount = receiver.bankAccounts[0];
-      // const senderAccount = sender.bankAccounts[0];
 
       const senderAccount = sender.bankAccounts.find((ba: any) => ba.isActive);
       const receiverAccount = receiver.bankAccounts.find((ba: any) => ba.isActive);

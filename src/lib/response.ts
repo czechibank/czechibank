@@ -30,7 +30,7 @@ export type ErrorResponse = {
   success: false;
   message: string;
   error: {
-    code: string;
+    code: ApiErrorCode;
     message: string;
     details?: ErrorDetail[];
   };
@@ -53,7 +53,7 @@ export function successResponse<T>(message: string, data: T, meta?: Partial<Resp
 
 export function errorResponse(
   message: string,
-  code: string,
+  code: ApiErrorCode,
   details?: ErrorDetail[],
   meta?: Partial<ResponseMeta>,
 ): ErrorResponse {
@@ -87,7 +87,7 @@ export async function validateEventHandler<TInput, TOutput>(
 ): Promise<TOutput | ErrorResponse> {
   const result = await schema.safeParseAsync(event);
   if (!result.success) {
-    return errorResponse("Validation error", "VALIDATION_ERROR", result.error.errors);
+    return errorResponse("Validation error", ApiErrorCode.VALIDATION_ERROR, result.error.errors);
   }
   return result.data;
 }
@@ -103,6 +103,7 @@ export enum ApiErrorCode {
   INTERNAL_ERROR = "INTERNAL_ERROR",
   RATE_LIMIT_EXCEEDED = "RATE_LIMIT_EXCEEDED",
   INSUFFICIENT_BALANCE = "INSUFFICIENT_BALANCE",
+  NON_ZERO_BALANCE = "NON_ZERO_BALANCE",
 
   // FE errors
   INVALID_PASSWORD = "INVALID_PASSWORD",

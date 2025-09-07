@@ -3,11 +3,12 @@
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/use-toast";
 import bankAccountService from "@/domain/bankAccount-domain/ba-service";
+import { BankAccount } from "@prisma/client";
 import { TrashIcon } from "lucide-react";
 import { Suspense, useState } from "react";
 import CustomSession from "../../../types/session-betterAuth";
 interface DeleteBankAccountButtonProps {
-  bankAccountId: string;
+  bankAccount: BankAccount;
   session: Pick<CustomSession, "token" | "userId" | "name">;
   onDeleted?: () => void;
 }
@@ -16,7 +17,7 @@ function Spinner() {
   return <div className="h-4 w-4 animate-spin rounded-full border-b-2 border-white"></div>;
 }
 
-export function DeleteBankAccountButton({ bankAccountId, session, onDeleted }: DeleteBankAccountButtonProps) {
+export function DeleteBankAccountButton({ bankAccount, session, onDeleted }: DeleteBankAccountButtonProps) {
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
 
@@ -25,7 +26,7 @@ export function DeleteBankAccountButton({ bankAccountId, session, onDeleted }: D
 
     setIsLoading(true);
     try {
-      const response = await bankAccountService.deleteBankAccount(bankAccountId, session.userId);
+      const response = await bankAccountService.deleteBankAccount(bankAccount, session.userId);
 
       if (response.success) {
         toast({
