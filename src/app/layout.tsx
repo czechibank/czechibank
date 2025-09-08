@@ -2,7 +2,7 @@ import UserButton from "@/components/auth/user-button";
 import { ThemeProvider } from "@/components/theme-provider";
 import { ModeToggle } from "@/components/theme/toggle-button";
 import { AppFooter } from "@/components/ui/app-footer";
-import { Toaster } from "@/components/ui/toaster";
+import { Toaster } from "@/components/ui/sonner";
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import Image from "next/image";

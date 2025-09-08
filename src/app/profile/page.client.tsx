@@ -3,7 +3,7 @@ import { ApiKeyCard } from "@/components/profile/apikey-card";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
-import { toast } from "@/components/ui/use-toast";
+import { sonnerToast } from "@/components/ui/sonnerToast";
 import { UserAvatar } from "@/components/user/avatar";
 import userService from "@/domain/user-domain/user-service";
 import { authClient, useSession } from "@/lib/auth-client";
@@ -48,19 +48,13 @@ export default function ProfileClientPage({
       { image: JSON.stringify(avatarConfig) },
       {
         onSuccess: () => {
-          toast({
-            description: "Avatar updated successfully!",
-            duration: 2000,
-          });
+          sonnerToast.showSuccess("Avatar updated successfully !");
           router.refresh();
           setIsUpdatingAvatar(false);
         },
         onError: (error) => {
           console.error("Failed to update avatar:", error);
-          toast({
-            description: "Failed to update avatar",
-            variant: "destructive",
-          });
+          sonnerToast.showError("Failed to update avatar");
           setIsUpdatingAvatar(false);
         },
       },

@@ -3,7 +3,8 @@
 import { Button } from "@/components/ui/button";
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { ToastAction } from "@/components/ui/toast";
+
+import { sonnerToast } from "@/components/ui/sonnerToast";
 import { MIN_PASSWORD_LENGTH } from "@/constants";
 import { CreateUserSchemaType, UserSchema } from "@/domain/user-domain/user-schema";
 import userService from "@/domain/user-domain/user-service";
@@ -13,7 +14,6 @@ import { ErrorContext } from "better-auth/react";
 import { redirect } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
-import { toast, Toast } from "../ui/use-toast";
 
 export function RegisterForm() {
   const ExtendedUserSchema = UserSchema.extend({
@@ -46,10 +46,7 @@ export function RegisterForm() {
       {
         onSuccess: () => {
           form.reset();
-          toast({
-            title: "Account created",
-            description: "You can create your first transaction now! 🎉",
-          } satisfies Toast);
+          sonnerToast.showWithDescription("Account created", "You can create your first transaction now! 🎉");
 
           // Redirect to the home page, user will be already signed in
           redirect("/");
@@ -59,28 +56,21 @@ export function RegisterForm() {
           form.resetField("password");
           form.resetField("confirmPassword");
 
-          if (error.error.code === "USER_ALREADY_EXISTS") {
+          if (error.error.code === "USER_ALREADY_EXISTS_USE_ANOTHER_EMAIL") {
             form.setError("email", {
               type: "manual",
               message: "This email is already exists",
             });
 
             // Show toast with an option to sign in
-            toast({
-              title: "User with this email already exists",
-              description: "Would you like to sign in instead?",
-              action: (
-                <ToastAction altText="Sign in" onClick={() => redirect("/signin")}>
-                  Sign in
-                </ToastAction>
-              ),
-            } satisfies Toast);
+            sonnerToast.showWithAction(
+              "User with this email already exists",
+              "Would you like to sign in instead?",
+              <Button onClick={() => redirect("/signin")}>Sign in</Button>,
+            );
           } else {
             // Handle other errors
-            toast({
-              title: "Oh snap! Error",
-              description: error.error.message,
-            } satisfies Toast);
+            sonnerToast.showWithDescription("Oh snap! Error", error.error.message);
           }
         },
       },

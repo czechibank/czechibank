@@ -12,7 +12,6 @@ import {
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { toast } from "@/components/ui/use-toast";
 import { CreateApiKeySchema } from "@/domain/apikey/apikey-schema";
 import apikeyService from "@/domain/apikey/apikey-service";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -22,6 +21,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
+import { sonnerToast } from "../ui/sonnerToast";
 
 export default function CreateApiKey() {
   const router = useRouter();
@@ -41,15 +41,10 @@ export default function CreateApiKey() {
   const handleCopyClick = async () => {
     try {
       await navigator.clipboard.writeText(newApiKey!);
-      toast({
-        description: "API key copied to clipboard",
-        duration: 2000,
-      });
+
+      sonnerToast.showSuccess("API key copied to clipboard");
     } catch (err) {
-      toast({
-        description: "Failed to copy API key",
-        variant: "destructive",
-      });
+      sonnerToast.showError("Failed to copy API key");
     }
   };
 
@@ -66,19 +61,13 @@ export default function CreateApiKey() {
         onSuccess: (context) => {
           const apiKey = context.data as Apikey;
           setNewApiKey(apiKey.key);
-          toast({
-            title: "API key created",
-            description: "Your new API key has been created successfully",
-          });
+
+          sonnerToast.showWithDescription("API key created", "Your new API key has been created successfully");
           router.refresh();
           setInCreating(false);
         },
         onError: (error) => {
-          toast({
-            description: `Failed to create API key due to an error: ${error?.error?.message}`,
-            variant: "destructive",
-            title: "Error",
-          });
+          sonnerToast.showError(`Failed to create API key due to an error: ${error?.error?.message}`);
           setInCreating(false);
         },
       },

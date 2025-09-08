@@ -3,7 +3,7 @@
 import { Button } from "@/components/ui/button";
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { Toast, useToast } from "@/components/ui/use-toast";
+import { sonnerToast } from "@/components/ui/sonnerToast";
 import { MIN_PASSWORD_LENGTH } from "@/constants";
 import { LoginSchema, LoginSchemaType, UserBaseSchemaType } from "@/domain/user-domain/user-schema";
 import userService from "@/domain/user-domain/user-service";
@@ -13,8 +13,6 @@ import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 
 export default function SignInPage() {
-  const { toast } = useToast();
-
   const form = useForm<LoginSchemaType>({
     resolver: zodResolver(LoginSchema),
     defaultValues: {
@@ -28,20 +26,12 @@ export default function SignInPage() {
   const action: () => void = form.handleSubmit(async (data: UserBaseSchemaType): Promise<void> => {
     await userService.client.signIn({ email: data.email, password: data.password } satisfies UserBaseSchemaType, {
       onSuccess: () => {
-        toast({
-          title: "Success",
-          description: "You are signed in",
-        } satisfies Toast);
+        sonnerToast.showSuccess("You are signed in");
         router.push("/");
       },
       onError: (error) => {
         form.resetField("password");
-
-        toast({
-          title: "Error",
-          description: error?.error.message,
-          variant: "destructive",
-        } satisfies Toast);
+        sonnerToast.showError(error?.error.message);
       },
     });
   });

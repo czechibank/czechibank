@@ -1,6 +1,5 @@
 "use client";
-
-import { useToast } from "@/components/ui/use-toast";
+import { sonnerToast } from "@/components/ui/sonnerToast";
 import apikeyService from "@/domain/apikey/apikey-service";
 import { Apikey } from "@prisma/client";
 import { CalendarIcon, EyeIcon, EyeOffIcon, TrashIcon } from "lucide-react";
@@ -12,7 +11,6 @@ import { Card, CardContent } from "../ui/card";
 import { Label } from "../ui/label";
 
 export function ApiKeyCard({ apiKey }: { apiKey: Omit<Apikey, "key"> }) {
-  const { toast } = useToast();
   const router = useRouter();
   const [showKey, setShowKey] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -21,18 +19,12 @@ export function ApiKeyCard({ apiKey }: { apiKey: Omit<Apikey, "key"> }) {
     setIsDeleting(true);
     await apikeyService.client.deleteApiKey(apiKey.id, {
       onSuccess: () => {
-        toast({
-          description: `API key "${apiKey.name}" has been deleted.`,
-          duration: 3000,
-        });
+        sonnerToast.showSuccess(`API key "${apiKey.name}" has been deleted.`);
         router.refresh();
       },
       onError: (error) => {
         console.error(error);
-        toast({
-          description: "Failed to delete API key",
-          variant: "destructive",
-        });
+        sonnerToast.showError("Failed to delete API key");
         setIsDeleting(false);
       },
     });
