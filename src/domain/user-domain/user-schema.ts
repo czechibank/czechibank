@@ -10,6 +10,9 @@ export const LoginSchema = UserBaseSchema;
 
 export const UserSchema = UserBaseSchema.extend({
   name: z.string().trim().min(1, "Name cannot be empty or contain only spaces"),
+  image: z.string().optional(),
 });
 
-export type CreateUserSchema = z.infer<typeof UserSchema>;
+export type CreateUserSchemaType = z.infer<typeof UserSchema>;
+export type UserBaseSchemaType = z.infer<typeof UserBaseSchema>;
+export type LoginSchemaType = z.infer<typeof LoginSchema>;

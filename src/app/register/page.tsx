@@ -23,7 +23,9 @@ export default async function RegisterPage() {
   }
   return (
     <div>
-      <h1 className="my-8 scroll-m-20 text-4xl font-extrabold tracking-tight lg:text-5xl">Register</h1>
+      <h1 className="my-8 mb-3 scroll-m-20 text-4xl font-extrabold tracking-tight lg:text-5xl">Register</h1>
+      <p className="mb-9 text-sm text-muted-foreground"></p>
+
       <RegisterForm />
     </div>
   );
