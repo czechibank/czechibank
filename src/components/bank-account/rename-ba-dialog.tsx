@@ -13,6 +13,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/components/ui/use-toast";
+import { RenameBankAccountSchema } from "@/domain/bankAccount-domain/ba-schema";
 import bankAccountService from "@/domain/bankAccount-domain/ba-service";
 import { Pencil } from "lucide-react";
 import { useState } from "react";
@@ -27,11 +28,7 @@ interface RenameBankAccountDialogProps {
   onRenamed?: () => void;
 }
 
-const renameBankAccountSchema = z.object({
-  name: z.string().min(1, "Account name cannot be empty"),
-});
-
-type FormData = z.infer<typeof renameBankAccountSchema>;
+type FormData = z.infer<typeof RenameBankAccountSchema>;
 
 export function RenameDialog({ bankAccountId, currentName, session, onRenamed }: RenameBankAccountDialogProps) {
   const [open, setOpen] = useState(false);

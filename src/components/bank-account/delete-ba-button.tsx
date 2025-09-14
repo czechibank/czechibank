@@ -5,7 +5,7 @@ import { useToast } from "@/components/ui/use-toast";
 import bankAccountService from "@/domain/bankAccount-domain/ba-service";
 import { BankAccount } from "@prisma/client";
 import { TrashIcon } from "lucide-react";
-import { Suspense, useState } from "react";
+import { useState } from "react";
 import CustomSession from "../../../types/session-betterAuth";
 interface DeleteBankAccountButtonProps {
   bankAccount: BankAccount;
@@ -56,29 +56,17 @@ export function DeleteBankAccountButton({ bankAccount, session, onDeleted }: Del
   }
 
   return (
-    <Suspense
-      fallback={
-        <Button variant="destructive" size="sm" disabled className="ml-2">
-          <Spinner />
-        </Button>
-      }
+    <Button
+      variant="destructive"
+      size="sm"
+      onClick={(e) => {
+        e.preventDefault();
+        handleDelete();
+      }}
+      disabled={isLoading}
+      className="ml-2"
     >
-      <Button
-        variant="destructive"
-        size="sm"
-        onClick={(e) => {
-          e.preventDefault();
-          handleDelete();
-        }}
-        disabled={isLoading}
-        className="ml-2"
-      >
-        {isLoading ? (
-          <div className="h-4 w-4 animate-spin rounded-full border-b-2 border-white"></div>
-        ) : (
-          <TrashIcon className="h-4 w-4" />
-        )}
-      </Button>
-    </Suspense>
+      {isLoading ? <Spinner /> : <TrashIcon className="h-4 w-4" />}
+    </Button>
   );
 }

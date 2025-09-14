@@ -1,5 +1,6 @@
 import { checkUserAuthOrThrowError } from "@/app/api/v1/server-actions";
 import bankAccountService from "@/domain/bankAccount-domain/ba-service";
+import { mapErrorCodeToStatus } from "@/lib/api-error-status-map";
 import { ApiErrorCode, createPaginationMeta, errorResponse, successResponse } from "@/lib/response";
 import { ApiError, DELETE, HEAD, PATCH, POST, PUT, handleErrors } from "../routes";
 
@@ -80,26 +81,29 @@ import { ApiError, DELETE, HEAD, PATCH, POST, PUT, handleErrors } from "../route
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/Error'
+ *       502:
+ *         description: Bad Gateway - Bank account service returned malformed or invalid data
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *             examples:
+ *               malformedData:
+ *                 summary: Malformed service response
+ *                 value:
+ *                   success: false
+ *                   message: "Invalid data from bank account service"
+ *                   error:
+ *                     code: BAD_GATEWAY
+ *                     message: "Service returned missing or malformed data"
  */
 
 export async function GET(request: Request) {
   try {
     console.log("GET /bank-account/route.ts");
-    // 1️⃣ Authenticate user
-    let user;
-    try {
-      user = await checkUserAuthOrThrowError(request);
-      if ("error" in user) {
-        return Response.json(user, { status: 401 });
-      }
-    } catch (authErr) {
-      return Response.json(
-        errorResponse("Authentication failed", ApiErrorCode.UNAUTHORIZED, [
-          { code: ApiErrorCode.UNAUTHORIZED, message: (authErr as Error).message },
-        ]),
-        { status: 401 },
-      );
-    }
+    // Authenticate user
+    const user = await checkUserAuthOrThrowError(request);
+    if ("error" in user) return Response.json(user, { status: mapErrorCodeToStatus(user.error.code) }); //401
 
     const { searchParams } = new URL(request.url);
     const page = parseInt(searchParams.get("page") || "1");
@@ -132,16 +136,14 @@ export async function GET(request: Request) {
     }
 
     // Check if service returned error
-    if ("error" in result) {
-      return Response.json(result);
-    }
+    if ("error" in result) return Response.json(result, { status: mapErrorCodeToStatus(result.error.code) }); //VALIDATION (422), INTERNAL_ERROR (500)
 
     if (!result.data || !Array.isArray(result.data.items)) {
       return Response.json(
-        errorResponse("Invalid data from bank account service", ApiErrorCode.INTERNAL_ERROR, [
-          { code: ApiErrorCode.INTERNAL_ERROR, message: "Missing or invalid data property" },
+        errorResponse("Invalid data from bank account service", ApiErrorCode.BAD_GATEWAY, [
+          { code: ApiErrorCode.BAD_GATEWAY, message: "Service returned missing or malformed data" },
         ]),
-        { status: 500 },
+        { status: 502 },
       );
     }
 

@@ -7,10 +7,6 @@ type Pagination = {
   page: number;
   limit: number;
 };
-type BankAccountSummary = {
-  id: string;
-  name: string;
-};
 
 const bankAccountService = {
   async createBankAccount(
@@ -67,15 +63,14 @@ const bankAccountService = {
       const deletedBankAccount = await repository.deleteBankAccount(bankAccount.id);
       return successResponse("Bank account deleted successfully", deletedBankAccount);
     } catch (error: any) {
-      if (error?.code === ApiErrorCode.BAD_REQUEST) {
-        return errorResponse(error.message, ApiErrorCode.BAD_REQUEST);
+      if (
+        error?.code === ApiErrorCode.BAD_REQUEST ||
+        error?.code === ApiErrorCode.NON_ZERO_BALANCE ||
+        error?.code === ApiErrorCode.NOT_FOUND
+      ) {
+        return errorResponse(error.message, error.code);
       }
-      if (error?.code === ApiErrorCode.NON_ZERO_BALANCE) {
-        return errorResponse(error.message, ApiErrorCode.NON_ZERO_BALANCE);
-      }
-      if (error?.code === ApiErrorCode.NOT_FOUND) {
-        return errorResponse(error.message, ApiErrorCode.NOT_FOUND);
-      }
+
       return errorResponse(error?.message || "Failed to delete bank account", ApiErrorCode.INTERNAL_ERROR);
     }
   },
@@ -88,14 +83,12 @@ const bankAccountService = {
       }
       return successResponse("Bank account retrieved successfully", bankAccount);
     } catch (error: any) {
-      if (error?.code === ApiErrorCode.BAD_REQUEST) {
-        return errorResponse(error.message, ApiErrorCode.BAD_REQUEST);
-      }
-      if (error?.code === ApiErrorCode.INSUFFICIENT_BALANCE) {
-        return errorResponse(error.message, ApiErrorCode.INSUFFICIENT_BALANCE);
-      }
-      if (error?.code === ApiErrorCode.NOT_FOUND) {
-        return errorResponse(error.message, ApiErrorCode.NOT_FOUND);
+      if (
+        error?.code === ApiErrorCode.BAD_REQUEST ||
+        error?.code === ApiErrorCode.INSUFFICIENT_BALANCE ||
+        error?.code === ApiErrorCode.NOT_FOUND
+      ) {
+        return errorResponse(error.message, error.code);
       }
       return errorResponse(error?.message || "Bank account not found", ApiErrorCode.NOT_FOUND);
     }

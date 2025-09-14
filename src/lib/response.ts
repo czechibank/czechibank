@@ -30,7 +30,7 @@ export type ErrorResponse = {
   success: false;
   message: string;
   error: {
-    code: ApiErrorCode;
+    code: ApiErrorCode | string;
     message: string;
     details?: ErrorDetail[];
   };
@@ -53,7 +53,7 @@ export function successResponse<T>(message: string, data: T, meta?: Partial<Resp
 
 export function errorResponse(
   message: string,
-  code: ApiErrorCode,
+  code: ApiErrorCode | string,
   details?: ErrorDetail[],
   meta?: Partial<ResponseMeta>,
 ): ErrorResponse {
@@ -104,6 +104,8 @@ export enum ApiErrorCode {
   RATE_LIMIT_EXCEEDED = "RATE_LIMIT_EXCEEDED",
   INSUFFICIENT_BALANCE = "INSUFFICIENT_BALANCE",
   NON_ZERO_BALANCE = "NON_ZERO_BALANCE",
+  CONFLICT = "CONFLICT",
+  BAD_GATEWAY = "BAD_GATEWAY",
 
   // FE errors
   INVALID_PASSWORD = "INVALID_PASSWORD",

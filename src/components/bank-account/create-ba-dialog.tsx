@@ -14,6 +14,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/components/ui/use-toast";
+import { CreateBankAccountSchema } from "@/domain/bankAccount-domain/ba-schema";
 import bankAccountService from "@/domain/bankAccount-domain/ba-service";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Plus } from "lucide-react";
@@ -27,12 +28,7 @@ interface CreateBankAccountDialogProps {
   onCreated?: (newBankAccount: any) => void;
 }
 
-const createBankAccountSchema = z.object({
-  name: z.string().min(1, "Account name is required"),
-  currency: z.enum(["CZECHITOKEN"]),
-});
-
-type FormData = z.infer<typeof createBankAccountSchema>;
+type FormData = z.infer<typeof CreateBankAccountSchema>;
 
 function getErrorMessage(error: unknown): string {
   if (error && typeof error === "object" && "message" in error && typeof (error as any).message === "string") {
@@ -47,7 +43,7 @@ export function CreateDialog({ session, onCreated }: CreateBankAccountDialogProp
   const [isLoading, setIsLoading] = useState(false);
 
   const form = useForm<FormData>({
-    resolver: zodResolver(createBankAccountSchema),
+    resolver: zodResolver(CreateBankAccountSchema),
     defaultValues: {
       name: "",
       currency: "CZECHITOKEN",
@@ -62,9 +58,6 @@ export function CreateDialog({ session, onCreated }: CreateBankAccountDialogProp
         currency: data.currency,
         name: data.name,
       });
-
-      //simulate loading delay
-      // await new Promise((res) => setTimeout(res, 1000));
 
       if (response.success) {
         toast({
