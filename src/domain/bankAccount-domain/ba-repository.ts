@@ -66,16 +66,19 @@ export async function createBankAccount({
   userId,
   currency,
   name = "My Bank Account",
+  balance,
 }: {
   userId: string;
   currency: Currency;
   name?: string;
+  balance: number;
 }) {
   const bankAccount = await prisma.bankAccount.create({
     data: {
       userId: userId,
       currency: currency,
       name: name,
+      balance,
       number: generateRandomDigits(12) + "/5555",
       isActive: true,
     },

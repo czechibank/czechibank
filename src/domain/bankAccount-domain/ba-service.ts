@@ -1,6 +1,11 @@
 import { ApiErrorCode, ErrorResponse, errorResponse, SuccessResponse, successResponse } from "@/lib/response";
 import { BankAccount } from "@prisma/client";
-import { enforceMinActiveBankAccount, enforceZeroBalance, getUniqueBankAccountName } from "./ba-helpers";
+import {
+  enforceMinActiveBankAccount,
+  enforceZeroBalance,
+  getInitialBalanceForUser,
+  getUniqueBankAccountName,
+} from "./ba-helpers";
 import * as repository from "./ba-repository";
 
 type Pagination = {
@@ -14,7 +19,10 @@ const bankAccountService = {
   ): Promise<SuccessResponse<BankAccount> | ErrorResponse> {
     try {
       const finalName = await getUniqueBankAccountName(bankAccount.name, bankAccount.userId);
-      const result = await repository.createBankAccount({ ...bankAccount, name: finalName });
+
+      const initialBalance = await getInitialBalanceForUser(bankAccount.userId);
+
+      const result = await repository.createBankAccount({ ...bankAccount, name: finalName, balance: initialBalance });
       return successResponse("Bank account created successfully", result);
     } catch (error: any) {
       return errorResponse(error?.message || "Failed to create bank account", ApiErrorCode.INTERNAL_ERROR);
