@@ -35,6 +35,7 @@ model BankAccount {
   currency        Currency      @default(CZECHITOKEN)
   userId          String
   balance         Float         @default(100000)
+  isActive        Boolean       @default(true)
   user            User          @relation(fields: [userId], references: [id])
   outTransactions Transaction[] @relation("FromAccount")
   inTransactions  Transaction[] @relation("ToAccount")
