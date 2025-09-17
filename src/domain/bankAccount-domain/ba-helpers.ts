@@ -12,6 +12,11 @@ export async function enforceMinActiveBankAccount(userId: string) {
   }
 }
 
+export async function getInitialBalanceForUser(userId: string): Promise<number> {
+  const { total } = await repository.getBankAccountsByUserId(userId, { page: 1, limit: 1 });
+  return total === 0 ? 100_000 : 0;
+}
+
 export async function enforceZeroBalance(bankAccount: BankAccount) {
   if (!bankAccount) {
     throw {
