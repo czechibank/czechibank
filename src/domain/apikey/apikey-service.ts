@@ -14,13 +14,13 @@ const apikeyService = {
      * @param onError - The function to call when the API key is not created.
      */
     async createApiKey(
-      { name, expiresIn }: CreateApiKeySchema,
+      { name, expiresInDays }: CreateApiKeySchema,
       {
         onSuccess,
         onError,
       }: { onSuccess: (context: SuccessContext<Apikey>) => void; onError: (error?: ErrorContext) => void },
     ) {
-      const parsed = CreateApiKeySchema.safeParse({ name, expiresIn });
+      const parsed = CreateApiKeySchema.safeParse({ name, expiresInDays });
       if (!parsed.success) {
         onError({
           error: {
@@ -29,7 +29,13 @@ const apikeyService = {
         } as ErrorContext);
         return;
       }
-      await authClient.apiKey.create(parsed.data, { onSuccess, onError });
+      await authClient.apiKey.create(
+        {
+          name,
+          expiresIn: expiresInDays ? expiresInDays * 24 * 60 * 60 : undefined,
+        },
+        { onSuccess, onError },
+      );
     },
 
     /**

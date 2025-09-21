@@ -6,7 +6,7 @@ import { ApiError, DELETE, HEAD, OPTIONS, PATCH, POST, PUT, handleErrors } from 
  * @swagger
  * /bank-account/get-all:
  *   get:
- *     summary: Get all bank accounts
+ *     summary: Get all bank accounts (all users)
  *     description: Retrieve a paginated list of bank accounts
  *     tags: [Bank Accounts]
  *     security:

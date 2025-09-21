@@ -114,7 +114,7 @@ export function TransactionTransfer({
                 <FormControl>
                   <Select onValueChange={field.onChange} {...field}>
                     <SelectTrigger className="">
-                      <SelectValue placeholder="Select an receiver your money" />
+                      <SelectValue placeholder="Select a receiver for your money" />
                     </SelectTrigger>
                     <SelectContent>
                       <SelectGroup>

@@ -2,6 +2,7 @@ import { checkUserAuthOrThrowError } from "@/app/api/v1/server-actions";
 import { BankAccountSchema } from "@/domain/bankAccount-domain/ba-schema";
 import bankAccountService from "@/domain/bankAccount-domain/ba-service";
 import { ApiErrorCode, errorResponse, successResponse } from "@/lib/response";
+import { NextResponse } from "next/server";
 import { ApiError, handleErrors } from "../../routes";
 /**
  * @swagger
@@ -50,13 +51,13 @@ export async function POST(request: Request) {
   try {
     const user = await checkUserAuthOrThrowError(request);
     if ("error" in user) {
-      return Response.json(user, { status: 401 });
+      return NextResponse.json(user, { status: 401 });
     }
     const body = await request.json();
     const parsedBody = BankAccountSchema.safeParse(body);
 
     if (!parsedBody.success) {
-      return Response.json(errorResponse(parsedBody.error.message, ApiErrorCode.VALIDATION_ERROR));
+      return NextResponse.json(errorResponse(parsedBody.error.message, ApiErrorCode.VALIDATION_ERROR), { status: 400 });
     }
 
     const result = await bankAccountService.createBankAccount({
@@ -65,16 +66,18 @@ export async function POST(request: Request) {
       name: parsedBody.data.name || "New Bank Account",
     });
 
-    return Response.json(successResponse("Bank account created successfully", { bankAccount: result }), {
+    return NextResponse.json(successResponse("Bank account created successfully", { bankAccount: result }), {
       status: 201,
     });
   } catch (error) {
     if (error instanceof ApiError) {
       return handleErrors(error);
     } else {
-      throw new ApiError("Internal Server Error", 500, ApiErrorCode.INTERNAL_ERROR, [
-        { code: ApiErrorCode.INTERNAL_ERROR, message: error instanceof Error ? error.message : "Unknown error" },
-      ]);
+      return handleErrors(
+        new ApiError("Internal Server Error", 500, ApiErrorCode.INTERNAL_ERROR, [
+          { code: ApiErrorCode.INTERNAL_ERROR, message: error instanceof Error ? error.message : "Unknown error" },
+        ]),
+      );
     }
   }
 }

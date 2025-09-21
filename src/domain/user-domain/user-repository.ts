@@ -39,7 +39,9 @@ export async function getUserByApiKey(apiKey: string): Promise<any> {
 export async function getAllUsersWithBankAccounts(): Promise<UserWithBankAccounts[]> {
   return await prisma.user.findMany({
     include: {
-      bankAccounts: true,
+      bankAccounts: {
+        where: { isActive: true },
+      },
     },
   });
 }

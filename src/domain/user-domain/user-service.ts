@@ -4,7 +4,7 @@ import { ApiErrorCode, ErrorResponse, errorResponse, SuccessResponse, successRes
 import { User } from "@prisma/client";
 import { auth } from "../../../auth";
 import * as userRepository from "./user-repository";
-import type { CreateUserSchema } from "./user-schema";
+import { CreateUserSchemaType, UserBaseSchemaType } from "./user-schema";
 
 import { UserWithBankAccounts } from "@/components/transactions/transfer";
 import { ResponseSuccessErrorType } from "@/domain/shared-domain-types";
@@ -21,10 +21,7 @@ const userService = {
      * @param onSuccess - The function to call when the user is signed in.
      * @param onError - The function to call when the user is not signed in.
      */
-    async signIn(
-      user: { email: string; password: string },
-      { onSuccess, onError }: ResponseSuccessErrorType,
-    ): Promise<void> {
+    async signIn(user: UserBaseSchemaType, { onSuccess, onError }: onSuccessOnErrorType) {
       await authClient.signIn.email(
         { email: user.email, password: user.password },
         {
@@ -40,10 +37,7 @@ const userService = {
      * @param onSuccess - The function to call when the user is signed up.
      * @param onError - The function to call when the user is not signed up.
      */
-    async signUp(
-      user: { email: string; password: string; name: string; image: string },
-      { onSuccess, onError }: ResponseSuccessErrorType,
-    ): Promise<void> {
+    async signUp(user: CreateUserSchemaType, { onSuccess, onError }: onSuccessOnErrorType) {
       await authClient.signUp.email(
         {
           email: user.email,
@@ -100,7 +94,7 @@ const userService = {
           email: user.email,
           password: user.password,
           name: user.name,
-          role: "admin" as Role,
+          role: role,
         },
       });
     },
