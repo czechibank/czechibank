@@ -178,8 +178,16 @@ All responses follow a consistent format:
           type: "object",
           properties: {
             amount: { type: "number", example: 100.5, minimum: 0.01, description: "Amount to send (must be positive)" },
-            fromBankNumber: { type: "string", example: "968206569/5555", description: "Sender's bank account number" },
-            toBankNumber: { type: "string", example: "987654321/5555", description: "Recipient's bank account number" },
+            fromBankNumber: {
+              type: "string",
+              example: "1111222233334444/5555",
+              description: "Sender's bank account number",
+            },
+            toBankNumber: {
+              type: "string",
+              example: "1111222233334444/5555",
+              description: "Recipient's bank account number",
+            },
           },
           required: ["amount", "fromBankNumber", "toBankNumber"],
         },
