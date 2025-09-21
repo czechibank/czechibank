@@ -6,8 +6,9 @@ import { Meteors } from "@/components/ui/meteors";
 import bankAccountService from "@/domain/bankAccount-domain/ba-service";
 import userService from "@/domain/user-domain/user-service";
 
+import { incorrectBalanceDisplayFeature } from "@/domain/features-domain/features-application-service";
 import featuresService from "@/domain/features-domain/features-service";
-import { FeaturesKeysEnum, FeatureType } from "@/domain/features-domain/features.schema";
+import { FeatureType } from "@/domain/features-domain/features.schema";
 import { RocketIcon } from "lucide-react";
 import { headers } from "next/headers";
 import { notFound, redirect } from "next/navigation";
@@ -23,14 +24,12 @@ export default async function BankAccountPage(props: { params: Promise<{ id: str
   if (!bankAccount.success) {
     notFound();
   }
-  const allUsers = await userService.server.getAllUsers();
+  const allUsers = await userService.server.getAllUsersWithBankAccounts();
   const allFeatures = await featuresService.server.getAllFeatures();
 
   // simulate a bug in the balance display
   function getBankBalance(balance: number, features: FeatureType[]): string {
-    if (featuresService.client.getFeatureToggle(FeaturesKeysEnum.BUG_INCORRECT_BALANCE_DISPLAY, features)) {
-      balance = balance * (Math.random() * (10 - 0.1) + 0.1);
-    }
+    balance = incorrectBalanceDisplayFeature(features, balance);
 
     return balance.toFixed(1);
   }

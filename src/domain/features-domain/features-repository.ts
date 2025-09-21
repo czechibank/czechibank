@@ -12,27 +12,10 @@ export async function getAllFeatures(): Promise<FeatureType[]> {
 }
 
 export async function updateFeatures(features: FeatureType[]): Promise<void> {
-  // DIRTY HACK: update all features with "true" value
-  await prisma.feature.updateMany({
-    data: {
-      toggle: true,
-    },
-    where: {
-      id: {
-        in: features.filter((feat: FeatureType) => feat.toggle).map((feat: FeatureType) => feat.id),
-      },
-    },
-  });
-
-  // DIRTY HACK: update all features with "false" value
-  await prisma.feature.updateMany({
-    data: {
-      toggle: false,
-    },
-    where: {
-      id: {
-        in: features.filter((feat: FeatureType) => !feat.toggle).map((feat: FeatureType) => feat.id),
-      },
-    },
-  });
+  for (const feature of features) {
+    await prisma.feature.update({
+      where: { id: feature.id },
+      data: { toggle: feature.toggle },
+    });
+  }
 }

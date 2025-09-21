@@ -26,5 +26,5 @@ export default async function AdministrationPage() {
     return <div>Error loading features. Please try again later.</div>;
   }
 
-  return <AdministrationClientPage user={user} features={allFeatures.data} />;
+  return <AdministrationClientPage features={allFeatures.data} />;
 }

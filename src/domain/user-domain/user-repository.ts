@@ -1,4 +1,5 @@
 "use server";
+import { UserWithBankAccounts } from "@/components/transactions/transfer";
 import prisma from "@/lib/db";
 
 /**
@@ -35,7 +36,7 @@ export async function getUserByApiKey(apiKey: string): Promise<any> {
   });
 }
 
-export async function getAllUsers(): Promise<any> {
+export async function getAllUsersWithBankAccounts(): Promise<UserWithBankAccounts[]> {
   return await prisma.user.findMany({
     include: {
       bankAccounts: true,

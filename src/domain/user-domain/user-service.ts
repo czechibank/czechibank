@@ -6,6 +6,7 @@ import { auth } from "../../../auth";
 import * as userRepository from "./user-repository";
 import type { CreateUserSchema } from "./user-schema";
 
+import { UserWithBankAccounts } from "@/components/transactions/transfer";
 import { ResponseSuccessErrorType } from "@/domain/shared-domain-types";
 import { UserWithRole } from "better-auth/plugins";
 
@@ -108,9 +109,9 @@ const userService = {
      * Get all users from the DB with their bank accounts.
      * @returns The users with their bank accounts
      */
-    async getAllUsers(): Promise<SuccessResponse<any> | ErrorResponse> {
+    async getAllUsersWithBankAccounts(): Promise<SuccessResponse<UserWithBankAccounts[]> | ErrorResponse> {
       try {
-        const result = await userRepository.getAllUsers();
+        const result = await userRepository.getAllUsersWithBankAccounts();
         return successResponse("Users found", result);
       } catch (error) {
         return errorResponse("Error fetching users", ApiErrorCode.OPERATION_FAILED);

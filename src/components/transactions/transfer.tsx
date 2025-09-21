@@ -1,8 +1,11 @@
 "use client";
 
 import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import featuresService from "@/domain/features-domain/features-service";
-import { FeaturesKeysEnum, FeatureType } from "@/domain/features-domain/features.schema";
+import {
+  amountSchemaToCheckFeature,
+  showGifInTransactionsFeature,
+} from "@/domain/features-domain/features-application-service";
+import { FeatureType } from "@/domain/features-domain/features.schema";
 import { sendMoneyToBankNumberAction } from "@/domain/transaction-domain/transaction-action";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Prisma } from "@prisma/client";
@@ -14,7 +17,7 @@ import { Input } from "../ui/input";
 import { useToast } from "../ui/use-toast";
 import { UserAvatar } from "../user/avatar";
 
-type UserWithBankAccounts = Prisma.UserGetPayload<{
+export type UserWithBankAccounts = Prisma.UserGetPayload<{
   include: {
     bankAccounts: true;
   };
@@ -44,17 +47,9 @@ export function TransactionTransfer({
       return a.name.localeCompare(b.name);
     });
 
-  // feature toggle to allow sending more money than the balance
-  function getAmountSchemaToCheck() {
-    if (featuresService.client.getFeatureToggle(FeaturesKeysEnum.SEND_MONEY_WITHOUT_ACCOUNT_BALANCE, features)) {
-      return z.coerce.number().min(0);
-    }
-    return z.coerce.number().min(0).max(balance);
-  }
-
   const transferScheme = z.object({
     toBankNumber: z.string(),
-    amount: getAmountSchemaToCheck(),
+    amount: amountSchemaToCheckFeature(features, balance),
     // .refine((value) => {
     //   // const decimalPart = value.toString().split('.')[1];
     //   // return decimalPart === undefined || decimalPart.length === 1;
@@ -84,8 +79,7 @@ export function TransactionTransfer({
     });
 
     if (response.success) {
-      // feature to show GIFs in toast
-      if (featuresService.client.getFeatureToggle(FeaturesKeysEnum.GIFS_IN_TRANSACTIONS, features)) {
+      if (showGifInTransactionsFeature(features)) {
         toast({
           title: "💸 Transaction created!",
           description: (

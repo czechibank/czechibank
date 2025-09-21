@@ -8,19 +8,17 @@ import { toast } from "@/components/ui/use-toast";
 import featuresService from "@/domain/features-domain/features-service";
 import { FeatureType } from "@/domain/features-domain/features.schema";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { User } from "@prisma/client";
 import { flatMap, isEmpty, isEqual, omitBy, uniq } from "lodash";
 import { SettingsIcon } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { useForm } from "react-hook-form";
 import z, { ZodBoolean, ZodDefault } from "zod";
 
 type FeaturesFlagsValues = { [p: string]: boolean };
 
-export default function AdministrationClientPage({ user, features }: { user: User; features: FeatureType[] }) {
-  const allFeatures: FeatureType[] = useMemo(
-    () => features.sort((a: FeatureType, b: FeatureType): number => (a.name < b.name ? -1 : 1)),
-    [features],
+export default function AdministrationClientPage({ features }: { features: FeatureType[] }) {
+  const allFeatures: FeatureType[] = features.sort((a: FeatureType, b: FeatureType): number =>
+    a.name < b.name ? -1 : 1,
   );
   const [visibleFeatures, setVisibleFeatures] = useState<FeatureType[]>(allFeatures);
 
@@ -177,54 +175,59 @@ export default function AdministrationClientPage({ user, features }: { user: Use
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-6">
-        <div className="flex flex-wrap gap-1">
-          {featuresCategories.map((category: string) => (
-            <button
-              type="button"
-              onClick={() => selectCategory(category)}
-              key={category}
-              className={`rounded-full  px-2 py-1 text-xs ${
-                selectedCategories.has(category) ? "bg-gray-800 text-white" : "bg-gray-100 text-gray-700"
-              }`}
-            >
-              {category}
-            </button>
-          ))}
-        </div>
+        {visibleFeatures.length > 0 ? (
+          <>
+            <div className="flex flex-wrap gap-1">
+              {featuresCategories.map((category: string) => (
+                <button
+                  type="button"
+                  onClick={() => selectCategory(category)}
+                  key={category}
+                  className={`rounded-full  px-2 py-1 text-xs ${
+                    selectedCategories.has(category) ? "bg-gray-800 text-white" : "bg-gray-100 text-gray-700"
+                  }`}
+                >
+                  {category}
+                </button>
+              ))}
+            </div>
 
-        <Form {...featuresForm}>
-          <form onSubmit={featuresForm.handleSubmit(onSubmit)} className="space-y-4">
-            {visibleFeatures.map((feature: FeatureType) => (
-              <FormField
-                control={featuresForm.control}
-                name={feature.key}
-                key={feature.key}
-                render={({ field }) => (
-                  <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3 shadow-sm">
-                    <div className="space-y-0.5">
-                      <FormLabel>{feature.name}</FormLabel>
-                      <FormDescription>{feature.description}</FormDescription>
-                      <div className="flex flex-wrap gap-2 pt-2">
-                        {feature.category.map((cat) => (
-                          <span key={cat} className="rounded-full bg-gray-100 px-2 py-1 text-xs text-gray-700">
-                            {cat}
-                          </span>
-                        ))}
-                      </div>
-                    </div>
-                    <FormControl>
-                      <Switch checked={field.value} onCheckedChange={field.onChange} />
-                    </FormControl>
-                  </FormItem>
-                )}
-              />
-            ))}
-            <Button type="submit">Submit</Button>
-            <Button className="mx-4" type="button" variant={"outline"} onClick={resetToDefault}>
-              Reset defaults
-            </Button>
-          </form>
-        </Form>
+            <Form {...featuresForm}>
+              <form onChange={featuresForm.handleSubmit(onSubmit)} className="space-y-4">
+                {visibleFeatures.map((feature: FeatureType) => (
+                  <FormField
+                    control={featuresForm.control}
+                    name={feature.key}
+                    key={feature.key}
+                    render={({ field }) => (
+                      <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3 shadow-sm">
+                        <div className="space-y-0.5">
+                          <FormLabel>{feature.name}</FormLabel>
+                          <FormDescription>{feature.description}</FormDescription>
+                          <div className="flex flex-wrap gap-2 pt-2">
+                            {feature.category.map((cat) => (
+                              <span key={cat} className="rounded-full bg-gray-100 px-2 py-1 text-xs text-gray-700">
+                                {cat}
+                              </span>
+                            ))}
+                          </div>
+                        </div>
+                        <FormControl>
+                          <Switch checked={field.value} onCheckedChange={field.onChange} />
+                        </FormControl>
+                      </FormItem>
+                    )}
+                  />
+                ))}
+                <Button type="button" variant={"outline"} onClick={resetToDefault}>
+                  Reset defaults
+                </Button>
+              </form>
+            </Form>
+          </>
+        ) : (
+          <p className="text-sm text-gray-500">No features available.</p>
+        )}
       </CardContent>
     </Card>
   );
