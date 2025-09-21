@@ -46,13 +46,8 @@ export function RegisterForm() {
       {
         onSuccess: () => {
           form.reset();
-          toast({
-            title: "Account created",
-            description: "You can create your first transaction now! 🎉",
-          } satisfies Toast);
 
-          // Redirect to the home page, user will be already signed in
-          redirect("/");
+          redirect("/register/success");
         },
         onError: (error: ErrorContext): void => {
           // Reset password fields if user already exists, because of the security reasons

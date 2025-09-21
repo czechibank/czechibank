@@ -1,5 +1,11 @@
 import { ApiErrorCode, ErrorResponse, errorResponse, SuccessResponse, successResponse } from "@/lib/response";
 import { BankAccount } from "@prisma/client";
+import {
+  enforceMinActiveBankAccount,
+  enforceZeroBalance,
+  getInitialBalanceForUser,
+  getUniqueBankAccountName,
+} from "./ba-helpers";
 import * as repository from "./ba-repository";
 
 type Pagination = {
@@ -12,7 +18,11 @@ const bankAccountService = {
     bankAccount: Pick<BankAccount, "userId" | "currency" | "name">,
   ): Promise<SuccessResponse<BankAccount> | ErrorResponse> {
     try {
-      const result = await repository.createBankAccount(bankAccount);
+      const finalName = await getUniqueBankAccountName(bankAccount.name, bankAccount.userId);
+
+      const initialBalance = await getInitialBalanceForUser(bankAccount.userId);
+
+      const result = await repository.createBankAccount({ ...bankAccount, name: finalName, balance: initialBalance });
       return successResponse("Bank account created successfully", result);
     } catch (error: any) {
       return errorResponse(error?.message || "Failed to create bank account", ApiErrorCode.INTERNAL_ERROR);
@@ -51,11 +61,24 @@ const bankAccountService = {
     return successResponse("Bank accounts retrieved successfully", bankAccounts);
   },
 
-  async deleteBankAccount(id: string): Promise<SuccessResponse<BankAccount> | ErrorResponse> {
+  async deleteBankAccount(
+    bankAccount: BankAccount,
+    userId: string,
+  ): Promise<SuccessResponse<BankAccount> | ErrorResponse> {
     try {
-      const deletedBankAccount = await repository.deleteBankAccount(id);
+      await enforceMinActiveBankAccount(userId);
+      await enforceZeroBalance(bankAccount);
+      const deletedBankAccount = await repository.deleteBankAccount(bankAccount.id);
       return successResponse("Bank account deleted successfully", deletedBankAccount);
     } catch (error: any) {
+      if (
+        error?.code === ApiErrorCode.BAD_REQUEST ||
+        error?.code === ApiErrorCode.NON_ZERO_BALANCE ||
+        error?.code === ApiErrorCode.NOT_FOUND
+      ) {
+        return errorResponse(error.message, error.code);
+      }
+
       return errorResponse(error?.message || "Failed to delete bank account", ApiErrorCode.INTERNAL_ERROR);
     }
   },
@@ -68,7 +91,31 @@ const bankAccountService = {
       }
       return successResponse("Bank account retrieved successfully", bankAccount);
     } catch (error: any) {
+      if (
+        error?.code === ApiErrorCode.BAD_REQUEST ||
+        error?.code === ApiErrorCode.INSUFFICIENT_BALANCE ||
+        error?.code === ApiErrorCode.NOT_FOUND
+      ) {
+        return errorResponse(error.message, error.code);
+      }
       return errorResponse(error?.message || "Bank account not found", ApiErrorCode.NOT_FOUND);
+    }
+  },
+  async renameBankAccount(
+    id: string,
+    userId: string,
+    newName: string,
+  ): Promise<SuccessResponse<BankAccount> | ErrorResponse> {
+    try {
+      // Generate a unique name for this user
+      const finalName = await getUniqueBankAccountName(newName, userId, id);
+
+      // Update the account name in the repository
+      const updatedBankAccount = await repository.updateBankAccountName(id, finalName);
+
+      return successResponse("Bank account renamed successfully", updatedBankAccount);
+    } catch (error: any) {
+      return errorResponse(error?.message || "Failed to rename bank account", ApiErrorCode.INTERNAL_ERROR);
     }
   },
 };

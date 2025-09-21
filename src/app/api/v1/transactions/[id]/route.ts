@@ -1,5 +1,6 @@
 import transactionService from "@/domain/transaction-domain/transaction-service";
-import { ApiErrorCode, errorResponse } from "@/lib/response";
+import { mapErrorCodeToStatus } from "@/lib/api-error-status-map";
+import { ApiErrorCode, errorResponse, successResponse } from "@/lib/response";
 import { NextRequest, NextResponse } from "next/server";
 import { DELETE, HEAD, OPTIONS, PATCH, POST, PUT } from "../../routes";
 import { checkUserAuthOrThrowError } from "../../server-actions";
@@ -47,34 +48,45 @@ import { checkUserAuthOrThrowError } from "../../server-actions";
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/Error'
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
  */
 export async function GET(request: NextRequest, props: { params: Promise<{ id: string }> }) {
   const params = await props.params;
   try {
     const user = await checkUserAuthOrThrowError(request);
     if ("error" in user) {
-      return NextResponse.json(errorResponse(user.error.message, user.error.code), { status: 401 });
+      return NextResponse.json(errorResponse(user.error.message, user.error.code), {
+        status: mapErrorCodeToStatus(user.error.code),
+      }); //401
     }
 
     const result = await transactionService.getTransactionDetailByTransactionId(params.id, user.id);
 
     if ("error" in result) {
-      const error = result.error as { code: ApiErrorCode; message: string };
-      if (error.code === "NOT_FOUND") {
-        return NextResponse.json(errorResponse("Transaction not found", "404"), { status: 404 });
+      const { code, message } = result.error;
+
+      if (code === ApiErrorCode.NOT_FOUND) {
+        return NextResponse.json(errorResponse("Transaction not found", code), { status: mapErrorCodeToStatus(code) }); //404
       }
-      return NextResponse.json(errorResponse(error.message, "500"), { status: 500 });
+
+      return NextResponse.json(errorResponse(message, ApiErrorCode.INTERNAL_ERROR), {
+        status: mapErrorCodeToStatus(ApiErrorCode.INTERNAL_ERROR), //500
+      });
     }
 
-    return NextResponse.json({
-      success: true,
-      data: {
-        transaction: result.data,
-      },
+    return NextResponse.json(successResponse("Transaction retrieved successfully", { transaction: result.data }), {
+      status: 200,
     });
   } catch (error) {
     console.error("Error in GET /api/v1/transactions/[id]:", error);
-    return NextResponse.json(errorResponse("Internal server error", "500"), { status: 500 });
+    return NextResponse.json(errorResponse("Internal server error", ApiErrorCode.INTERNAL_ERROR), {
+      status: mapErrorCodeToStatus(ApiErrorCode.INTERNAL_ERROR), //500
+    });
   }
 }
 

@@ -22,11 +22,11 @@ Techstack: NextJS (Typescript) + Prisma + Auth.js (email)
 1. `cp .env.example .env` - and fill environment variables
 1. Run docker image with database
    - `docker compose up -d`
-1. Run script to initialize tables for NextAuth
-   - `npx prisma generate && npx prisma migrate dev`
-1. Basic pnpm stuff
+1. Basic npm stuff
    - Install dependencies - `pnpm install`
    - Run server - `pnpm run dev`
+1. Run script to initialize tables for NextAuth
+   - `pnpx prisma generate && pnpx prisma migrate dev`
 
 ## Frameworks + Tools
 
@@ -41,7 +41,7 @@ Prisma provides the best experience for your team to work and interact with data
 
 ### Better-Auth
 
-https://www.better-auth.com/
+<https://www.better-auth.com/>
 
 ### shadcn/ui
 
