@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "npm run db:seed:features && next dev --turbopack",
-    "build": "prisma generate && next build && npm run db:seed:features",
+    "build": "prisma generate && next build",
     "post:build": "mkdir build/standalone/.next && cp -r public build/standalone/ && cp -r .next/static build/standalone/.next/",
     "start": "next start",
     "lint": "next lint",
