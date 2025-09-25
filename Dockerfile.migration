@@ -14,5 +14,13 @@ RUN \
 # Copy only the prisma directory (and schema)
 COPY prisma ./prisma
 
-# Default command
-CMD ["npx", "prisma", "migrate", "deploy"] 
+# Copy the scripts directory for seeding
+COPY scripts ./scripts
+
+# Copy source files needed for seeding
+COPY src ./src
+COPY tsconfig.json ./
+COPY next-env.d.ts ./
+
+# Default command - run migrations then seed features
+CMD ["sh", "-c", "npx prisma migrate deploy && npm run db:seed:features"] 
