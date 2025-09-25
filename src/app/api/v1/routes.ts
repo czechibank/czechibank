@@ -1,4 +1,4 @@
-import { errorResponse } from "@/lib/response";
+import { ApiErrorCode, errorResponse } from "@/lib/response";
 import { APIError } from "better-auth/api";
 import { NextResponse } from "next/server";
 import { ApiError } from "./api-error";
@@ -13,6 +13,9 @@ export async function handleErrors(error: ApiError | APIError) {
       status: error.statusCode,
     });
   }
+
+  // Fallback for unexpected error types
+  return Response.json(errorResponse("Internal Server Error", ApiErrorCode.INTERNAL_ERROR), { status: 500 });
 }
 
 export async function DELETE(request: Request) {
