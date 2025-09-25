@@ -8,6 +8,7 @@ import { MIN_PASSWORD_LENGTH } from "@/constants";
 import { LoginSchema, LoginSchemaType, UserBaseSchemaType } from "@/domain/user-domain/user-schema";
 import userService from "@/domain/user-domain/user-service";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { ErrorContext } from "better-auth/react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
@@ -34,7 +35,7 @@ export default function SignInPage() {
         } satisfies Toast);
         router.push("/");
       },
-      onError: (error) => {
+      onError: (error: ErrorContext) => {
         form.resetField("password");
 
         toast({

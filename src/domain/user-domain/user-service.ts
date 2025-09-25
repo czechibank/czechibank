@@ -21,7 +21,7 @@ const userService = {
      * @param onSuccess - The function to call when the user is signed in.
      * @param onError - The function to call when the user is not signed in.
      */
-    async signIn(user: UserBaseSchemaType, { onSuccess, onError }: onSuccessOnErrorType) {
+    async signIn(user: UserBaseSchemaType, { onSuccess, onError }: ResponseSuccessErrorType) {
       await authClient.signIn.email(
         { email: user.email, password: user.password },
         {
@@ -37,7 +37,7 @@ const userService = {
      * @param onSuccess - The function to call when the user is signed up.
      * @param onError - The function to call when the user is not signed up.
      */
-    async signUp(user: CreateUserSchemaType, { onSuccess, onError }: onSuccessOnErrorType) {
+    async signUp(user: CreateUserSchemaType, { onSuccess, onError }: ResponseSuccessErrorType) {
       await authClient.signUp.email(
         {
           email: user.email,
@@ -88,7 +88,7 @@ const userService = {
      * @param role - The role of the user
      * @returns The user
      */
-    async createUser(user: CreateUserSchema, role: Role): Promise<{ user: UserWithRole }> {
+    async createUser(user: CreateUserSchemaType, role: Role): Promise<{ user: UserWithRole }> {
       return await auth.api.createUser({
         body: {
           email: user.email,
