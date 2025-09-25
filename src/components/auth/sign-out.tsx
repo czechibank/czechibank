@@ -15,9 +15,10 @@ export function SignOut(props: React.ComponentPropsWithRef<typeof Button>) {
       onClick={async () => {
         await userService.client.signOut({
           onSuccess: () => {
-            router.push("/");
+            window.location.replace("/");
           },
           onError: (error) => {
+            window.location.replace("/");
             console.log(error);
           },
         });
