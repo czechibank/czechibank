@@ -1,16 +1,14 @@
 import { authClient } from "@/lib/auth-client";
 import { Role } from "@/lib/permissions";
-import { ApiErrorCode, errorResponse, successResponse } from "@/lib/response";
+import { ApiErrorCode, ErrorResponse, errorResponse, SuccessResponse, successResponse } from "@/lib/response";
 import { User } from "@prisma/client";
-import { ErrorContext } from "better-auth/react";
 import { auth } from "../../../auth";
 import * as userRepository from "./user-repository";
 import { CreateUserSchemaType, UserBaseSchemaType } from "./user-schema";
 
-type onSuccessOnErrorType = {
-  onSuccess: () => void;
-  onError: (error: ErrorContext) => void;
-};
+import { UserWithBankAccounts } from "@/components/transactions/transfer";
+import { ResponseSuccessErrorType } from "@/domain/shared-domain-types";
+import { UserWithRole } from "better-auth/plugins";
 
 /**
  * Service layer for user domain. Orchestrates between better-auth, repositories, and other services.
@@ -58,11 +56,11 @@ const userService = {
      * @param onSuccess - The function to call when the user is updated
      * @param onError - The function to call when the user is not updated
      */
-    async updateUser(user: Pick<User, "image">, { onSuccess, onError }: onSuccessOnErrorType) {
+    async updateUser(user: Pick<User, "image">, { onSuccess, onError }: ResponseSuccessErrorType): Promise<void> {
       await authClient.updateUser({ image: user.image }, { onSuccess, onError });
     },
 
-    async signOut({ onSuccess, onError }: onSuccessOnErrorType) {
+    async signOut({ onSuccess, onError }: ResponseSuccessErrorType): Promise<void> {
       await authClient.signOut({
         fetchOptions: {
           onSuccess,
@@ -90,8 +88,7 @@ const userService = {
      * @param role - The role of the user
      * @returns The user
      */
-    // TODO - @vojtech-cerveny - do we want to use the "role" here?
-    async createUser(user: CreateUserSchemaType, role: Role) {
+    async createUser(user: CreateUserSchema, role: Role): Promise<{ user: UserWithRole }> {
       return await auth.api.createUser({
         body: {
           email: user.email,
@@ -106,9 +103,9 @@ const userService = {
      * Get all users from the DB with their bank accounts.
      * @returns The users with their bank accounts
      */
-    async getAllUsers() {
+    async getAllUsersWithBankAccounts(): Promise<SuccessResponse<UserWithBankAccounts[]> | ErrorResponse> {
       try {
-        const result = await userRepository.getAllUsers();
+        const result = await userRepository.getAllUsersWithBankAccounts();
         return successResponse("Users found", result);
       } catch (error) {
         return errorResponse("Error fetching users", ApiErrorCode.OPERATION_FAILED);

@@ -1,6 +1,6 @@
 "use server";
+import { UserWithBankAccounts } from "@/components/transactions/transfer";
 import prisma from "@/lib/db";
-import { ApiErrorCode, errorResponse, successResponse } from "@/lib/response";
 
 /**
  * Custom user repository functions for logic not handled by better-auth.
@@ -10,8 +10,8 @@ import { ApiErrorCode, errorResponse, successResponse } from "@/lib/response";
 /**
  * Regenerates a user's avatar config (custom logic, not handled by better-auth).
  */
-export async function regenerateAvatarConfig(userId: string, avatarConfig: string) {
-  const user = await prisma.user.update({
+export async function regenerateAvatarConfig(userId: string, avatarConfig: string): Promise<void> {
+  await prisma.user.update({
     where: {
       id: userId,
     },
@@ -19,18 +19,13 @@ export async function regenerateAvatarConfig(userId: string, avatarConfig: strin
       image: avatarConfig,
     },
   });
-  if ("error" in user) {
-    return errorResponse("An error occurred while regenerating the avatar config", ApiErrorCode.OPERATION_FAILED);
-  }
-
-  return successResponse("Avatar config regenerated", user);
 }
 
 /**
  * Finds a user by API key (if you still use API keys for custom logic).
  */
-export async function getUserByApiKey(apiKey: string) {
-  const user = await prisma.user.findFirst({
+export async function getUserByApiKey(apiKey: string): Promise<any> {
+  return await prisma.user.findFirst({
     where: {
       apikeys: {
         some: {
@@ -39,17 +34,14 @@ export async function getUserByApiKey(apiKey: string) {
       },
     },
   });
-
-  return user;
 }
 
-export async function getAllUsers() {
-  const users = await prisma.user.findMany({
+export async function getAllUsersWithBankAccounts(): Promise<UserWithBankAccounts[]> {
+  return await prisma.user.findMany({
     include: {
       bankAccounts: {
         where: { isActive: true },
       },
     },
   });
-  return users;
 }

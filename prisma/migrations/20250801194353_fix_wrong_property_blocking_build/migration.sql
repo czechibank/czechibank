@@ -1,2 +1,2 @@
 -- DropEnum
-DROP TYPE "Sex";
+-- DROP TYPE "Sex";
