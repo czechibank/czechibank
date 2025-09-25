@@ -22,6 +22,7 @@ export const ApiTransactionCreateSchema = z.object({
     .max(Number.MAX_SAFE_INTEGER, "Amount must be less than or equal to 9007199254740991 due security reasons.")
     .transform((val) => Math.round(val * 10) / 10),
   toBankNumber: z.string().endsWith("5555").length(17, "Bank number must be exactly in format 1111222233334444/5555"),
+  fromBankNumber: z.string().endsWith("5555").length(17, "Bank number must be exactly in format 1111222233334444/5555"),
 });
 
 export const CreateTransactionUserIdToUserIdUserSchema = z.object({
