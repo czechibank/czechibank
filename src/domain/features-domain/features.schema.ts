@@ -29,6 +29,14 @@ export const availableFeatures: Omit<FeatureType, "id">[] = [
     defaultToggle: false,
     category: ["BUG", "UI", "BANK_ACCOUNT"],
   },
+  {
+    key: "INCREASE_TIME_IN_SENDING_TRANSACTIONS",
+    name: "Increase time in sending transactions",
+    description: "Increase time in sending transactions.",
+    toggle: false,
+    defaultToggle: false,
+    category: ["BUG"],
+  },
 ];
 
 export const FeatureSchema = z.object({
