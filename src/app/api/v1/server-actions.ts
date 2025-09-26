@@ -15,17 +15,22 @@ export async function checkUserAuthOrThrowError(
     return errorResponse("Unauthorized", ApiErrorCode.UNAUTHORIZED);
   }
 
-  const session = await userService.server.getSession(
-    new Headers({
-      "x-api-key": apiKey,
-    }),
-  );
+  try {
+    const session = await userService.server.getSession(
+      new Headers({
+        "x-api-key": apiKey,
+      }),
+    );
 
-  if (!session) {
+    if (!session) {
+      return errorResponse("Unauthorized", ApiErrorCode.UNAUTHORIZED);
+    }
+
+    return session.user;
+  } catch (error) {
+    console.error("[checkUserAuthOrThrowError] Auth error:", error);
     return errorResponse("Unauthorized", ApiErrorCode.UNAUTHORIZED);
   }
-
-  return session.user;
 }
 
 export async function generateRequestId(): Promise<string> {
