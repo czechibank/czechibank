@@ -1,8 +1,11 @@
 import { checkUserAuthOrThrowError } from "@/app/api/v1/server-actions";
 import { RenameBankAccountSchema } from "@/domain/bankAccount-domain/ba-schema";
 import bankAccountService from "@/domain/bankAccount-domain/ba-service";
+import { canSeeYourBankAccountDetailFeature as anyOneCanSeeYourBankAccountFeature } from "@/domain/features-domain/features-application-service";
+import featuresService from "@/domain/features-domain/features-service";
 import { mapErrorCodeToStatus } from "@/lib/api-error-status-map";
-import { ApiErrorCode, successResponse, validateEventHandler } from "@/lib/response";
+import { ApiErrorCode, ErrorResponse, SuccessResponse, successResponse, validateEventHandler } from "@/lib/response";
+import type { BankAccount } from "@prisma/client";
 import { z } from "zod";
 import { ApiError, handleErrors } from "../../routes";
 
@@ -197,7 +200,7 @@ import { ApiError, handleErrors } from "../../routes";
 export async function GET(request: Request, context: { params: Promise<{ id: string }> }) {
   try {
     console.log("GET /bank-account/[id]/route.ts");
-
+    let bankAccountResponse: SuccessResponse<BankAccount> | ErrorResponse;
     const { id } = await context.params;
     const schema = z.object({
       id: z.string().cuid(),
@@ -211,8 +214,14 @@ export async function GET(request: Request, context: { params: Promise<{ id: str
     const user = await checkUserAuthOrThrowError(request);
     if ("error" in user) return Response.json(user, { status: mapErrorCodeToStatus(user.error.code) }); // UNAUTHORIZED(401)
 
-    const bankAccountResponse = await bankAccountService.getBankAccountById(parsedId.id, user.id);
-
+    // If the feature is enabled, dont check who is owner of the bank account
+    const allFeatures = await featuresService.server.getAllFeatures();
+    if (allFeatures.success && anyOneCanSeeYourBankAccountFeature(allFeatures.data)) {
+      bankAccountResponse = await bankAccountService.getBankAccountById(parsedId.id);
+    } else {
+      // If the feature is disabled, also check who is owner of the bank account
+      bankAccountResponse = await bankAccountService.getBankAccountByIdAndUserId(parsedId.id, user.id);
+    }
     if ("error" in bankAccountResponse)
       return Response.json(bankAccountResponse, { status: mapErrorCodeToStatus(bankAccountResponse.error.code) }); // NOT_FOUND(404)
 
@@ -236,7 +245,7 @@ export async function DELETE(request: Request, context: { params: Promise<{ id: 
     if ("error" in user) return Response.json(user, { status: mapErrorCodeToStatus(user.error.code) }); // UNAUTHORIZED(401)
 
     // First verify the user owns this account
-    const bankAccountResponse = await bankAccountService.getBankAccountById(id, user.id);
+    const bankAccountResponse = await bankAccountService.getBankAccountByIdAndUserId(id, user.id);
     if ("error" in bankAccountResponse)
       return Response.json(bankAccountResponse, { status: mapErrorCodeToStatus(bankAccountResponse.error.code) }); // NOT_FOUND(404)
 
@@ -284,7 +293,7 @@ export async function PATCH(request: Request, context: { params: Promise<{ id: s
     if ("error" in user) return Response.json(user, { status: mapErrorCodeToStatus(user.error.code) });
     // UNAUTHORIZED(401)
 
-    const bankAccountResponse = await bankAccountService.getBankAccountById(id, user.id);
+    const bankAccountResponse = await bankAccountService.getBankAccountByIdAndUserId(id, user.id);
     if ("error" in bankAccountResponse)
       return Response.json(bankAccountResponse, { status: mapErrorCodeToStatus(bankAccountResponse.error.code) }); // NOT_FOUND(404)
 

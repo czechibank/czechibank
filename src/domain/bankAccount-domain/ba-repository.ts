@@ -112,6 +112,18 @@ export async function getBankAccountByIdAndUserId(bankAccountId: string, userId:
   return bankAccount;
 }
 
+export async function getBankAccountById(bankAccountId: string) {
+  console.log(bankAccountId);
+  const bankAccount = await prisma.bankAccount.findFirst({
+    where: {
+      id: bankAccountId,
+      isActive: true,
+    },
+  });
+
+  return bankAccount;
+}
+
 export async function getBankAccountByNumber(bankNumber: string) {
   const bankAccount = await prisma.bankAccount.findFirst({
     where: {
