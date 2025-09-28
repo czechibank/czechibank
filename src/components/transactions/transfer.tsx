@@ -105,15 +105,14 @@ export function TransactionTransfer({
           description: response.error.message,
         });
       }
-
-      form.resetField("amount");
-      form.resetField("toBankNumber");
     } catch (error) {
       toast({
         title: "💸 Transaction failed!",
         description: error instanceof Error ? error.message : "Unknown error occurred",
       });
     } finally {
+      form.resetField("amount");
+      form.resetField("toBankNumber");
       setIsLoading(false);
     }
   });

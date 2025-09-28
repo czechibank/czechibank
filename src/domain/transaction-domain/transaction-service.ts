@@ -8,8 +8,6 @@ import { sendDiscordMessage } from "../social-reporting-domain/discord-action";
 import * as repository from "./transaction-repository";
 import { CreateTransactionNumberToNumberSchema } from "./transation-schema";
 
-const allFeatures = await featuresService.server.getAllFeatures();
-
 function parseTransactionData(
   userId: string,
   fromBankNumber: string,
@@ -57,6 +55,8 @@ const transactionService = {
     applicationType: "api" | "web";
   }) {
     try {
+      const allFeatures = await featuresService.server.getAllFeatures();
+
       if (allFeatures.success) {
         if (increaseTimeInSendingTransactionsFeature(allFeatures.data)) {
           await new Promise((resolve) => setTimeout(resolve, 5000));
