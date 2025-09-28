@@ -20,7 +20,7 @@ export default async function BankAccountPage(props: { params: Promise<{ id: str
   if (!session) {
     redirect("/signin");
   }
-  const bankAccount = await bankAccountService.getBankAccountById(params.id, session.user.id);
+  const bankAccount = await bankAccountService.getBankAccountByIdAndUserId(params.id, session.user.id);
   if (!bankAccount.success) {
     notFound();
   }

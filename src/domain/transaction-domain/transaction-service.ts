@@ -2,6 +2,8 @@ import env from "@/lib/env";
 import { ApiErrorCode, errorResponse, successResponse } from "@/lib/response";
 import { Currency } from "@prisma/client";
 import bankAccountService from "../bankAccount-domain/ba-service";
+import { increaseTimeInSendingTransactionsFeature } from "../features-domain/features-application-service";
+import featuresService from "../features-domain/features-service";
 import { sendDiscordMessage } from "../social-reporting-domain/discord-action";
 import * as repository from "./transaction-repository";
 import { CreateTransactionNumberToNumberSchema } from "./transation-schema";
@@ -53,6 +55,14 @@ const transactionService = {
     applicationType: "api" | "web";
   }) {
     try {
+      const allFeatures = await featuresService.server.getAllFeatures();
+
+      if (allFeatures.success) {
+        if (increaseTimeInSendingTransactionsFeature(allFeatures.data)) {
+          await new Promise((resolve) => setTimeout(resolve, 5000));
+        }
+      }
+
       const parsedTransaction = parseTransactionData(userId, fromBankNumber, toBankNumber, amount, currency);
 
       if ("error" in parsedTransaction) {

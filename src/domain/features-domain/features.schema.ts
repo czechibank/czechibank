@@ -27,7 +27,24 @@ export const availableFeatures: Omit<FeatureType, "id">[] = [
     description: "Show an incorrect account balance (simulate calculation bug).",
     toggle: false,
     defaultToggle: false,
-    category: ["BUG", "UI", "BANK_ACCOUNT"],
+    category: ["BUG", "UI", "BANK_ACCOUNT", "API"],
+  },
+  {
+    key: "INCREASE_TIME_IN_SENDING_TRANSACTIONS",
+    name: "Increase time in sending transactions",
+    description: "Increase time in sending transactions.",
+    toggle: false,
+    defaultToggle: false,
+    category: ["BUG"],
+  },
+  {
+    key: "CAN_SEE_YOUR_BANK_ACCOUNT_DETAIL",
+    name: "Can see your bank account balance",
+    description:
+      "Can see your bank account detail. If disabled, only the owner can see the. `GET v1/bank-account/{id}`",
+    toggle: false,
+    defaultToggle: false,
+    category: ["BUG", "BANK_ACCOUNT", "API", "SECURITY"],
   },
 ];
 

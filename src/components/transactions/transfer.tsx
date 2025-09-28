@@ -9,6 +9,7 @@ import { FeatureType } from "@/domain/features-domain/features.schema";
 import { sendMoneyToBankNumberAction } from "@/domain/transaction-domain/transaction-action";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Prisma } from "@prisma/client";
+import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { Button } from "../ui/button";
@@ -16,6 +17,10 @@ import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, For
 import { Input } from "../ui/input";
 import { useToast } from "../ui/use-toast";
 import { UserAvatar } from "../user/avatar";
+
+function Spinner() {
+  return <div className="h-4 w-4 animate-spin rounded-full border-b-2 border-white"></div>;
+}
 
 export type UserWithBankAccounts = Prisma.UserGetPayload<{
   include: {
@@ -38,6 +43,7 @@ export function TransactionTransfer({
 }) {
   console.log(userId, bankAccountNumber, balance);
   const { toast } = useToast();
+  const [isLoading, setIsLoading] = useState(false);
   const users = allUsers
     .filter((user) => user.id !== userId)
     .sort((a, b) => {
@@ -69,37 +75,46 @@ export function TransactionTransfer({
   });
 
   const action: () => void = form.handleSubmit(async (data) => {
-    const response = await sendMoneyToBankNumberAction({
-      amount: data.amount,
-      currency: "CZECHITOKEN",
-      fromBankNumber: bankAccountNumber,
-      toBankNumber: data.toBankNumber,
-      userId: userId,
-      applicationType: "web",
-    });
+    setIsLoading(true);
+    try {
+      const response = await sendMoneyToBankNumberAction({
+        amount: data.amount,
+        currency: "CZECHITOKEN",
+        fromBankNumber: bankAccountNumber,
+        toBankNumber: data.toBankNumber,
+        userId: userId,
+        applicationType: "web",
+      });
 
-    if (response.success) {
-      if (showGifInTransactionsFeature(features)) {
-        toast({
-          title: "💸 Transaction created!",
-          description: (
-            <img src="https://media4.giphy.com/media/v1.Y2lkPTc5MGI3NjExbGw2OXB2cmMydW1kb3k5cnpub2x4bm02bmhzZm9lb3E3ZTRxdnhwNCZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/l0HFkA6omUyjVYqw8/giphy.gif" />
-          ),
-        });
+      if (response.success) {
+        if (showGifInTransactionsFeature(features)) {
+          toast({
+            title: "💸 Transaction created!",
+            description: (
+              <img src="https://media4.giphy.com/media/v1.Y2lkPTc5MGI3NjExbGw2OXB2cmMydW1kb3k5cnpub2x4bm02bmhzZm9lb3E3ZTRxdnhwNCZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/l0HFkA6omUyjVYqw8/giphy.gif" />
+            ),
+          });
+        } else {
+          toast({
+            title: "💸 Transaction created!",
+          });
+        }
       } else {
         toast({
-          title: "💸 Transaction created!",
+          title: "💸 Transaction failed!",
+          description: response.error.message,
         });
       }
-    } else {
+    } catch (error) {
       toast({
         title: "💸 Transaction failed!",
-        description: response.error.message,
+        description: error instanceof Error ? error.message : "Unknown error occurred",
       });
+    } finally {
+      form.resetField("amount");
+      form.resetField("toBankNumber");
+      setIsLoading(false);
     }
-
-    form.resetField("amount");
-    form.resetField("toBankNumber");
   });
   return (
     <div className="flex flex-col gap-4">
@@ -154,7 +169,9 @@ export function TransactionTransfer({
             )}
           />
 
-          <Button type="submit">Transfer</Button>
+          <Button type="submit" disabled={isLoading}>
+            {isLoading ? <Spinner /> : "Transfer"}
+          </Button>
         </form>
       </Form>
     </div>

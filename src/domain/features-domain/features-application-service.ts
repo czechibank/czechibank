@@ -21,3 +21,11 @@ export function amountSchemaToCheckFeature(features: FeatureType[], balance: num
 export function showGifInTransactionsFeature(features: FeatureType[]): boolean {
   return featuresService.client.getFeatureToggle(FeaturesKeysEnum.GIFS_IN_TRANSACTIONS, features);
 }
+
+export function increaseTimeInSendingTransactionsFeature(features: FeatureType[]): boolean {
+  return featuresService.client.getFeatureToggle(FeaturesKeysEnum.INCREASE_TIME_IN_SENDING_TRANSACTIONS, features);
+}
+
+export function canSeeYourBankAccountDetailFeature(features: FeatureType[]): boolean {
+  return featuresService.client.getFeatureToggle(FeaturesKeysEnum.CAN_SEE_YOUR_BANK_ACCOUNT_DETAIL, features);
+}

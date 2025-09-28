@@ -29,9 +29,18 @@ const bankAccountService = {
     }
   },
 
-  async getBankAccountById(id: string, userId: string) {
+  async getBankAccountByIdAndUserId(id: string, userId: string) {
     const bankAccount = await repository.getBankAccountByIdAndUserId(id, userId);
 
+    if (!bankAccount) {
+      return errorResponse("Bank account not found", ApiErrorCode.NOT_FOUND);
+    }
+
+    return successResponse("Bank account retrieved successfully", bankAccount);
+  },
+
+  async getBankAccountById(id: string) {
+    const bankAccount = await repository.getBankAccountById(id);
     if (!bankAccount) {
       return errorResponse("Bank account not found", ApiErrorCode.NOT_FOUND);
     }
