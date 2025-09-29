@@ -9,7 +9,7 @@ export const adminUserToSeed = {
   name: "App Admin",
   password: "app_admin",
   avatarConfig:
-    '{"backgroundColor":["C4DD68"],"eyebrows":["variant12"], eyebrowsColor":["000000"],"eyes":["variant01"],"eyesColor":["000000"],"freckles":["variant01"],"frecklesColor":["000000"],"frecklesProbability":[null],"glasses":["variant03"],"glassesColor":["000000"],"glassesProbability":[null],"mouth":["happy05"],"mouthColor":["000000"],"nose":["variant06"],"noseColor":["000000"]}',
+    '{"backgroundColor":["C4DD68"],"eyebrows":["variant12"],"eyebrowsColor":["000000"],"eyes":["variant01"],"eyesColor":["000000"],"freckles":["variant01"],"frecklesColor":["000000"],"frecklesProbability":[null],"glasses":["variant03"],"glassesColor":["000000"],"glassesProbability":[null],"mouth":["happy05"],"mouthColor":["000000"],"nose":["variant06"],"noseColor":["000000"]}',
   bankAccountNumber: "000000000000/5555",
   apiKey: "app_admin_key",
   role: "admin",
@@ -31,7 +31,7 @@ const usersToSeed = [
   },
   {
     email: "zachranNas+brno@pejsekAKocicka.cz",
-    name: "[BRNO] Pejsek a Kočička 🐶&🐱",
+    name: "[PRAHA] Pejsek a Kočička 🐶&🐱",
     password: "PejsekAKocicka123",
     avatarConfig:
       '{"backgroundColor":["0DC681"],"eyebrows":["variant12"],"eyebrowsColor":["000000"],"eyes":["variant01"],"eyesColor":["000000"],"freckles":["variant01"],"frecklesColor":["000000"],"frecklesProbability":[null],"glasses":["variant03"],"glassesColor":["000000"],"glassesProbability":[null],"mouth":["happy05"],"mouthColor":["000000"],"nose":["variant06"],"noseColor":["000000"]}',
@@ -42,10 +42,10 @@ const usersToSeed = [
   // Core team
   {
     email: "vojta@czechibank.ostrava.digital",
-    name: "Vojta 🦊 🎉 Cerveny",
+    name: "[CZBANK][💛 DEV] Vojta 🦊 🎉 Cerveny",
     password: "hello123456",
     avatarConfig:
-      '{"backgroundColor":["ff0000"],"eyebrows":["variant11"],"eyebrowsColor":["ffffff"],"eyes":["variant01"],"eyesColor":["ffffff"],"freckles":["variant01"],"frecklesColor":["ffffff"],"frecklesProbability":[null],"glasses":["variant01"],"glassesColor":["ffffff"],"glassesProbability":[null],"mouth":["happy04"],"mouthColor":["ffffff"],"nose":["variant04"],"noseColor":["ffffff"]}',
+      '{"backgroundColor":["FF0000"],"eyebrows":["variant11"],"eyebrowsColor":["000000"],"eyes":["variant01"],"eyesColor":["000000"],"freckles":["variant01"],"frecklesColor":["000000"],"frecklesProbability":[null],"glasses":["variant02"],"glassesColor":["000000"],"glassesProbability":[100],"mouth":["happy04"],"mouthColor":["000000"],"nose":["variant04"],"noseColor":["000000"]}',
     bankAccountNumber: "000000000001/5555",
     apiKey: "33",
     role: "admin",
@@ -78,7 +78,7 @@ const usersToSeed = [
       '{"backgroundColor":["4699CD"],"eyebrows":["variant12"],"eyebrowsColor":["000000"],"eyes":["variant01"],"eyesColor":["000000"],"freckles":["variant01"],"frecklesColor":["000000"],"frecklesProbability":[null],"glasses":["variant03"],"glassesColor":["000000"],"glassesProbability":[null],"mouth":["happy05"],"mouthColor":["000000"],"nose":["variant06"],"noseColor":["000000"]}',
     bankAccountNumber: "000000000004/5555",
     apiKey: "66",
-    role: "user",
+    role: "admin",
   },
 ];
 
@@ -92,6 +92,9 @@ async function seedUsers() {
           name: userSeed.name,
           password: userSeed.password,
           role: userSeed.role as Role,
+          data: {
+            image: userSeed.avatarConfig,
+          },
         },
       });
 
