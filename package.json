@@ -3,7 +3,8 @@
   "version": "0.1.4",
   "private": true,
   "contributors": [
-    "Vojtěch Červený <cervik49@gmail.com> (https://www.linkedin.com/in/vojtech-cerveny/)"
+    "Vojtěch Červený <cervik49@gmail.com> (https://www.linkedin.com/in/vojtech-cerveny/)",
+    "Silvia Stražovcová (https://www.linkedin.com/in/silvia-strazovcova/)"
   ],
   "scripts": {
     "dev": "npm run db:seed:features && next dev --turbopack",
