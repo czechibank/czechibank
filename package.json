@@ -4,7 +4,8 @@
   "private": true,
   "contributors": [
     "Vojtěch Červený <cervik49@gmail.com> (https://www.linkedin.com/in/vojtech-cerveny/)",
-    "Silvia Stražovcová (https://www.linkedin.com/in/silvia-strazovcova/)"
+    "Silvia Stražovcová (https://www.linkedin.com/in/silvia-strazovcova/)",
+    "Dita Pochová Dřímalová (https://www.linkedin.com/in/dita-pochov%C3%A1-d%C5%99%C3%ADmalov%C3%A1/)"
   ],
   "scripts": {
     "dev": "npm run db:seed:features && next dev --turbopack",
