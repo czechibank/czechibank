@@ -86,7 +86,7 @@ const usersToSeed = [
     name: "[CZBANK][💛 DEV] Silvi Czka",
     password: "hello123456",
     avatarConfig:
-      '{"backgroundColor":["C4DD68"],"eyebrows":["variant12"],"eyebrowsColor":["000000"],"eyes":["variant01"],"eyesColor":["000000"],"freckles":["variant01"],"frecklesColor":["000000"],"frecklesProbability":[null],"glasses":["variant03"],"glassesColor":["000000"],"glassesProbability":[null],"mouth":["happy05"],"mouthColor":["000000"],"nose":["variant06"],"noseColor":["000000"]}',
+      '{"backgroundColor":["FFEE8C"],"eyebrows":["variant12"],"eyebrowsColor":["000000"],"eyes":["variant01"],"eyesColor":["000000"],"freckles":["variant01"],"frecklesColor":["000000"],"frecklesProbability":[null],"glasses":["variant03"],"glassesColor":["000000"],"glassesProbability":[null],"mouth":["happy05"],"mouthColor":["000000"],"nose":["variant06"],"noseColor":["000000"]}',
     bankAccountNumber: "000000000005/5555",
     apiKey: "77",
     role: "user",
@@ -96,8 +96,18 @@ const usersToSeed = [
     name: "[CZBANK][💚 QA] Dita Pochová Dřímalová",
     password: "hello123456",
     avatarConfig:
-      '{"backgroundColor":["008000"],"eyebrows":["variant12"],"eyebrowsColor":["000000"],"eyes":["variant01"],"eyesColor":["000000"],"freckles":["variant01"],"frecklesColor":["000000"],"frecklesProbability":[null],"glasses":["variant03"],"glassesColor":["000000"],"glassesProbability":[null],"mouth":["happy05"],"mouthColor":["000000"],"nose":["variant06"],"noseColor":["000000"]}',
+      '{"backgroundColor":["88E788"],"eyebrows":["variant12"],"eyebrowsColor":["000000"],"eyes":["variant01"],"eyesColor":["000000"],"freckles":["variant01"],"frecklesColor":["000000"],"frecklesProbability":[null],"glasses":["variant03"],"glassesColor":["000000"],"glassesProbability":[null],"mouth":["happy05"],"mouthColor":["000000"],"nose":["variant06"],"noseColor":["000000"]}',
     bankAccountNumber: "000000000006/5555",
+    apiKey: "88",
+    role: "user",
+  },
+  {
+    email: "iveta@czechibank.ostrava.digital",
+    name: "[CZBANK][💚 QA] Ivet Kuklová",
+    password: "hello123456",
+    avatarConfig:
+      '{"backgroundColor":["88E788"],"eyebrows":["variant11"],"eyebrowsColor":["000000"],"eyes":["variant01"],"eyesColor":["000000"],"freckles":["variant01"],"frecklesColor":["000000"],"frecklesProbability":[null],"glasses":["variant03"],"glassesColor":["000000"],"glassesProbability":[null],"mouth":["happy05"],"mouthColor":["000000"],"nose":["variant06"],"noseColor":["000000"]}',
+    bankAccountNumber: "000000000007/5555",
     apiKey: "88",
     role: "user",
   },
