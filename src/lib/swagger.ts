@@ -191,6 +191,77 @@ All responses follow a consistent format:
           },
           required: ["amount", "fromBankNumber", "toBankNumber"],
         },
+        ApiKey: {
+          type: "object",
+          properties: {
+            id: { type: "string", example: "ak_123", description: "Unique API key identifier" },
+            name: {
+              type: ["string", "null"],
+              example: "My API Key",
+              description: "Human-readable name for the API key",
+            },
+            start: { type: ["string", "null"], example: "czb_", description: "Prefix of the API key" },
+            prefix: { type: ["string", "null"], example: "czb_", description: "Prefix of the API key" },
+            key: {
+              type: "string",
+              example: "czb_1234567890abcdef",
+              description: "The actual (hashed) API key (only shown on creation)",
+            },
+            userId: { type: "string", example: "usr_123", description: "ID of the user who owns this API key" },
+            refillInterval: {
+              type: ["integer", "null"],
+              example: 3600,
+              description: "Rate limit refill interval in seconds",
+            },
+            refillAmount: {
+              type: ["integer", "null"],
+              example: 100,
+              description: "Number of requests to refill per interval",
+            },
+            lastRefillAt: {
+              type: ["string", "null"],
+              format: "date-time",
+              description: "When the rate limit was last refilled",
+            },
+            enabled: { type: ["boolean", "null"], example: true, description: "Whether the API key is enabled" },
+            rateLimitEnabled: {
+              type: ["boolean", "null"],
+              example: true,
+              description: "Whether rate limiting is enabled",
+            },
+            rateLimitTimeWindow: {
+              type: ["integer", "null"],
+              example: 3600,
+              description: "Rate limit time window in seconds",
+            },
+            rateLimitMax: { type: ["integer", "null"], example: 100, description: "Maximum requests per time window" },
+            requestCount: {
+              type: ["integer", "null"],
+              example: 45,
+              description: "Current number of requests in the time window",
+            },
+            remaining: {
+              type: ["integer", "null"],
+              example: 55,
+              description: "Remaining requests in the current time window",
+            },
+            lastRequest: {
+              type: ["string", "null"],
+              format: "date-time",
+              description: "When the API key was last used",
+            },
+            expiresAt: { type: ["string", "null"], format: "date-time", description: "When the API key expires" },
+            createdAt: { type: "string", format: "date-time", description: "When the API key was created" },
+            updatedAt: { type: "string", format: "date-time", description: "When the API key was last updated" },
+            permissions: {
+              type: ["string", "null"],
+              example: "read,write",
+              description: "Comma-separated list of permissions",
+            },
+            metadata: { type: ["string", "null"], example: "{}", description: "Additional metadata as JSON string" },
+          },
+          required: ["id", "key", "userId", "createdAt", "updatedAt"],
+        },
         SuccessResponse: {
           type: "object",
           properties: {
@@ -268,6 +339,10 @@ All responses follow a consistent format:
       {
         name: "Transactions",
         description: "Money transfer operations",
+      },
+      {
+        name: "API Keys",
+        description: "API key management operations",
       },
     ],
   },
