@@ -128,20 +128,47 @@ export function TransactionTransfer({
                 <FormLabel>Receiver</FormLabel>
                 <FormControl>
                   <Select onValueChange={field.onChange} {...field}>
-                    <SelectTrigger className="">
-                      <SelectValue placeholder="Select a receiver for your money" />
+                    <SelectTrigger className="p-6">
+                      <SelectValue placeholder="Select a receiver for your money">
+                        {field.value
+                          ? (() => {
+                              const selectedAccount = users
+                                .flatMap((user) => user.bankAccounts)
+                                .find((account) => account.number === field.value);
+                              const selectedUser = selectedAccount
+                                ? users.find((user) =>
+                                    user.bankAccounts.some((account) => account.number === selectedAccount.number),
+                                  )
+                                : null;
+
+                              return selectedUser && selectedAccount ? (
+                                <div className="flex w-full items-center gap-3">
+                                  <UserAvatar size={8} image={selectedUser.image ?? null} />
+                                  <div className="flex flex-col">
+                                    <span className="truncate text-left font-semibold">{selectedUser.name}</span>
+                                    <span className="text-left font-mono text-sm text-muted-foreground/70">
+                                      {selectedAccount.number}
+                                    </span>
+                                  </div>
+                                </div>
+                              ) : null;
+                            })()
+                          : null}
+                      </SelectValue>
                     </SelectTrigger>
                     <SelectContent>
                       <SelectGroup>
                         {users.map((user) =>
                           user.bankAccounts.map((bankAccount) => (
-                            <SelectItem key={bankAccount.number} value={bankAccount.number} className="flex w-full">
-                              <div className="flex w-full flex-row items-center justify-between">
-                                <div className="flex w-[300px] flex-row items-center gap-4 pl-8 font-semibold ">
-                                  <UserAvatar size={8} image={user.image ?? null} />
-                                  <span className="truncate">{user.name}</span>
+                            <SelectItem key={bankAccount.number} value={bankAccount.number}>
+                              <div className="flex w-full items-center gap-4">
+                                <UserAvatar size={8} image={user.image ?? null} />
+                                <div className="flex min-w-0 flex-1 flex-col">
+                                  <span className="truncate font-semibold">{user.name}</span>
+                                  <span className="font-mono text-sm text-muted-foreground/70">
+                                    {bankAccount.number}
+                                  </span>
                                 </div>
-                                <span className="font-mono">{bankAccount.number}</span>
                               </div>
                             </SelectItem>
                           )),

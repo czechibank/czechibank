@@ -42,33 +42,33 @@ export async function TransactionTable({ bankAccountId }: { bankAccountId: strin
     <div className="my-8 w-full">
       <h1>Transactions</h1>
       <AlertDestructive message="DUE to bad performance, you will see last 30 transactions. Use API to see ALL your transactions." />
-      <Table>
+      <Table className="w-full">
         <TableCaption>A list of your recent transactions.</TableCaption>
         <TableHeader>
           <TableRow>
             <TableHead className="">From</TableHead>
             <TableHead>To</TableHead>
-            <TableHead>Currency</TableHead>
+            <TableHead className="hidden md:table-cell">Currency</TableHead>
             <TableHead className="text-right">Amount</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
           {transactions.map((transaction) => (
             <TableRow key={transaction.id.padStart(10)}>
-              <TableCell className=" font-medium">
-                <div className="flex flex-row items-center justify-start space-x-2">
+              <TableCell className="font-medium">
+                <div className="flex items-center justify-start space-x-2 md:flex-row">
                   <UserAvatar size={8} image={transaction.from.user.image ?? null} />
                   <span>{transaction.from.user.name}</span>
                 </div>
               </TableCell>
-              <TableCell className="">
+              <TableCell className="sm:w-1/3">
                 <div className="flex flex-row items-center justify-start space-x-2">
                   <UserAvatar size={8} image={transaction.to.user.image ?? null} />
                   <span>{transaction.to.user.name}</span>
                 </div>
               </TableCell>
-              <TableCell>{transaction.currency}</TableCell>
-              <TableCell className="text-right">{transaction.amount}</TableCell>
+              <TableCell className="hidden md:table-cell">{transaction.currency}</TableCell>
+              <TableCell className="max-w-[10px] text-right">{transaction.amount}</TableCell>
             </TableRow>
           ))}
         </TableBody>
