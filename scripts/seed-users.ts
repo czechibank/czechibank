@@ -111,6 +111,16 @@ const usersToSeed = [
     apiKey: "88",
     role: "user",
   },
+  {
+    email: "michaela@czechibank.ostrava.digital",
+    name: "[CZBANK][💛 DEV] Michaela Poštulka",
+    password: "hello123456",
+    avatarConfig:
+      '{"backgroundColor":["ffd5dc"],"eyebrows":["variant10"],"eyebrowsColor":["000000"],"eyes":["variant23"],"eyesColor":["000000"],"freckles":["variant01"],"frecklesColor":["000000"],"frecklesProbability":["100"],"glasses":["variant03"],"glassesColor":["000000"],"glassesProbability":["100"],"mouth":["happy04"],"mouthColor":["000000"],"nose":["variant05"],"noseColor":["000000"]}',
+    bankAccountNumber: "000000000008/5555",
+    apiKey: "88",
+    role: "user",
+  },
 ];
 
 async function seedUsers() {
