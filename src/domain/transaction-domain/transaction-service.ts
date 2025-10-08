@@ -179,8 +179,8 @@ const transactionService = {
     return successResponse("Transaction details retrieved successfully", transaction);
   },
 
-  async getAllTransactionsByUserAndBankAccountId(bankAccountId: string) {
-    return await repository.getAllTransactionsByUserAndBankAccountId(bankAccountId);
+  async getAllTransactionsByUserAndBankAccountId(bankAccountId: string, limit: number) {
+    return await repository.getAllTransactionsByUserAndBankAccountId(bankAccountId, limit);
   },
 };
 

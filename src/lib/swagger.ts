@@ -24,7 +24,7 @@ All responses follow a consistent format:
 \`\`\``,
       contact: {
         name: "API Support",
-        url: "https://github.com/your-repo/czechibank",
+        url: "https://github.com/czechibank/czechibank",
       },
     },
     servers: [
@@ -35,6 +35,14 @@ All responses follow a consistent format:
       {
         url: "https://czechibank.ostrava.digital/api/v1",
         description: "Production Server",
+      },
+      {
+        url: "https://ostrava.czechibank.ostrava.digital/api/v1",
+        description: "OSTRAVA!!! Production Server",
+      },
+      {
+        url: "https://praha.czechibank.ostrava.digital/api/v1",
+        description: "Praha Production Server",
       },
     ],
     components: {
@@ -309,8 +317,9 @@ All responses follow a consistent format:
                       field: { type: "string", example: "amount", description: "Field that caused the error" },
                       message: {
                         type: "string",
-                        example: "Amount must be positive",
-                        description: "Detailed error message",
+                        example:
+                          "Generic error message - details are not here, they are in the code 🤗 Use your imagination and creativity to figure out what went wrong! 🤩 And have fun!",
+                        description: "More detailed error message",
                       },
                     },
                   },

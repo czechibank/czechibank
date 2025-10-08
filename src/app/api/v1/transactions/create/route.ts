@@ -52,12 +52,12 @@ import { NextRequest, NextResponse } from "next/server";
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/Error'
- *      500:
- *        description: Internal server error
- *        content:
- *          application/json:
- *            schema:
- *              $ref: '#/components/schemas/Error'
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
  *
  */
 export async function POST(request: NextRequest) {
