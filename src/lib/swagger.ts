@@ -317,8 +317,9 @@ All responses follow a consistent format:
                       field: { type: "string", example: "amount", description: "Field that caused the error" },
                       message: {
                         type: "string",
-                        example: "Amount must be positive",
-                        description: "Detailed error message",
+                        example:
+                          "Generic error message - details are not here, they are in the code 🤗 Use your imagination and creativity to figure out what went wrong! 🤩 And have fun!",
+                        description: "More detailed error message",
                       },
                     },
                   },
