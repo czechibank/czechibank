@@ -9,21 +9,12 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { useSession } from "@/lib/auth-client";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { useEffect } from "react";
 import { Button } from "../ui/button";
 import { UserAvatar } from "../user/avatar";
 import { SignOut } from "./sign-out";
 
 export default function UserButton() {
-  const router = useRouter();
   const { data: session, isPending } = useSession();
-
-  useEffect(() => {
-    if (!isPending && !session?.user) {
-      router.push("/signin");
-    }
-  }, [isPending, session, router]);
 
   if (isPending) return <p className="mt-8 text-center">Loading...</p>;
   if (!session?.user) return <Link href="/signin">Sign in</Link>;
