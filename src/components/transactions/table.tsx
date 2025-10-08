@@ -46,7 +46,7 @@ export async function TransactionTable({ bankAccountId }: { bankAccountId: strin
       <AlertDestructive
         message={`DUE to bad performance, you will see last ${LIMIT} transactions. Use API to see ALL your transactions.`}
       />
-      <Table>
+      <Table className="w-full">
         <TableCaption>A list of your recent transactions.</TableCaption>
         <TableHeader>
           <TableRow>
@@ -74,7 +74,7 @@ export async function TransactionTable({ bankAccountId }: { bankAccountId: strin
                   <span>{transaction.to.user.name}</span>
                 </div>
               </TableCell>
-              <TableCell className="text-right">{transaction.amount}</TableCell>
+              <TableCell className="max-w-[10px] text-right">{transaction.amount}</TableCell>
             </TableRow>
           ))}
         </TableBody>
