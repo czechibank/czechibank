@@ -108,7 +108,7 @@ export async function getAllTransactionsByUserId(userId: string) {
   return transactions;
 }
 
-export async function getAllTransactionsByUserAndBankAccountId(bankAccountId: string) {
+export async function getAllTransactionsByUserAndBankAccountId(bankAccountId: string, limit: number) {
   const transactions = await prisma.transaction.findMany({
     where: {
       OR: [
@@ -135,7 +135,7 @@ export async function getAllTransactionsByUserAndBankAccountId(bankAccountId: st
     orderBy: {
       createdAt: "desc",
     },
-    take: 30,
+    take: limit,
   });
 
   return transactions;
