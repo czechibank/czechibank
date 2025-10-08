@@ -24,7 +24,7 @@ All responses follow a consistent format:
 \`\`\``,
       contact: {
         name: "API Support",
-        url: "https://github.com/your-repo/czechibank",
+        url: "https://github.com/czechibank/czechibank",
       },
     },
     servers: [
@@ -35,6 +35,14 @@ All responses follow a consistent format:
       {
         url: "https://czechibank.ostrava.digital/api/v1",
         description: "Production Server",
+      },
+      {
+        url: "https://ostrava.czechibank.ostrava.digital/api/v1",
+        description: "OSTRAVA!!! Production Server",
+      },
+      {
+        url: "https://praha.czechibank.ostrava.digital/api/v1",
+        description: "Praha Production Server",
       },
     ],
     components: {
