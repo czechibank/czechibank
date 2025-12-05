@@ -81,11 +81,5 @@
   },
   "lint-staged": {
     "*.{js,css,md,tsx,ts}": "npm run format"
-  },
-  "pnpm": {
-    "overrides": {
-      "react": "^19.0.0",
-      "react-dom": "^19.0.0"
-    }
   }
 }
