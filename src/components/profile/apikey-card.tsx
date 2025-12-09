@@ -1,7 +1,7 @@
 "use client";
 
 import { useToast } from "@/components/ui/use-toast";
-import apikeyService from "@/domain/apikey/apikey-service";
+import apikeyServiceClient from "@/domain/apikey/apikey-service-client";
 import { Apikey } from "@prisma/client";
 import { CalendarIcon, EyeIcon, EyeOffIcon, TrashIcon } from "lucide-react";
 import { useRouter } from "next/navigation";
@@ -19,7 +19,7 @@ export function ApiKeyCard({ apiKey }: { apiKey: Omit<Apikey, "key"> }) {
 
   const handleDelete = async () => {
     setIsDeleting(true);
-    await apikeyService.client.deleteApiKey(apiKey.id, {
+    await apikeyServiceClient.deleteApiKey(apiKey.id, {
       onSuccess: () => {
         toast({
           description: `API key "${apiKey.name}" has been deleted.`,

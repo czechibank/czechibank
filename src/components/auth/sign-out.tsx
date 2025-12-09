@@ -1,6 +1,6 @@
 "use client";
 
-import userService from "@/domain/user-domain/user-service";
+import userServiceClient from "@/domain/user-domain/user-service-client";
 import { useRouter } from "next/navigation";
 import { Button } from "../ui/button";
 
@@ -13,7 +13,7 @@ export function SignOut(props: React.ComponentPropsWithRef<typeof Button>) {
       className="flex w-full"
       {...props}
       onClick={async () => {
-        await userService.client.signOut({
+        await userServiceClient.signOut({
           onSuccess: () => {
             window.location.replace("/");
           },

@@ -1,117 +1,19 @@
-import { authClient } from "@/lib/auth-client";
-import { Role } from "@/lib/permissions";
-import { ApiErrorCode, ErrorResponse, errorResponse, SuccessResponse, successResponse } from "@/lib/response";
-import { User } from "@prisma/client";
-import { auth } from "../../../auth";
-import * as userRepository from "./user-repository";
-import { CreateUserSchemaType, UserBaseSchemaType } from "./user-schema";
+// Barrel file that re-exports client and server services
+// NOTE: Client components should import directly from user-service-client.ts
+// to avoid bundling server-only code (auth.ts and better-auth server modules)
 
-import { UserWithBankAccounts } from "@/components/transactions/transfer";
-import { ResponseSuccessErrorType } from "@/domain/shared-domain-types";
-import { UserWithRole } from "better-auth/plugins";
+import userServiceClient from "./user-service-client";
+import userServiceServer from "./user-service-server";
 
 /**
  * Service layer for user domain. Orchestrates between better-auth, repositories, and other services.
+ *
+ * @deprecated For client components, import directly from "./user-service-client" to avoid bundling server code.
+ * Server components can continue using this file.
  */
 const userService = {
-  client: {
-    /**
-     * Signs in a user using better-auth.
-     * @param user - The user to sign in.
-     * @param onSuccess - The function to call when the user is signed in.
-     * @param onError - The function to call when the user is not signed in.
-     */
-    async signIn(user: UserBaseSchemaType, { onSuccess, onError }: ResponseSuccessErrorType) {
-      await authClient.signIn.email(
-        { email: user.email, password: user.password },
-        {
-          onSuccess,
-          onError,
-        },
-      );
-    },
-
-    /**
-     * Sign up a user using better-auth.
-     * @param user - The user to sign up.
-     * @param onSuccess - The function to call when the user is signed up.
-     * @param onError - The function to call when the user is not signed up.
-     */
-    async signUp(user: CreateUserSchemaType, { onSuccess, onError }: ResponseSuccessErrorType) {
-      await authClient.signUp.email(
-        {
-          email: user.email,
-          password: user.password,
-          name: user.name,
-          image: user.image,
-        },
-        { onSuccess, onError },
-      );
-    },
-
-    /**
-     * Update a user on the client side
-     * TODO: @vojtech-cerveny - add more fields to update
-     * @param user - The user to update
-     * @param onSuccess - The function to call when the user is updated
-     * @param onError - The function to call when the user is not updated
-     */
-    async updateUser(user: Pick<User, "image">, { onSuccess, onError }: ResponseSuccessErrorType): Promise<void> {
-      await authClient.updateUser({ image: user.image }, { onSuccess, onError });
-    },
-
-    async signOut({ onSuccess, onError }: ResponseSuccessErrorType): Promise<void> {
-      await authClient.signOut({
-        fetchOptions: {
-          onSuccess,
-          onError,
-        },
-      });
-    },
-  },
-
-  server: {
-    /**
-     * Get the session from the headers on the server side
-     * @param headers - The headers to get the session from
-     * @returns The session
-     */
-    async getSession(headers: Headers) {
-      return await auth.api.getSession({
-        headers,
-      });
-    },
-
-    /**
-     * Create a user on the server side
-     * @param user - The user to create
-     * @param role - The role of the user
-     * @returns The user
-     */
-    async createUser(user: CreateUserSchemaType, role: Role): Promise<{ user: UserWithRole }> {
-      return await auth.api.createUser({
-        body: {
-          email: user.email,
-          password: user.password,
-          name: user.name,
-          role: role,
-        },
-      });
-    },
-
-    /**
-     * Get all users from the DB with their bank accounts.
-     * @returns The users with their bank accounts
-     */
-    async getAllUsersWithBankAccounts(): Promise<SuccessResponse<UserWithBankAccounts[]> | ErrorResponse> {
-      try {
-        const result = await userRepository.getAllUsersWithBankAccounts();
-        return successResponse("Users found", result);
-      } catch (error) {
-        return errorResponse("Error fetching users", ApiErrorCode.OPERATION_FAILED);
-      }
-    },
-  },
+  client: userServiceClient,
+  server: userServiceServer,
 };
 
 export default userService;

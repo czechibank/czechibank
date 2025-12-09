@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { ToastAction } from "@/components/ui/toast";
 import { MIN_PASSWORD_LENGTH } from "@/constants";
 import { CreateUserSchemaType, UserSchema } from "@/domain/user-domain/user-schema";
-import userService from "@/domain/user-domain/user-service";
+import userServiceClient from "@/domain/user-domain/user-service-client";
 import { generateRandomAvatarConfig } from "@/lib/utils";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { ErrorContext } from "better-auth/react";
@@ -36,7 +36,7 @@ export function RegisterForm() {
   console.log(form.formState.errors);
 
   const action: () => void = form.handleSubmit(async (data: ExtendedUserSchemaType): Promise<void> => {
-    await userService.client.signUp(
+    await userServiceClient.signUp(
       {
         email: data.email,
         password: data.password,

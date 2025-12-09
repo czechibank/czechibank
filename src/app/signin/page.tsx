@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Toast, useToast } from "@/components/ui/use-toast";
 import { MIN_PASSWORD_LENGTH } from "@/constants";
 import { LoginSchema, LoginSchemaType, UserBaseSchemaType } from "@/domain/user-domain/user-schema";
-import userService from "@/domain/user-domain/user-service";
+import userServiceClient from "@/domain/user-domain/user-service-client";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { ErrorContext } from "better-auth/react";
 import Link from "next/link";
@@ -27,7 +27,7 @@ export default function SignInPage() {
   const router = useRouter();
 
   const action: () => void = form.handleSubmit(async (data: UserBaseSchemaType): Promise<void> => {
-    await userService.client.signIn({ email: data.email, password: data.password } satisfies UserBaseSchemaType, {
+    await userServiceClient.signIn({ email: data.email, password: data.password } satisfies UserBaseSchemaType, {
       onSuccess: () => {
         toast({
           title: "Success",

@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { toast } from "@/components/ui/use-toast";
 import { UserAvatar } from "@/components/user/avatar";
-import userService from "@/domain/user-domain/user-service";
+import userServiceClient from "@/domain/user-domain/user-service-client";
 import { authClient, useSession } from "@/lib/auth-client";
 import { generateRandomAvatarConfig } from "@/lib/utils";
 import { Apikey } from "@prisma/client";
@@ -44,7 +44,7 @@ export default function ProfileClientPage({
     setIsUpdatingAvatar(true);
     const avatarConfig = generateRandomAvatarConfig();
 
-    await userService.client.updateUser(
+    await userServiceClient.updateUser(
       { image: JSON.stringify(avatarConfig) },
       {
         onSuccess: () => {

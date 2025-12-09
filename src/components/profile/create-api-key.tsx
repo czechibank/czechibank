@@ -14,7 +14,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "@/components/ui/use-toast";
 import { CreateApiKeySchema } from "@/domain/apikey/apikey-schema";
-import apikeyService from "@/domain/apikey/apikey-service";
+import apikeyServiceClient from "@/domain/apikey/apikey-service-client";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Apikey } from "@prisma/client";
 import { CopyIcon, PlusIcon } from "lucide-react";
@@ -57,7 +57,7 @@ export default function CreateApiKey() {
   const onSubmit = async (data: z.infer<typeof CreateApiKeySchema>) => {
     setInCreating(true);
     setNewApiKey(null);
-    await apikeyService.client.createApiKey(
+    await apikeyServiceClient.createApiKey(
       {
         name: data.name,
         expiresInDays: data.expiresInDays,
