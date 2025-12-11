@@ -25,6 +25,7 @@ export const auth = betterAuth({
         timeWindow: RATE_LIMIT.TIME_WINDOW,
         maxRequests: RATE_LIMIT.MAX_REQUESTS,
       },
+      disableKeyHashing: true,
     }),
     adminPlugin({
       ac,
