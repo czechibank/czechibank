@@ -25,6 +25,9 @@ export const auth = betterAuth({
         timeWindow: RATE_LIMIT.TIME_WINDOW,
         maxRequests: RATE_LIMIT.MAX_REQUESTS,
       },
+      // better-auth say that it can create security issue, that we returning session.
+      // not sure how to handle this.. so far, this is OK. @vojtech-cerveny
+      enableSessionForAPIKeys: true,
       disableKeyHashing: true,
     }),
     adminPlugin({
