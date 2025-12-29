@@ -3,9 +3,23 @@ import { Currency, PrismaClient } from "@prisma/client";
 import { APIError } from "better-auth/api";
 import { UserWithRole } from "better-auth/plugins";
 import { auth } from "../auth";
+import ensureUserBankAccounts from "./seed-helpers/ba-utils";
+import { generateTransactionData } from "./seed-helpers/generate-transaction-data";
+import { generateUserTransactionHistory } from "./seed-helpers/generate-user-transaction-history";
+import resetBankAccountBalances from "./seed-helpers/reset-balances";
+import validateSeedBankAccounts from "./seed-helpers/validation";
 
 const prisma = new PrismaClient();
 
+// ============================================================================
+// CONFIGURATION
+// ============================================================================
+// Global setting: which bank account index to use for transactions (0 = first, 1 = second, etc.)
+const PRIMARY_TRANSACTION_INDEX = 1; // Default: use first bank account
+
+// ============================================================================
+// SEED CONFIGURATION
+// ============================================================================
 // nemazat existujici uzivatele, jen pridavat nove
 // resetovat bankovni ucty - a to jen hodnoty
 
@@ -17,12 +31,12 @@ function generateApiKey(startingValue: string = "", length: number = 64): string
   return startingValue + "0".repeat(length - startingValue.length);
 }
 
-type UserSeedConfig = {
+export type UserSeedConfig = {
   email: string;
   name: string;
   password: string;
   avatarConfig: string;
-  bankAccountNumber: string;
+  bankAccountNumber: string | string[];
   apiKey?: string;
   role: "admin" | "user";
   // New fields for special configurations
@@ -32,6 +46,8 @@ type UserSeedConfig = {
   skipApiKey?: boolean; // Don't create any API keys
   needsTransactionHistory?: boolean; // Mark user for transaction history generation
   transactionCount?: number; // Number of transactions for this user
+  primaryBalanceIndex?: number; // Which BA gets the 100k/Seed balance (Default BA index: 0)
+  primaryTransactionIndex?: number; // Which BA gets involved in the 10,000 seed transactions (Default BA index: 0)
 };
 
 export const adminUserToSeed: Omit<
@@ -87,7 +103,7 @@ const usersToSeed: UserSeedConfig[] = [
     password: "hello123456",
     avatarConfig:
       '{"backgroundColor":["ff0000"],"eyebrows":["variant11"],"eyebrowsColor":["ffffff"],"eyes":["variant01"],"eyesColor":["ffffff"],"freckles":["variant01"],"frecklesColor":["ffffff"],"frecklesProbability":[null],"glasses":["variant01"],"glassesColor":["ffffff"],"glassesProbability":[null],"mouth":["happy04"],"mouthColor":["ffffff"],"nose":["variant04"],"noseColor":["ffffff"]}',
-    bankAccountNumber: "000000000001/5555",
+    bankAccountNumber: ["000000000001/5555", "100000001001/5555", "100000001021/5555"],
     apiKey: "33",
     role: "admin",
     balance: undefined,
@@ -114,7 +130,7 @@ const usersToSeed: UserSeedConfig[] = [
     password: "password123",
     avatarConfig:
       '{"backgroundColor":["E24A4A"],"eyebrows":["variant12"],"eyebrowsColor":["000000"],"eyes":["variant01"],"eyesColor":["000000"],"freckles":["variant01"],"frecklesColor":["000000"],"frecklesProbability":[null],"glasses":["variant01"],"glassesColor":["000000"],"glassesProbability":[null],"mouth":["sad01"],"mouthColor":["000000"],"nose":["variant01"],"noseColor":["000000"]}',
-    bankAccountNumber: "100000000002/5555",
+    bankAccountNumber: ["100000000002/5555", "100000010011/5555"],
     apiKey: "zero_balance_key",
     role: "user",
     balance: 0,
@@ -127,7 +143,7 @@ const usersToSeed: UserSeedConfig[] = [
     password: "password123",
     avatarConfig:
       '{"backgroundColor":["4AE24A"],"eyebrows":["variant12"],"eyebrowsColor":["000000"],"eyes":["variant01"],"eyesColor":["000000"],"freckles":["variant01"],"frecklesColor":["000000"],"frecklesProbability":[null],"glasses":["variant02"],"glassesColor":["000000"],"glassesProbability":[null],"mouth":["happy03"],"mouthColor":["000000"],"nose":["variant01"],"noseColor":["000000"]}',
-    bankAccountNumber: "100000000003/5555",
+    bankAccountNumber: ["100000000003/5555", "100009000003/5555"],
     apiKey: "high_balance_key",
     role: "user",
     balance: 1_000_000, // High balance
@@ -177,12 +193,17 @@ const usersToSeed: UserSeedConfig[] = [
 ];
 
 async function seedUsers() {
+  // Validate seed BA numbers before modifying DB
+  await validateSeedBankAccounts(prisma, usersToSeed);
+
   for (const userSeed of usersToSeed) {
     try {
       console.log(`[users seed] Creating user: ${userSeed.email}`);
-      let response: UserWithRole | undefined;
+
+      let user: UserWithRole | undefined;
+
       try {
-        const user = await auth.api.createUser({
+        const created = await auth.api.createUser({
           body: {
             email: userSeed.email,
             name: userSeed.name,
@@ -190,45 +211,38 @@ async function seedUsers() {
             role: userSeed.role as Role,
           },
         });
-        response = user.user;
+        user = created.user;
       } catch (error) {
-        if (error instanceof APIError) {
-          if (error.body?.code === "USER_ALREADY_EXISTS_USE_ANOTHER_EMAIL") {
-            // zachranNas+praha@pejsekAKocicka.cz
-            const user = (await prisma.user.findFirst({
-              where: { email: userSeed.email.toLowerCase() },
-            })) as UserWithRole;
-            response = user;
+        if (
+          error instanceof APIError &&
+          (error.body?.code === "USER_ALREADY_EXISTS_USE_ANOTHER_EMAIL" || error.body?.code === "USER_ALREADY_EXISTS")
+        ) {
+          // zachranNas+praha@pejsekAKocicka.cz
+          const existing = (await prisma.user.findFirst({
+            where: { email: userSeed.email.toLowerCase() },
+          })) as UserWithRole | null;
+
+          if (existing) {
+            user = existing;
             console.log(`[users seed] User already exists: ${userSeed.email}`);
+          } else {
+            console.warn(`[users seed] Auth reports user exists, but Prisma cannot find it: ${userSeed.email}`);
             console.log("💚💚💚 user", user);
           }
+        } else {
+          console.error(`[users seed] Unexpected error from auth.api.createUser for ${userSeed.email}:`, error);
         }
       }
 
-      const user: UserWithRole = response!;
-
-      // Update bank account number and balance
-      const bankAccount = await prisma.bankAccount.findFirst({ where: { userId: user.id, isActive: true } });
-      if (bankAccount) {
-        const updateData: { number: string; isActive: boolean; balance?: number } = {
-          number: Array.isArray(userSeed.bankAccountNumber)
-            ? userSeed.bankAccountNumber[0]
-            : userSeed.bankAccountNumber,
-          isActive: true,
-        };
-        if (userSeed.balance !== undefined) {
-          updateData.balance = userSeed.balance;
-        }
-        await prisma.bankAccount.update({
-          where: { id: bankAccount.id },
-          data: updateData,
-        });
-        console.log(
-          `[users seed] Updated bank account number${userSeed.balance !== undefined ? ` and balance (${userSeed.balance})` : ""} for user: ${user.email}`,
+      if (!user) {
+        console.warn(
+          `[users seed] No user entity resolved for ${userSeed.email}, skipping bank account setup and API keys`,
         );
-      } else {
-        console.warn(`[users seed] No bank account found for user: ${user.email}`);
+        continue;
       }
+
+      // Ensure user's bank accounts (supports array in seed)
+      await ensureUserBankAccounts(prisma, user, userSeed);
 
       // Handle API keys based on configuration
       if (userSeed.skipApiKey) {
@@ -242,7 +256,7 @@ async function seedUsers() {
           console.log(`[users seed] Creating expired API key for user: ${user.email}`);
           const expiredApiKey = await auth.api.createApiKey({ body: { userId: user.id } });
           const expiredDate = new Date();
-          expiredDate.setDate(expiredDate.getDate() - 1); // Expired yesterday
+          expiredDate.setDate(expiredDate.getDate() - 1);
           await prisma.apikey.update({
             where: { id: expiredApiKey.id },
             data: {
@@ -256,7 +270,6 @@ async function seedUsers() {
           for (let i = 0; i < apiKeyActiveCount; i++) {
             console.log(`[users seed] Creating API key ${i + 1}/${apiKeyActiveCount} for user: ${user.email}`);
             const apiKey = await auth.api.createApiKey({ body: { userId: user.id } });
-            // Generate 64-character API key
             const keyValue = generateApiKey("key_" + "_" + i + "_" + user.email);
             await prisma.apikey.update({
               where: { id: apiKey.id },
@@ -270,307 +283,6 @@ async function seedUsers() {
       }
     } catch (error) {
       console.error(`[users seed] Error seeding user ${userSeed.email}:`, error);
-    }
-  }
-}
-
-// Helper function to generate deterministic random numbers
-function seededRandom(seed: number, offset: number = 0) {
-  // Use a more stable random number generation
-  const x = Math.sin(seed + offset) * 10000;
-  const result = x - Math.floor(x);
-
-  // Add logging for seed 4 to debug the issue
-  if (seed === 4) {
-    console.log(`[${new Date().toISOString()}] Debugging seed 4 with offset ${offset}...`);
-    console.log(`[${new Date().toISOString()}] seed 4 calculation:`, { x, result });
-  }
-
-  return result;
-}
-
-// Test the seededRandom function with more test cases
-console.log(`[${new Date().toISOString()}] Testing seededRandom function...`);
-for (let i = 0; i < 10; i++) {
-  console.log(`[${new Date().toISOString()}] seededRandom(${i}) = ${seededRandom(i)}`);
-}
-
-// Generate transaction data
-function generateTransactionData(regularUsers: any[], totalTransactions: number) {
-  console.log(
-    `[${new Date().toISOString()}] Starting generateTransactionData with ${regularUsers.length} users and ${totalTransactions} transactions`,
-  );
-  const now = new Date();
-  const sixMonthsAgo = new Date(now.getTime() - 180 * 24 * 60 * 60 * 1000);
-  const transactions = [];
-
-  // Track transaction patterns
-  const transactionPatterns = new Map<string, Map<string, number>>();
-  regularUsers.forEach((user) => {
-    transactionPatterns.set(user.name, new Map());
-    regularUsers.forEach((otherUser) => {
-      transactionPatterns.get(user.name)!.set(otherUser.name, 0);
-    });
-  });
-
-  // Log user information for debugging
-  console.log(
-    `[${new Date().toISOString()}] Regular users:`,
-    regularUsers.map((u) => {
-      const activeBA = u.bankAccounts.find((ba: any) => ba.isActive);
-      return {
-        id: u.id,
-        name: u.name,
-        accountId: activeBA?.id,
-        balance: activeBA?.balance,
-      };
-    }),
-  );
-
-  for (let i = 0; i < totalTransactions; i++) {
-    try {
-      const seed = i;
-
-      // Generate random but deterministic sender and receiver
-      const senderIndex = Math.floor(seededRandom(seed, 0) * regularUsers.length);
-      let receiverIndex = Math.floor(seededRandom(seed, 1) * regularUsers.length);
-      let retryCount = 0;
-      const MAX_RETRIES = 5;
-
-      // Ensure sender and receiver are different
-      while (receiverIndex === senderIndex && retryCount < MAX_RETRIES) {
-        receiverIndex = Math.floor(seededRandom(seed, 2 + retryCount) * regularUsers.length);
-        retryCount++;
-      }
-
-      // If we couldn't find a different receiver after max retries, skip this transaction
-      if (receiverIndex === senderIndex) {
-        console.log(
-          `[${new Date().toISOString()}] Skipping transaction ${i + 1} - couldn't find different receiver after ${MAX_RETRIES} retries`,
-        );
-        continue;
-      }
-
-      const sender = regularUsers[senderIndex];
-      const receiver = regularUsers[receiverIndex];
-
-      // Track transaction pattern
-      const currentCount = transactionPatterns.get(sender.name)!.get(receiver.name)!;
-      transactionPatterns.get(sender.name)!.set(receiver.name, currentCount + 1);
-
-      // Generate random but deterministic amount between 100 and 10000
-      const amount = Math.floor(100 + seededRandom(seed, 3) * 9900);
-
-      // Generate random but deterministic timestamp within the 6-month period
-      const timeOffset = Math.floor(seededRandom(seed, 4) * (now.getTime() - sixMonthsAgo.getTime()));
-      const transactionDate = new Date(sixMonthsAgo.getTime() + timeOffset);
-
-      // Log progress every 100 transactions
-      if (i % 100 === 0) {
-        console.log(`[${new Date().toISOString()}] Generated ${i} transactions so far...`);
-      }
-
-      const senderAccount = sender.bankAccounts.find((ba: any) => ba.isActive);
-      const receiverAccount = receiver.bankAccounts.find((ba: any) => ba.isActive);
-      if (!senderAccount || !receiverAccount) {
-        console.warn(
-          `[${new Date().toISOString()}] Skipping transaction ${i + 1} - sender or receiver has no active account`,
-        );
-        continue; // Skip this transaction safely
-      }
-      transactions.push({
-        createdAt: transactionDate,
-        amount,
-        currency: "CZECHITOKEN",
-        fromBankId: senderAccount.id,
-        toBankId: receiverAccount.id,
-        senderBalance: senderAccount.balance - amount,
-        receiverBalance: receiverAccount.balance + amount,
-        senderAccountId: senderAccount.id,
-        receiverAccountId: receiverAccount.id,
-      });
-    } catch (error) {
-      console.error(`[${new Date().toISOString()}] Error generating transaction ${i}:`, error);
-      throw error;
-    }
-  }
-
-  // Log transaction patterns
-  console.log(`\n[${new Date().toISOString()}] Transaction Patterns:`);
-  console.log("From -> To: Count");
-  console.log("----------------");
-  transactionPatterns.forEach((receivers, sender) => {
-    receivers.forEach((count, receiver) => {
-      console.log(`${sender} -> ${receiver}: ${count}`);
-    });
-    console.log("----------------");
-  });
-
-  console.log(`[${new Date().toISOString()}] Finished generating ${transactions.length} transactions`);
-  return transactions;
-}
-
-// Generate transaction history for a specific user
-async function generateUserTransactionHistory(
-  prisma: PrismaClient,
-  userId: string,
-  transactionCount: number,
-  otherUsers: any[],
-) {
-  console.log(
-    `[users seed] Generating ${transactionCount} transactions for user ${userId} with ${otherUsers.length} other users`,
-  );
-
-  const user = await prisma.user.findUnique({
-    where: { id: userId },
-    include: { bankAccounts: { where: { isActive: true } } },
-  });
-
-  if (!user || user.bankAccounts.length === 0) {
-    console.warn(`[users seed] User ${userId} not found or has no bank account, skipping transaction generation`);
-    return;
-  }
-
-  const userAccount = user.bankAccounts[0];
-  const now = new Date();
-  const sixMonthsAgo = new Date(now.getTime() - 180 * 24 * 60 * 60 * 1000);
-
-  // Get other users' bank accounts
-  const otherAccounts = [];
-  for (const otherUser of otherUsers) {
-    const accounts = await prisma.bankAccount.findMany({
-      where: { userId: otherUser.id, isActive: true },
-    });
-    if (accounts.length > 0) {
-      otherAccounts.push(accounts[0]);
-    }
-  }
-
-  if (otherAccounts.length === 0) {
-    console.warn(`[users seed] No other accounts found for transaction generation`);
-    return;
-  }
-
-  let currentBalance = userAccount.balance || 0;
-
-  for (let i = 0; i < transactionCount; i++) {
-    try {
-      const seed = i + 10000; // Use different seed to avoid conflicts
-      const isIncoming = seededRandom(seed, 0) > 0.5; // 50% chance of incoming vs outgoing
-      const otherAccount = otherAccounts[Math.floor(seededRandom(seed, 1) * otherAccounts.length)];
-      const amount = Math.floor(100 + seededRandom(seed, 2) * 9900);
-      const timeOffset = Math.floor(seededRandom(seed, 3) * (now.getTime() - sixMonthsAgo.getTime()));
-      const transactionDate = new Date(sixMonthsAgo.getTime() + timeOffset);
-
-      if (isIncoming) {
-        // Incoming transaction - fetch current balances
-        const currentSenderAccount = await prisma.bankAccount.findUnique({
-          where: { id: otherAccount.id },
-        });
-        const currentUserAccount = await prisma.bankAccount.findUnique({
-          where: { id: userAccount.id },
-        });
-
-        if (!currentSenderAccount || !currentUserAccount) {
-          console.warn(`[users seed] Account not found, skipping transaction ${i + 1}`);
-          continue;
-        }
-
-        // Only create transaction if sender has enough balance
-        if (currentSenderAccount.balance >= amount) {
-          const transaction = await prisma.transaction.create({
-            data: {
-              createdAt: transactionDate,
-              amount,
-              currency: "CZECHITOKEN",
-              fromBankId: otherAccount.id,
-              toBankId: userAccount.id,
-            },
-          });
-
-          currentBalance = currentUserAccount.balance + amount;
-          await prisma.bankAccount.update({
-            where: { id: userAccount.id },
-            data: { balance: currentBalance },
-          });
-
-          // Update sender balance (decrease)
-          const senderBalance = currentSenderAccount.balance - amount;
-          await prisma.bankAccount.update({
-            where: { id: otherAccount.id },
-            data: { balance: Math.max(0, senderBalance) },
-          });
-        }
-      } else {
-        // Outgoing transaction (only if user has enough balance)
-        const currentUserAccount = await prisma.bankAccount.findUnique({
-          where: { id: userAccount.id },
-        });
-        const currentReceiverAccount = await prisma.bankAccount.findUnique({
-          where: { id: otherAccount.id },
-        });
-
-        if (!currentUserAccount || !currentReceiverAccount) {
-          console.warn(`[users seed] Account not found, skipping transaction ${i + 1}`);
-          continue;
-        }
-
-        if (currentUserAccount.balance >= amount) {
-          const transaction = await prisma.transaction.create({
-            data: {
-              createdAt: transactionDate,
-              amount,
-              currency: "CZECHITOKEN",
-              fromBankId: userAccount.id,
-              toBankId: otherAccount.id,
-            },
-          });
-
-          currentBalance = currentUserAccount.balance - amount;
-          await prisma.bankAccount.update({
-            where: { id: userAccount.id },
-            data: { balance: currentBalance },
-          });
-
-          // Update receiver balance (increase)
-          const receiverBalance = currentReceiverAccount.balance + amount;
-          await prisma.bankAccount.update({
-            where: { id: otherAccount.id },
-            data: { balance: receiverBalance },
-          });
-        }
-      }
-
-      if ((i + 1) % 50 === 0) {
-        console.log(`[users seed] Generated ${i + 1}/${transactionCount} transactions for user ${userId}`);
-      }
-    } catch (error) {
-      console.error(`[users seed] Error generating transaction ${i + 1} for user ${userId}:`, error);
-    }
-  }
-
-  console.log(`[users seed] Finished generating ${transactionCount} transactions for user ${userId}`);
-}
-
-async function resetBankAccountBalances(prisma: PrismaClient, users: UserSeedConfig[]) {
-  console.log(`[users seed] Resetting bank account balances for ${users.length} users`);
-  for (const user of users) {
-    const bankAccounts = await prisma.bankAccount.findMany({
-      where: { isActive: true, user: { email: user.email } },
-      include: { user: true },
-      orderBy: { id: "asc" },
-    });
-    if (bankAccounts.length > 0) {
-      bankAccounts.forEach(async (bankAccount, index) => {
-        if (index === 0) {
-          await prisma.bankAccount.update({
-            where: { id: bankAccount.id },
-            data: { balance: user.balance ?? 100_000 },
-          });
-        } else {
-          await prisma.bankAccount.update({ where: { id: bankAccount.id }, data: { balance: 0 } });
-        }
-      });
     }
   }
 }
@@ -599,9 +311,26 @@ async function generateDeterministicTransactions(prisma: PrismaClient) {
   const TOTAL_TRANSACTIONS = 10000; // Increased from 1000 to 10000
   console.log(`[${new Date().toISOString()}] Generating ${TOTAL_TRANSACTIONS} transaction records...`);
 
+  // Build map of users to their transaction account based on seed config index
+  const userToTransactionAccount = new Map<string, { id: string; number: string }>();
+  for (const userSeed of usersToSeed) {
+    const user = regularUsers.find((u) => u.email === userSeed.email);
+    if (user) {
+      const bankAccountNumbers = Array.isArray(userSeed.bankAccountNumber)
+        ? userSeed.bankAccountNumber
+        : [userSeed.bankAccountNumber];
+      const targetIndex = Math.min(PRIMARY_TRANSACTION_INDEX, bankAccountNumbers.length - 1);
+      const targetNumber = bankAccountNumbers[targetIndex];
+      const account = user.bankAccounts.find((ba: any) => ba.number === targetNumber && ba.isActive);
+      if (account) {
+        userToTransactionAccount.set(user.id, { id: account.id, number: account.number });
+      }
+    }
+  }
+
   try {
     // Generate all transaction data first
-    const transactions = generateTransactionData(regularUsers, TOTAL_TRANSACTIONS);
+    const transactions = generateTransactionData(regularUsers, TOTAL_TRANSACTIONS, userToTransactionAccount);
     console.log(`[${new Date().toISOString()}] Generated ${transactions.length} transaction records`);
 
     // Process transactions in batches
@@ -613,43 +342,61 @@ async function generateDeterministicTransactions(prisma: PrismaClient) {
       );
 
       // Process transactions in parallel within each batch
-      await Promise.all(
-        batch.map(async (transaction, j) => {
-          const transactionNumber = i + j + 1;
-          try {
-            // Create transaction record
-            const createdTransaction = await prisma.transaction.create({
-              data: {
-                createdAt: transaction.createdAt,
-                amount: transaction.amount,
-                currency: transaction.currency as Currency,
-                fromBankId: transaction.fromBankId,
-                toBankId: transaction.toBankId,
-              },
-            });
+      for (const [j, transaction] of batch.entries()) {
+        const transactionNumber = i + j + 1;
 
-            // Update sender balance
-            await prisma.bankAccount.update({
-              where: { id: transaction.senderAccountId },
-              data: { balance: transaction.senderBalance },
-            });
+        try {
+          // We use a sequential loop so we don't overwhelm the DB connection limit (5)
+          await prisma.$transaction(
+            async (tx) => {
+              // 1. Get real-time balance to ensure sender has enough money
+              const sender = await tx.bankAccount.findUnique({
+                where: { id: transaction.fromBankId },
+              });
 
-            // Update receiver balance
-            await prisma.bankAccount.update({
-              where: { id: transaction.receiverAccountId },
-              data: { balance: transaction.receiverBalance },
-            });
+              if (!sender || sender.balance < transaction.amount) {
+                // Skip if no funds - History record is NOT created here
+                return;
+              }
 
-            // Log progress every 1000 transactions
-            if (transactionNumber % 1000 === 0) {
-              console.log(`[${new Date().toISOString()}] Successfully processed transaction ${transactionNumber}`);
-            }
-          } catch (error) {
-            console.error(`[${new Date().toISOString()}] Error processing transaction ${transactionNumber}:`, error);
-            throw error;
-          }
-        }),
-      );
+              // 2. Create history
+              await tx.transaction.create({
+                data: {
+                  createdAt: transaction.createdAt,
+                  amount: transaction.amount,
+                  currency: transaction.currency as Currency,
+                  fromBankId: transaction.fromBankId,
+                  toBankId: transaction.toBankId,
+                },
+              });
+
+              // 3. Update balances using atomic math operations
+              await tx.bankAccount.update({
+                where: { id: transaction.fromBankId },
+                data: { balance: { decrement: transaction.amount } },
+              });
+
+              await tx.bankAccount.update({
+                where: { id: transaction.toBankId },
+                data: { balance: { increment: transaction.amount } },
+              });
+
+              // 4. Progress Logging (Kept from your original logic)
+              if (transactionNumber % 1000 === 0) {
+                console.log(`[${new Date().toISOString()}] Successfully processed transaction ${transactionNumber}`);
+              }
+            },
+            {
+              // Increased timeout specifically for seeding 10k records
+              timeout: 15000,
+            },
+          );
+        } catch (error) {
+          // Error logging preserved from your original code
+          console.error(`[${new Date().toISOString()}] Error processing transaction ${transactionNumber}:`, error);
+          // No 'throw' here ensures the rest of the batch continues even if one fails
+        }
+      }
     }
 
     console.log(`[${new Date().toISOString()}] Finished processing all ${transactions.length} transactions`);
