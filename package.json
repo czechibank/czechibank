@@ -27,7 +27,7 @@
     "test:e2e": "playwright test"
   },
   "dependencies": {
-    "@better-auth/cli": "^1.4.6",
+    "@better-auth/cli": "^1.4.10",
     "@dicebear/collection": "^9.2.4",
     "@dicebear/core": "^9.2.4",
     "@hookform/resolvers": "^3.10.0",
@@ -37,7 +37,7 @@
     "@types/swagger-ui-express": "^4.1.8",
     "@types/swagger-ui-react": "^5.18.0",
     "@types/uuid": "^10.0.0",
-    "better-auth": "^1.4.6",
+    "better-auth": "^1.4.10",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "framer-motion": "^12.23.25",

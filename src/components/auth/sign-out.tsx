@@ -1,11 +1,9 @@
 "use client";
 
 import userServiceClient from "@/domain/user-domain/user-service-client";
-import { useRouter } from "next/navigation";
 import { Button } from "../ui/button";
 
 export function SignOut(props: React.ComponentPropsWithRef<typeof Button>) {
-  const router = useRouter();
   return (
     <Button
       variant="ghost"
@@ -15,11 +13,14 @@ export function SignOut(props: React.ComponentPropsWithRef<typeof Button>) {
       onClick={async () => {
         await userServiceClient.signOut({
           onSuccess: () => {
-            window.location.replace("/");
+            // Use window.location.replace() to prevent back-button navigation to protected pages
+            // after logout. This is a standard best practice for logout flows.
+            window.location.replace("/signin");
           },
           onError: (error) => {
-            window.location.replace("/");
             console.log(error);
+            // Even on error, redirect to signin to ensure clean state
+            window.location.replace("/signin");
           },
         });
       }}
