@@ -58,21 +58,21 @@ All responses follow a consistent format:
         User: {
           type: "object",
           properties: {
-            id: { type: "string", example: "bFNcCQmAYJ2u4fODHT09QgLB7vkeSfhv", description: "Unique user identifier" },
-            name: { type: "string", example: "John Doe", description: "User's full name" },
-            email: { type: "string", example: "user@example.com", description: "User's email address" },
+            id: { type: "string", example: "bYmjHnHasQisW4g6L2IPxwLHBQYwHsLU", description: "Unique user identifier" },
+            name: { type: "string", example: "Jana Nováková", description: "User's full name" },
+            email: { type: "string", example: "jana@example.com", description: "User's email address" },
             emailVerified: { type: "boolean", example: false, description: "Whether the user's email is verified" },
             image: { type: ["string", "null"], example: null, description: "URL to user's profile image or null" },
             createdAt: {
               type: "string",
               format: "date-time",
-              example: "2025-07-21T12:27:03.625Z",
+              example: "2026-01-10T22:53:50.315Z",
               description: "When the user was created",
             },
             updatedAt: {
               type: "string",
               format: "date-time",
-              example: "2025-07-21T12:27:03.625Z",
+              example: "2026-01-10T22:53:50.315Z",
               description: "When the user was last updated",
             },
             role: {
@@ -82,9 +82,9 @@ All responses follow a consistent format:
               description: "User's role (user or admin)",
             },
             banned: {
-              type: ["boolean", "null"],
-              example: null,
-              description: "Whether the user is banned (null if not set)",
+              type: "boolean",
+              example: false,
+              description: "Whether the user is banned",
             },
             banReason: {
               type: ["string", "null"],
@@ -97,8 +97,13 @@ All responses follow a consistent format:
               example: null,
               description: "Ban expiration date if banned, otherwise null",
             },
+            apiKey: {
+              type: ["string", "null"],
+              example: "YUNKOBkSooRIXDgSSwYZgjPcAhTzqfIcGLvvFiODAmfdgfyrxQPuCRGsaDEYulQi",
+              description: "API key created for the user (only included in user creation response, null otherwise)",
+            },
           },
-          required: ["id", "name", "email", "emailVerified", "createdAt", "updatedAt", "role"],
+          required: ["id", "name", "email", "emailVerified", "createdAt", "updatedAt", "role", "banned"],
         },
         UserCreate: {
           type: "object",
