@@ -7,7 +7,7 @@ import { ApiError, DELETE, HEAD, OPTIONS, PATCH, POST, PUT, handleErrors } from 
  * /user:
  *   get:
  *     summary: Get current user
- *     description: Retrieves the authenticated user\'s profile information
+ *     description: Retrieves the authenticated user's profile information
  *     tags: [Users]
  *     security:
  *       - ApiKeyAuth: []
@@ -17,21 +17,38 @@ import { ApiError, DELETE, HEAD, OPTIONS, PATCH, POST, PUT, handleErrors } from 
  *         content:
  *           application/json:
  *             schema:
- *               allOf:
- *                 - $ref: \'#/components/schemas/SuccessResponse\'
- *                 - type: object
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: "User profile retrieved successfully"
+ *                 data:
+ *                   $ref: '#/components/schemas/User'
+ *                 meta:
+ *                   type: object
+ *                   additionalProperties: false
  *                   properties:
- *                     data:
- *                       type: object
- *                       properties:
- *                         user:
- *                           $ref: \'#/components/schemas/User\'
+ *                     timestamp:
+ *                       type: string
+ *                       format: date-time
+ *                       example: "2026-01-10T22:53:51.562Z"
+ *                       description: Response timestamp
+ *                   required:
+ *                     - timestamp
+ *               required:
+ *                 - success
+ *                 - message
+ *                 - data
+ *                 - meta
  *       401:
  *         description: Unauthorized - API key is missing or invalid
  *         content:
  *           application/json:
  *             schema:
- *               $ref: \'#/components/schemas/Error\'
+ *               $ref: '#/components/schemas/Error'
  */
 export async function GET(request: Request) {
   try {

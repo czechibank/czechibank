@@ -82,9 +82,9 @@ All responses follow a consistent format:
               description: "User's role (user or admin)",
             },
             banned: {
-              type: ["boolean", "null"],
-              example: null,
-              description: "Whether the user is banned (null if not set)",
+              type: "boolean",
+              example: false,
+              description: "Whether the user is banned",
             },
             banReason: {
               type: ["string", "null"],
@@ -98,7 +98,7 @@ All responses follow a consistent format:
               description: "Ban expiration date if banned, otherwise null",
             },
           },
-          required: ["id", "name", "email", "emailVerified", "createdAt", "updatedAt", "role"],
+          required: ["id", "name", "email", "emailVerified", "createdAt", "updatedAt", "role", "banned"],
         },
         UserCreate: {
           type: "object",
@@ -327,7 +327,21 @@ All responses follow a consistent format:
                 },
               },
             },
+            meta: {
+              type: "object",
+              additionalProperties: false,
+              properties: {
+                timestamp: {
+                  type: "string",
+                  format: "date-time",
+                  example: "2026-01-10T22:53:51.562Z",
+                  description: "Response timestamp",
+                },
+              },
+              required: ["timestamp"],
+            },
           },
+          required: ["success", "message", "error"],
         },
       },
     },
