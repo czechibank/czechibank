@@ -53,5 +53,5 @@ export async function getUniqueBankAccountName(
 
   let nextNumber = 1;
   while (used.has(nextNumber)) nextNumber++;
-  return `${baseName}(${String(nextNumber).padStart(2, "0")})`;
+  return `${baseName} (${String(nextNumber).padStart(2, "0")})`;
 }

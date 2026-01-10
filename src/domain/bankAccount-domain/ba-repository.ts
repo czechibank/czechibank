@@ -79,13 +79,6 @@ export async function createBankAccount({
   const MAX_ATTEMPTS = 6;
   let lastError: any = null;
 
-  // checking how many bank accounts the user has
-  const bankAccountsCount = await prisma.bankAccount.count({
-    where: { userId },
-  });
-
-  name = name === "My Bank Account" ? `My Bank Account (${bankAccountsCount + 1})` : name;
-
   for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
     //if BA number is provided (seeded users), use it, otherwise random generation
     const candidateNumber = number ?? generateRandomDigits(12) + "/5555";
