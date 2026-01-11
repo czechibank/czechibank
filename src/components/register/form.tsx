@@ -10,12 +10,13 @@ import userServiceClient from "@/domain/user-domain/user-service-client";
 import { generateRandomAvatarConfig } from "@/lib/utils";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { ErrorContext } from "better-auth/react";
-import { redirect } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { toast, Toast } from "../ui/use-toast";
 
 export function RegisterForm() {
+  const router = useRouter();
   const ExtendedUserSchema = UserSchema.extend({
     confirmPassword: z.string(),
   }).refine((data) => data.password === data.confirmPassword, {
@@ -46,8 +47,10 @@ export function RegisterForm() {
       {
         onSuccess: () => {
           form.reset();
-
-          redirect("/register/success");
+          // Refresh router to ensure useSession hook updates after signup
+          router.refresh();
+          // Navigate to success page
+          router.push("/register/success");
         },
         onError: (error: ErrorContext): void => {
           // Reset password fields if user already exists, because of the security reasons
@@ -65,7 +68,7 @@ export function RegisterForm() {
               title: "User with this email already exists",
               description: "Would you like to sign in instead?",
               action: (
-                <ToastAction altText="Sign in" onClick={() => redirect("/signin")}>
+                <ToastAction altText="Sign in" onClick={() => router.push("/signin")}>
                   Sign in
                 </ToastAction>
               ),
