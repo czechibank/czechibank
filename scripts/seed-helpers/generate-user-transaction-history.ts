@@ -1,12 +1,42 @@
-import { PrismaClient } from "@prisma/client";
+import { Prisma, PrismaClient } from "@prisma/client";
 import { seededRandom } from "./seeded-random";
 
-// Generate transaction history for a specific user
+type UserWithBankAccounts = Prisma.UserGetPayload<{
+  include: {
+    bankAccounts: true;
+  };
+}>;
+
+/**
+ * Generates transaction history for a specific user with other users.
+ *
+ * Creates a specified number of transactions (both incoming and outgoing) for a user
+ * with other users in the system. Transactions are generated deterministically and
+ * spread over the last 6 months. Only creates transactions if sufficient balance exists.
+ *
+ * @param prisma - Prisma client instance for database operations
+ * @param userId - ID of the user to generate transaction history for
+ * @param transactionCount - Number of transactions to generate
+ * @param otherUsers - Array of other users (with bank accounts) to transact with
+ *
+ * @returns Promise that resolves when transaction generation is complete
+ *
+ * @example
+ * ```ts
+ * await generateUserTransactionHistory(
+ *   prisma,
+ *   "user123",
+ *   150,
+ *   otherUsers
+ * );
+ * // Generates 150 transactions for user123 with other users
+ * ```
+ */
 export async function generateUserTransactionHistory(
   prisma: PrismaClient,
   userId: string,
   transactionCount: number,
-  otherUsers: any[],
+  otherUsers: UserWithBankAccounts[],
 ) {
   console.log(
     `[users seed] Generating ${transactionCount} transactions for user ${userId} with ${otherUsers.length} other users`,

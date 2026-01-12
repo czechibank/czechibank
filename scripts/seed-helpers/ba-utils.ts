@@ -1,7 +1,38 @@
 import bankAccountService from "@/domain/bankAccount-domain/ba-service";
 import { Currency, PrismaClient } from "@prisma/client";
+import { UserWithRole } from "better-auth/plugins";
+import { UserSeedConfig } from "../seed-users";
 
-export default async function ensureUserBankAccounts(prisma: PrismaClient, user: any, userSeed: any) {
+/**
+ * Ensures that a user has the correct bank accounts based on the seed configuration.
+ *
+ * This function handles:
+ * - Creating the primary bank account if it doesn't exist
+ * - Updating existing accounts with the correct numbers and balances
+ * - Creating additional bank accounts from the seed configuration array
+ * - Handling conflicts when bank account numbers are already taken by other users
+ * - Creating fallback account numbers if the primary number is unavailable
+ *
+ * @param prisma - Prisma client instance for database operations
+ * @param user - The user entity (from Better Auth) that needs bank accounts
+ * @param userSeed - Seed configuration containing bank account numbers and balance
+ *
+ * @throws {Error} If database operations fail
+ *
+ * @example
+ * ```ts
+ * await ensureUserBankAccounts(prisma, user, {
+ *   email: "user@example.com",
+ *   bankAccountNumber: ["123456789/5555", "987654321/5555"],
+ *   balance: 100000
+ * });
+ * ```
+ */
+export default async function ensureUserBankAccounts(
+  prisma: PrismaClient,
+  user: UserWithRole,
+  userSeed: UserSeedConfig,
+) {
   // Update bank account number(s) and balance (support string | string[] in seed)
   const providedBAs = Array.isArray(userSeed.bankAccountNumber)
     ? userSeed.bankAccountNumber

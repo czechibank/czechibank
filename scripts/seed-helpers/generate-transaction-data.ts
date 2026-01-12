@@ -1,8 +1,39 @@
+import { BankAccount, Prisma } from "@prisma/client";
 import { seededRandom } from "./seeded-random";
 
-// Generate transaction data
+type UserWithBankAccounts = Prisma.UserGetPayload<{
+  include: {
+    bankAccounts: true;
+  };
+}>;
+
+/**
+ * Generates deterministic transaction data for seeding purposes.
+ *
+ * Creates a large number of transaction records with deterministic properties:
+ * - Sender and receiver are selected deterministically based on seed values
+ * - Transaction amounts are between 100 and 10,000 (deterministic)
+ * - Transaction dates are spread over the last 6 months (deterministic)
+ * - Tracks transaction patterns between users for logging
+ *
+ * @param regularUsers - Array of users with their bank accounts (excludes rescue funds, should only include seeded users that are in userToTransactionAccount map)
+ * @param totalTransactions - Total number of transactions to generate
+ * @param userToTransactionAccount - Map of user IDs to their designated transaction bank account
+ *
+ * @returns Array of transaction data objects ready for database insertion
+ *
+ * @example
+ * ```ts
+ * const transactions = generateTransactionData(
+ *   regularUsers,
+ *   10000,
+ *   userToTransactionAccount
+ * );
+ * // Returns array of transaction objects with fromBankId, toBankId, amount, etc.
+ * ```
+ */
 export function generateTransactionData(
-  regularUsers: any[],
+  regularUsers: UserWithBankAccounts[],
   totalTransactions: number,
   userToTransactionAccount: Map<string, { id: string; number: string }>,
 ) {
@@ -33,7 +64,7 @@ export function generateTransactionData(
         transactionAccountId: transactionAccount?.id,
         transactionAccountNumber: transactionAccount?.number,
         balance: transactionAccount
-          ? u.bankAccounts.find((ba: any) => ba.id === transactionAccount.id)?.balance
+          ? u.bankAccounts.find((ba: BankAccount) => ba.id === transactionAccount.id)?.balance
           : undefined,
       };
     }),

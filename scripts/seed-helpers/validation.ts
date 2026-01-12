@@ -1,6 +1,28 @@
 import { PrismaClient } from "@prisma/client";
+import { UserSeedConfig } from "../seed-users";
 
-export default async function validateSeedBankAccounts(prisma: PrismaClient, usersToSeed: any[]) {
+/**
+ * Validates bank account numbers in the seed configuration before seeding.
+ *
+ * Performs the following validations:
+ * 1. Checks for duplicate bank account numbers within the seed file (prevents same number used for multiple users in seed config)
+ * 2. Checks for conflicts with existing bank account numbers in the database (only flags if account belongs to a different user)
+ *
+ * Note: Bank account numbers that already belong to the same user in the database are allowed (enables re-seeding).
+ *
+ * @param prisma - Prisma client instance for database operations
+ * @param usersToSeed - Array of user seed configurations to validate
+ *
+ * @throws {Error} If duplicate bank account numbers are found in the seed file
+ * @throws {Error} If bank account numbers already exist in the database and belong to different users
+ *
+ * @example
+ * ```ts
+ * await validateSeedBankAccounts(prisma, usersToSeed);
+ * // Throws if validation fails, otherwise returns void
+ * ```
+ */
+export default async function validateSeedBankAccounts(prisma: PrismaClient, usersToSeed: UserSeedConfig[]) {
   // Quick validation: ensure seed file doesn't contain duplicate BA numbers
   // and that provided BA numbers don't already belong to other DB users.
   const allProvidedBAs = usersToSeed
@@ -13,21 +35,6 @@ export default async function validateSeedBankAccounts(prisma: PrismaClient, use
     console.error(`[seed-users] Duplicate bank account numbers in seed file: ${[...new Set(dup)].join(", ")}`);
     throw new Error("Seed contains duplicate bank account numbers. Fix usersToSeed before running.");
   }
-  // Validate that primaryBalanceIndex and primaryTransactionIndex point to real array entries
-  usersToSeed.forEach((u) => {
-    const accountCount = Array.isArray(u.bankAccountNumber) ? u.bankAccountNumber.length : 1;
-
-    if (u.primaryBalanceIndex >= accountCount) {
-      throw new Error(
-        `User ${u.email} has primaryBalanceIndex ${u.primaryBalanceIndex} but only has ${accountCount} accounts.`,
-      );
-    }
-    if (u.primaryTransactionIndex >= accountCount) {
-      throw new Error(
-        `User ${u.email} has primaryTransactionIndex ${u.primaryTransactionIndex} but only has ${accountCount} accounts.`,
-      );
-    }
-  });
 
   // Check for conflicts with other users already in the DB
   if (allProvidedBAs.length > 0) {

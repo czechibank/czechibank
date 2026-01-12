@@ -1,5 +1,5 @@
 import { Role } from "@/lib/permissions";
-import { Currency, PrismaClient } from "@prisma/client";
+import { BankAccount, Currency, PrismaClient } from "@prisma/client";
 import { APIError } from "better-auth/api";
 import { UserWithRole } from "better-auth/plugins";
 import { auth } from "../auth";
@@ -15,7 +15,9 @@ const prisma = new PrismaClient();
 // CONFIGURATION
 // ============================================================================
 // Global setting: which bank account index to use for transactions (0 = first, 1 = second, etc.)
-const PRIMARY_TRANSACTION_INDEX = 1; // Default: use first bank account
+export const PRIMARY_TRANSACTION_INDEX = 1; // Uses second bank account (index 1), falls back to first if only one account exists
+// Global setting: which bank account index to use for balance assignment (0 = first, 1 = second, etc.)
+export const PRIMARY_BALANCE_INDEX = 0; // Default: use 1st bank account
 
 // ============================================================================
 // SEED CONFIGURATION
@@ -26,11 +28,32 @@ const PRIMARY_TRANSACTION_INDEX = 1; // Default: use first bank account
 // endpoint pro admina - /api/v1/admin/wipe-db
 //
 
-// Helper function to generate a 64-character API key
+/**
+ * Generates a fixed-length API key string.
+ *
+ * Creates an API key by padding the starting value with zeros to reach the desired length.
+ * This ensures all API keys have a consistent format for seeding purposes.
+ *
+ * @param startingValue - Initial value for the API key (will be padded)
+ * @param length - Desired length of the final API key (default: 64)
+ * @returns A string of the specified length
+ *
+ * @example
+ * ```ts
+ * const key = generateApiKey("test_", 64);
+ * // Returns "test_" + 59 zeros = 64 characters total
+ * ```
+ */
 function generateApiKey(startingValue: string = "", length: number = 64): string {
   return startingValue + "0".repeat(length - startingValue.length);
 }
 
+/**
+ * Configuration type for seeding users in the database.
+ *
+ * Defines all the properties needed to create a user with bank accounts,
+ * API keys, and transaction history during the seeding process.
+ */
 export type UserSeedConfig = {
   email: string;
   name: string;
@@ -46,8 +69,6 @@ export type UserSeedConfig = {
   skipApiKey?: boolean; // Don't create any API keys
   needsTransactionHistory?: boolean; // Mark user for transaction history generation
   transactionCount?: number; // Number of transactions for this user
-  primaryBalanceIndex?: number; // Which BA gets the 100k/Seed balance (Default BA index: 0)
-  primaryTransactionIndex?: number; // Which BA gets involved in the 10,000 seed transactions (Default BA index: 0)
 };
 
 export const adminUserToSeed: Omit<
@@ -192,6 +213,19 @@ const usersToSeed: UserSeedConfig[] = [
   },
 ];
 
+/**
+ * Seeds users into the database based on the `usersToSeed` configuration.
+ *
+ * This function:
+ * 1. Validates bank account numbers in the seed configuration
+ * 2. Creates or updates users using Better Auth
+ * 3. Ensures bank accounts exist for each user
+ * 4. Creates API keys based on user configuration (multiple, expired, or none)
+ *
+ * Handles existing users gracefully by finding and reusing them instead of failing.
+ *
+ * @throws {Error} If validation fails or critical errors occur during user creation
+ */
 async function seedUsers() {
   // Validate seed BA numbers before modifying DB
   await validateSeedBankAccounts(prisma, usersToSeed);
@@ -287,7 +321,23 @@ async function seedUsers() {
   }
 }
 
-// Generate deterministic transactions between users
+/**
+ * Generates a large number of deterministic transactions between regular users.
+ *
+ * Creates 10,000 transactions between users (excluding rescue funds and zero balance users).
+ * Transactions are:
+ * - Deterministic (same seed produces same transactions)
+ * - Processed in batches of 100 for performance
+ * - Atomic (all-or-nothing per transaction)
+ * - Only created if sender has sufficient balance
+ *
+ * Uses the global `PRIMARY_TRANSACTION_INDEX` constant to determine which bank account
+ * index from each user's account array should be used for transactions.
+ *
+ * @param prisma - Prisma client instance for database operations
+ *
+ * @throws {Error} If fatal errors occur during transaction generation
+ */
 async function generateDeterministicTransactions(prisma: PrismaClient) {
   console.log(`[${new Date().toISOString()}] Starting generateDeterministicTransactions...`);
 
@@ -298,7 +348,11 @@ async function generateDeterministicTransactions(prisma: PrismaClient) {
   });
   console.log(`[${new Date().toISOString()}] Found ${allUsers.length} total users`);
 
-  // Filter out rescue fund accounts
+  // Filter out rescue fund accounts and users without active bank accounts
+  // Note: The length > 0 check is critical to prevent crashes when accessing bankAccounts[0].number below.
+  // While users normally always have at least one active BA (enforced by enforceMinActiveBankAccount
+  // and auto-created on user creation), this filter handles edge cases where a user might not have
+  // been properly set up during seeding (e.g., if bank account creation failed silently).
   const regularUsers = allUsers.filter(
     (user) =>
       user.bankAccounts.length > 0 &&
@@ -314,23 +368,59 @@ async function generateDeterministicTransactions(prisma: PrismaClient) {
   // Build map of users to their transaction account based on seed config index
   const userToTransactionAccount = new Map<string, { id: string; number: string }>();
   for (const userSeed of usersToSeed) {
-    const user = regularUsers.find((u) => u.email === userSeed.email);
-    if (user) {
-      const bankAccountNumbers = Array.isArray(userSeed.bankAccountNumber)
-        ? userSeed.bankAccountNumber
-        : [userSeed.bankAccountNumber];
-      const targetIndex = Math.min(PRIMARY_TRANSACTION_INDEX, bankAccountNumbers.length - 1);
-      const targetNumber = bankAccountNumbers[targetIndex];
-      const account = user.bankAccounts.find((ba: any) => ba.number === targetNumber && ba.isActive);
-      if (account) {
-        userToTransactionAccount.set(user.id, { id: account.id, number: account.number });
+    // Check if user is intentionally filtered out (rescue funds, zero balance)
+    const isIntentionallyFiltered =
+      userSeed.bankAccountNumber.toString().includes("555555555555") ||
+      userSeed.bankAccountNumber.toString().includes("444444444444") ||
+      userSeed.email === "zero.balance@example.com";
+
+    // Check if user is in regularUsers (eligible for transactions)
+    const user = regularUsers.find((u) => u.email.toLowerCase() === userSeed.email.toLowerCase());
+
+    if (!user) {
+      // If intentionally filtered, silently skip (rescue funds, zero balance user)
+      if (isIntentionallyFiltered) {
+        continue;
       }
+
+      // User not found in regularUsers - skipping transaction account mapping
+      // This should rarely happen if seedUsers() ran successfully
+      console.warn(
+        `[users seed] Seeded user ${userSeed.email} not found in regularUsers (user may not exist in DB or has no active bank accounts), skipping transaction account mapping`,
+      );
+      continue;
     }
+    const bankAccountNumbers = Array.isArray(userSeed.bankAccountNumber)
+      ? userSeed.bankAccountNumber
+      : [userSeed.bankAccountNumber];
+
+    // Use PRIMARY_TRANSACTION_INDEX constant, but clamp to available accounts if out of bounds
+    const targetIndex = Math.min(PRIMARY_TRANSACTION_INDEX, bankAccountNumbers.length - 1);
+    const targetNumber = bankAccountNumbers[targetIndex];
+    const account = user.bankAccounts.find((ba: BankAccount) => ba.number === targetNumber && ba.isActive);
+    if (!account) {
+      console.warn(
+        `[users seed] Transaction account ${targetNumber} (index ${targetIndex}) not found or inactive for user ${userSeed.email}, skipping transaction account mapping. Available accounts: ${user.bankAccounts.map((ba) => ba.number).join(", ")}`,
+      );
+      continue;
+    }
+    userToTransactionAccount.set(user.id, { id: account.id, number: account.number });
   }
+  console.log(
+    `[${new Date().toISOString()}] Mapped ${userToTransactionAccount.size} seeded users to transaction accounts`,
+  );
+
+  // Filter regularUsers to only include seeded users that have a transaction account mapped
+  // (userToTransactionAccount map created above). This ensures logs only show users that
+  // actually participate in transactions, excluding manually created users.
+  const seededUsersOnly = regularUsers.filter((user) => userToTransactionAccount.has(user.id));
+  console.log(
+    `[${new Date().toISOString()}] Filtered to ${seededUsersOnly.length} seeded users for transaction generation`,
+  );
 
   try {
-    // Generate all transaction data first
-    const transactions = generateTransactionData(regularUsers, TOTAL_TRANSACTIONS, userToTransactionAccount);
+    // Generate all transaction data first (only for seeded users)
+    const transactions = generateTransactionData(seededUsersOnly, TOTAL_TRANSACTIONS, userToTransactionAccount);
     console.log(`[${new Date().toISOString()}] Generated ${transactions.length} transaction records`);
 
     // Process transactions in batches
@@ -341,7 +431,7 @@ async function generateDeterministicTransactions(prisma: PrismaClient) {
         `[${new Date().toISOString()}] Processing batch ${Math.floor(i / BATCH_SIZE) + 1} of ${Math.ceil(transactions.length / BATCH_SIZE)} (${batch.length} transactions)...`,
       );
 
-      // Process transactions in parallel within each batch
+      // Process transactions sequentially within each batch
       for (const [j, transaction] of batch.entries()) {
         const transactionNumber = i + j + 1;
 
@@ -406,6 +496,19 @@ async function generateDeterministicTransactions(prisma: PrismaClient) {
   }
 }
 
+/**
+ * Main seeding function that orchestrates the entire database seeding process.
+ *
+ * Execution order:
+ * 1. Connects to the database
+ * 2. Cleans up existing transactions and API keys (preserves users and bank accounts)
+ * 3. Seeds all users with their bank accounts and API keys
+ * 4. Resets bank account balances according to seed configuration
+ * 5. Generates 10,000 deterministic transactions between users
+ * 6. Generates additional transaction history for users who need it
+ *
+ * @throws {Error} If any critical step fails
+ */
 async function main() {
   console.log("[users seed] Starting seed script...");
   await prisma.$connect();
@@ -425,11 +528,22 @@ async function main() {
 
   await resetBankAccountBalances(prisma, usersToSeed);
 
-  // Generate transactions (keep your existing logic here)
+  // Generate transactions
   await generateDeterministicTransactions(prisma);
 
-  // Generate additional transaction history for users who need it (after general transactions)
+  // Generate additional transaction history for specific users who need more transactions
+  // Some users in seed config have needsTransactionHistory: true and transactionCount: N
+  // (e.g., high.balance@example.com needs 150 transactions total).
+  // After generateDeterministicTransactions() creates 10,000 general transactions,
+  // this code checks if those specific users have enough transactions and generates more if needed.
+  // Note: Fresh query needed here because database state changed (transactions created, balances updated).
+  // Query only users with at least one active bank account (optimization - we filter for this anyway)
   const allUsers = await prisma.user.findMany({
+    where: {
+      bankAccounts: {
+        some: { isActive: true },
+      },
+    },
     include: {
       bankAccounts: { where: { isActive: true } },
     },
@@ -438,42 +552,49 @@ async function main() {
   for (const userSeed of usersToSeed) {
     if (userSeed.needsTransactionHistory && userSeed.transactionCount) {
       const user = allUsers.find((u) => u.email === userSeed.email);
-      if (user) {
-        // Get current transaction count for this user
-        const currentTransactionCount = await prisma.transaction.count({
-          where: {
-            OR: [
-              { fromBankId: { in: user.bankAccounts.map((ba) => ba.id) } },
-              { toBankId: { in: user.bankAccounts.map((ba) => ba.id) } },
-            ],
-          },
-        });
+      if (!user) {
+        console.warn(
+          `[users seed] User ${userSeed.email} not found in database, skipping transaction history generation`,
+        );
+        continue;
+      }
+      // Get current transaction count for this user
+      const currentTransactionCount = await prisma.transaction.count({
+        where: {
+          OR: [
+            { fromBankId: { in: user.bankAccounts.map((ba) => ba.id) } },
+            { toBankId: { in: user.bankAccounts.map((ba) => ba.id) } },
+          ],
+        },
+      });
 
-        const neededTransactions = Math.max(0, userSeed.transactionCount - currentTransactionCount);
+      const neededTransactions = Math.max(0, userSeed.transactionCount - currentTransactionCount);
 
-        if (neededTransactions > 0) {
-          // Get other users (excluding rescue funds and the current user)
-          const otherUsers = allUsers.filter(
-            (u) =>
-              u.id !== user.id &&
-              u.bankAccounts.length > 0 &&
-              !u.bankAccounts[0].number.includes("555555555555") &&
-              !u.bankAccounts[0].number.includes("444444444444"),
-          );
+      if (neededTransactions > 0) {
+        // Get other seeded users only (excluding rescue funds and the current user)
+        // Filter to only include users that are in the seed configuration
+        const seededUserEmails = new Set(usersToSeed.map((u) => u.email.toLowerCase()));
+        const otherUsers = allUsers.filter(
+          (u) =>
+            u.id !== user.id &&
+            u.bankAccounts.length > 0 &&
+            seededUserEmails.has(u.email.toLowerCase()) &&
+            !u.bankAccounts[0].number.includes("555555555555") &&
+            !u.bankAccounts[0].number.includes("444444444444"),
+        );
 
-          if (otherUsers.length > 0) {
-            console.log(
-              `[users seed] User ${userSeed.email} has ${currentTransactionCount} transactions, generating ${neededTransactions} more to reach ${userSeed.transactionCount}`,
-            );
-            await generateUserTransactionHistory(prisma, user.id, neededTransactions, otherUsers);
-          } else {
-            console.warn(`[users seed] No other users found for generating transaction history for ${userSeed.email}`);
-          }
-        } else {
+        if (otherUsers.length > 0) {
           console.log(
-            `[users seed] User ${userSeed.email} already has ${currentTransactionCount} transactions (needed: ${userSeed.transactionCount})`,
+            `[users seed] User ${userSeed.email} has ${currentTransactionCount} transactions, generating ${neededTransactions} more to reach ${userSeed.transactionCount}`,
           );
+          await generateUserTransactionHistory(prisma, user.id, neededTransactions, otherUsers);
+        } else {
+          console.warn(`[users seed] No other users found for generating transaction history for ${userSeed.email}`);
         }
+      } else {
+        console.log(
+          `[users seed] User ${userSeed.email} already has ${currentTransactionCount} transactions (needed: ${userSeed.transactionCount})`,
+        );
       }
     }
   }
