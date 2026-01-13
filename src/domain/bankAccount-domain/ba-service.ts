@@ -15,14 +15,20 @@ type Pagination = {
 
 const bankAccountService = {
   async createBankAccount(
-    bankAccount: Pick<BankAccount, "userId" | "currency" | "name">,
+    bankAccount: Pick<BankAccount, "userId" | "currency"> & { name?: string; number?: string; balance?: number },
   ): Promise<SuccessResponse<BankAccount> | ErrorResponse> {
     try {
-      const finalName = await getUniqueBankAccountName(bankAccount.name, bankAccount.userId);
+      const finalName = await getUniqueBankAccountName(bankAccount.name || "My Bank Account", bankAccount.userId);
 
-      const initialBalance = await getInitialBalanceForUser(bankAccount.userId);
+      const balanceToSet =
+        bankAccount.balance !== undefined ? bankAccount.balance : await getInitialBalanceForUser(bankAccount.userId);
 
-      const result = await repository.createBankAccount({ ...bankAccount, name: finalName, balance: initialBalance });
+      const result = await repository.createBankAccount({
+        ...bankAccount,
+        name: finalName,
+        balance: balanceToSet,
+        number: bankAccount.number,
+      });
       return successResponse("Bank account created successfully", result);
     } catch (error: any) {
       return errorResponse(error?.message || "Failed to create bank account", ApiErrorCode.INTERNAL_ERROR);
