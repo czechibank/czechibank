@@ -69,6 +69,8 @@ export type UserSeedConfig = {
   skipApiKey?: boolean; // Don't create any API keys
   needsTransactionHistory?: boolean; // Mark user for transaction history generation
   transactionCount?: number; // Number of transactions for this user
+  primaryBalanceIndex?: number; // Which BA gets the 100k/Seed balance (Default BA index: 0)
+  primaryTransactionIndex?: number; // Which BA gets involved in the 10,000 seed transactions (Default BA index: 0)
 };
 
 export const adminUserToSeed: Omit<

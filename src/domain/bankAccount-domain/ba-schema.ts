@@ -1,6 +1,7 @@
 import { Currency } from "@prisma/client";
 import { z } from "zod";
 
+// Default schema for bank account creation - name is optional
 export const BankAccountSchema = z.object({
   name: z.string().optional(),
   currency: z.nativeEnum(Currency),

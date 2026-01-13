@@ -63,7 +63,7 @@ export async function POST(request: Request) {
     const result = await bankAccountService.createBankAccount({
       userId: user.id,
       currency: parsedBody.data.currency,
-      name: parsedBody.data.name || "New Bank Account",
+      name: parsedBody.data.name,
     });
 
     return NextResponse.json(successResponse("Bank account created successfully", { bankAccount: result }), {

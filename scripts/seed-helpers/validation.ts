@@ -35,6 +35,21 @@ export default async function validateSeedBankAccounts(prisma: PrismaClient, use
     console.error(`[seed-users] Duplicate bank account numbers in seed file: ${[...new Set(dup)].join(", ")}`);
     throw new Error("Seed contains duplicate bank account numbers. Fix usersToSeed before running.");
   }
+  // Validate that primaryBalanceIndex and primaryTransactionIndex point to real array entries
+  usersToSeed.forEach((u) => {
+    const accountCount = Array.isArray(u.bankAccountNumber) ? u.bankAccountNumber.length : 1;
+
+    if (u.primaryBalanceIndex !== undefined && u.primaryBalanceIndex >= accountCount) {
+      throw new Error(
+        `User ${u.email} has primaryBalanceIndex ${u.primaryBalanceIndex} but only has ${accountCount} accounts.`,
+      );
+    }
+    if (u.primaryTransactionIndex !== undefined && u.primaryTransactionIndex >= accountCount) {
+      throw new Error(
+        `User ${u.email} has primaryTransactionIndex ${u.primaryTransactionIndex} but only has ${accountCount} accounts.`,
+      );
+    }
+  });
 
   // Check for conflicts with other users already in the DB
   if (allProvidedBAs.length > 0) {
