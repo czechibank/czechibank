@@ -4,6 +4,17 @@ import { UserWithRole } from "better-auth/plugins";
 import { UserSeedConfig } from "../seed-users";
 
 /**
+ * Generates a random 12-digit number string for bank account numbers.
+ */
+function generateRandomDigits(digitCount: number): string {
+  let randomNumber = "";
+  for (let i = 0; i < digitCount; i++) {
+    randomNumber += Math.floor(Math.random() * 10);
+  }
+  return randomNumber;
+}
+
+/**
  * Ensures that a user has the correct bank accounts based on the seed configuration.
  *
  * This function handles:
@@ -53,8 +64,15 @@ export default async function ensureUserBankAccounts(
         console.warn(
           `[users seed] Bank account number ${primaryNumber} already exists for another user; skipping reuse for ${user.email}`,
         );
-        // create fallback unique number to avoid collision
-        const fallbackNumber = `${primaryNumber}_${user.id.slice(0, 6)}`;
+        // create fallback unique number to avoid collision, preserving "number/code" format
+        let fallbackNumber: string;
+        if (primaryNumber.includes("/")) {
+          const [numberPart, codePart] = primaryNumber.split("/");
+          fallbackNumber = `${numberPart}_${user.id.slice(0, 6)}/${codePart}`;
+        } else {
+          // No slash found - generate a compliant random number
+          fallbackNumber = `${generateRandomDigits(12)}/5555`;
+        }
         await bankAccountService.createBankAccount({
           userId: user.id,
           currency: Currency.CZECHITOKEN,

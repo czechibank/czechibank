@@ -302,8 +302,9 @@ async function seedUsers() {
           });
           console.log(`[users seed] Created expired API key (64 chars) for user: ${user.email}`);
         } else {
-          // Create multiple API keys or single key
-          for (let i = 0; i < apiKeyActiveCount; i++) {
+          // Create active API keys (always, unless hasExpiredKey consumed one slot)
+          const activeKeysToCreate = hasExpiredKey ? apiKeyActiveCount - 1 : apiKeyActiveCount;
+          for (let i = 0; i < activeKeysToCreate; i++) {
             console.log(`[users seed] Creating API key ${i + 1}/${apiKeyActiveCount} for user: ${user.email}`);
             const apiKey = await auth.api.createApiKey({ body: { userId: user.id } });
             const keyValue = generateApiKey("key_" + "_" + i + "_" + user.email);
@@ -553,7 +554,7 @@ async function main() {
 
   for (const userSeed of usersToSeed) {
     if (userSeed.needsTransactionHistory && userSeed.transactionCount) {
-      const user = allUsers.find((u) => u.email === userSeed.email);
+      const user = allUsers.find((u) => u.email.toLowerCase() === userSeed.email.toLowerCase());
       if (!user) {
         console.warn(
           `[users seed] User ${userSeed.email} not found in database, skipping transaction history generation`,
