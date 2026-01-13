@@ -68,7 +68,7 @@ export default async function ensureUserBankAccounts(
         let fallbackNumber: string;
         if (primaryNumber.includes("/")) {
           const [numberPart, codePart] = primaryNumber.split("/");
-          fallbackNumber = `${numberPart}_${user.id.slice(0, 6)}/${codePart}`;
+          fallbackNumber = `${generateRandomDigits(12)}/${codePart}`;
         } else {
           // No slash found - generate a compliant random number
           fallbackNumber = `${generateRandomDigits(12)}/5555`;
