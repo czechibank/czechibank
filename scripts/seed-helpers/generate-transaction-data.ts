@@ -1,4 +1,4 @@
-import { BankAccount, Prisma } from "@prisma/client";
+import { BankAccount, Prisma, Transaction } from "@prisma/client";
 import { seededRandom } from "./seeded-random";
 
 type UserWithBankAccounts = Prisma.UserGetPayload<{
@@ -42,7 +42,7 @@ export function generateTransactionData(
   );
   const now = new Date();
   const sixMonthsAgo = new Date(now.getTime() - 180 * 24 * 60 * 60 * 1000);
-  const transactions = [];
+  const transactions: Omit<Transaction, "id" | "updatedAt">[] = [];
 
   // Track transaction patterns
   const transactionPatterns = new Map<string, Map<string, number>>();
@@ -127,8 +127,6 @@ export function generateTransactionData(
         currency: "CZECHITOKEN",
         fromBankId: senderAccount.id,
         toBankId: receiverAccount.id,
-        senderAccountId: senderAccount.id,
-        receiverAccountId: receiverAccount.id,
       });
     } catch (error) {
       console.error(`[${new Date().toISOString()}] Error generating transaction ${i}:`, error);

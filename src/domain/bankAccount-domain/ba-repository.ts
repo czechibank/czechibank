@@ -75,13 +75,47 @@ export async function createBankAccount({
   balance: number;
   number?: string;
 }) {
+  // If number is provided, attempt once and fail fast on collision
+  if (number !== undefined && number !== null) {
+    try {
+      const bankAccount = await prisma.bankAccount.create({
+        data: {
+          userId: userId,
+          currency: currency,
+          name: name,
+          balance,
+          number: number,
+          isActive: true,
+        },
+        include: {
+          user: {
+            select: {
+              name: true,
+              email: true,
+            },
+          },
+        },
+      });
+
+      return bankAccount;
+    } catch (error: any) {
+      // Prisma unique constraint error code is P2002
+      if (error?.code === "P2002") {
+        throw new Error(
+          `Bank account number "${number}" already exists. Cannot create bank account with duplicate number.`,
+        );
+      }
+      // For other errors, rethrow immediately
+      throw error;
+    }
+  }
+
   // Try creating a bank account with a random number; retry on unique-constraint collisions.
   const MAX_ATTEMPTS = 6;
   let lastError: any = null;
 
   for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
-    //if BA number is provided (seeded users), use it, otherwise random generation
-    const candidateNumber = number ?? generateRandomDigits(12) + "/5555";
+    const candidateNumber = generateRandomDigits(12) + "/5555";
     try {
       const bankAccount = await prisma.bankAccount.create({
         data: {
