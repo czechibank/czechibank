@@ -8,7 +8,11 @@ export async function GET(request: Request) {
 
   // If accessed from a browser, redirect to the UI page
   if (accept.includes("text/html")) {
-    return NextResponse.redirect(new URL("/api/v1/docs/page", request.url));
+    // Construct the redirect URL using headers to handle proxies/load balancers correctly
+    const host = headersList.get("x-forwarded-host") || headersList.get("host") || request.url;
+    const protocol = headersList.get("x-forwarded-proto") || "https";
+    const redirectUrl = new URL("/api/v1/docs/page", `${protocol}://${host}`);
+    return NextResponse.redirect(redirectUrl);
   }
 
   // Otherwise return the OpenAPI spec as JSON
