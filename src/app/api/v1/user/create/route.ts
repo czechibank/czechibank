@@ -3,7 +3,7 @@ export { DELETE, HEAD, OPTIONS, PATCH, PUT } from "../../routes";
 import apikeyService from "@/domain/apikey/apikey-service";
 import { UserSchema } from "@/domain/user-domain/user-schema";
 import userService from "@/domain/user-domain/user-service";
-import { validateEventHandler } from "@/lib/response";
+import { ApiErrorCode, errorResponse, successResponse, validateEventHandler } from "@/lib/response";
 import { APIError } from "better-auth/api";
 import { ApiError, handleErrors } from "../../routes";
 
@@ -12,7 +12,7 @@ import { ApiError, handleErrors } from "../../routes";
  * /user/create:
  *   post:
  *     summary: Create a new user
- *     description: Creates a new user account with the provided details
+ *     description: Creates a new user account with the provided details and automatically generates an API key
  *     tags: [Users]
  *     requestBody:
  *       required: true
@@ -26,17 +26,34 @@ import { ApiError, handleErrors } from "../../routes";
  *         content:
  *           application/json:
  *             schema:
- *               allOf:
- *                 - $ref: '#/components/schemas/SuccessResponse'
- *                 - type: object
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: "User created successfully"
+ *                 data:
+ *                   $ref: '#/components/schemas/User'
+ *                 meta:
+ *                   type: object
  *                   properties:
- *                     data:
- *                       type: object
- *                       properties:
- *                         user:
- *                           $ref: '#/components/schemas/User'
+ *                     timestamp:
+ *                       type: string
+ *                       format: date-time
+ *                       example: "2026-01-10T22:53:51.562Z"
+ *                       description: Response timestamp
+ *                   required:
+ *                     - timestamp
  *       400:
  *         description: Invalid input or email already exists
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *       422:
+ *         description: Validation error
  *         content:
  *           application/json:
  *             schema:
@@ -59,7 +76,9 @@ export async function POST(request: Request) {
     const createdUser = await userService.server.createUser(parsedUser, "user");
     const apiKey = await apikeyService.server.createApiKey(createdUser.user.id);
 
-    return Response.json({ ...createdUser.user, apiKey: apiKey.key }, { status: 201 });
+    return Response.json(successResponse("User created successfully", { ...createdUser.user, apiKey: apiKey.key }), {
+      status: 201,
+    });
   } catch (error) {
     // TODO: @vojtech-cerveny - handle better-auth - we can reuse their ApiErrorCodes etc.
     // https://www.better-auth.com/docs/concepts/api#error-handling
@@ -71,7 +90,12 @@ export async function POST(request: Request) {
     if (error instanceof ApiError || error instanceof APIError) {
       return handleErrors(error);
     } else {
-      return Response.json({ error: "Internal Server Error", message: error }, { status: 500 });
+      return Response.json(
+        errorResponse("Internal Server Error", ApiErrorCode.INTERNAL_ERROR, [
+          { code: ApiErrorCode.INTERNAL_ERROR, message: error instanceof Error ? error.message : "Unknown error" },
+        ]),
+        { status: 500 },
+      );
     }
   }
 }
