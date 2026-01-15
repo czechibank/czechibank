@@ -332,7 +332,21 @@ All responses follow a consistent format:
                 },
               },
             },
+            meta: {
+              type: "object",
+              additionalProperties: false,
+              properties: {
+                timestamp: {
+                  type: "string",
+                  format: "date-time",
+                  example: "2026-01-10T22:53:51.562Z",
+                  description: "Response timestamp",
+                },
+              },
+              required: ["timestamp"],
+            },
           },
+          required: ["success", "message", "error"],
         },
       },
     },
