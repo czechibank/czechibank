@@ -9,11 +9,9 @@ export async function GET(request: Request) {
 
   // If accessed from a browser, redirect to the UI page
   if (accept.includes("text/html")) {
-    // Construct the redirect URL using headers to handle proxies/load balancers correctly
-    const host =
-      headersList.get("x-forwarded-host") || headersList.get("host") || env.HOST || new URL(request.url).host;
+    // Use trusted HOST environment variable to prevent open redirect vulnerabilities
     const protocol = headersList.get("x-forwarded-proto") || "https";
-    const redirectUrl = new URL("/api/v1/docs/page", `${protocol}://${host}`);
+    const redirectUrl = new URL("/api/v1/docs/page", `${protocol}://${env.HOST}`);
     return NextResponse.redirect(redirectUrl);
   }
 
