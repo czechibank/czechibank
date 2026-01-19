@@ -33,6 +33,10 @@ All responses follow a consistent format:
         description: "Local Development Server",
       },
       {
+        url: "https://develop.czechibank.ostrava.digital/api/v1",
+        description: "Development Server",
+      },
+      {
         url: "https://czechibank.ostrava.digital/api/v1",
         description: "Production Server",
       },
