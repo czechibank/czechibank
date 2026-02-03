@@ -1,17 +1,27 @@
 "use server";
 import { TransactionTable } from "@/components/transactions/table";
 import { TransactionTransfer } from "@/components/transactions/transfer";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Meteors } from "@/components/ui/meteors";
 import bankAccountService from "@/domain/bankAccount-domain/ba-service";
 import userService from "@/domain/user-domain/user-service";
 
 import { incorrectBalanceDisplayFeature } from "@/domain/features-domain/features-application-service";
 import featuresService from "@/domain/features-domain/features-service";
 import { FeatureType } from "@/domain/features-domain/features.schema";
-import { RocketIcon } from "lucide-react";
+import { ArrowLeft, CreditCard, History, Send, Wallet } from "lucide-react";
 import { headers } from "next/headers";
+import Image from "next/image";
+import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
+
+// Neobrutalist colors
+const colors = {
+  pink: "#ff4c91",
+  yellow: "#FFE566",
+  blue: "#6EC1E4",
+  orange: "#FF6B35",
+  green: "#7ED957",
+  purple: "#B794F6",
+};
 
 export default async function BankAccountPage(props: { params: Promise<{ id: string }> }) {
   const params = await props.params;
@@ -39,61 +49,99 @@ export default async function BankAccountPage(props: { params: Promise<{ id: str
   }
   if (bankAccount.success && allFeatures.success) {
     return (
-      <div className="flex flex-col gap-4">
-        <h1 className="my-8 scroll-m-20 text-4xl font-extrabold tracking-tight lg:text-5xl">{bankAccount.data.name}</h1>
-        <h2 className="flex items-center gap-4 text-xl font-bold">
-          <RocketIcon />
-          Číslo účtu
-        </h2>
-        <div className="flex">
-          <h2 className="mb-8 inline-block scroll-m-20 bg-gradient-to-r from-pink-600 to-gray-900 bg-clip-text text-2xl font-extrabold tracking-tight text-transparent lg:text-5xl">
+      <div className="pb-12">
+        {/* Back link */}
+        <Link
+          href="/dashboard"
+          className="mb-6 inline-flex items-center gap-2 text-sm font-bold text-muted-foreground transition-colors hover:text-foreground"
+        >
+          <ArrowLeft className="h-4 w-4" />
+          Back to Dashboard
+        </Link>
+
+        {/* Header */}
+        <div className="mb-8">
+          <div className="mb-4 inline-flex items-center gap-2 rounded-full border-3 border-black bg-[#6EC1E4] px-4 py-2 font-bold shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]">
+            <CreditCard className="h-4 w-4" />
+            Account Details
+          </div>
+          <h1 className="mb-2 text-4xl font-black tracking-tight">{bankAccount.data.name}</h1>
+          <div className="inline-block rounded-lg border-2 border-black bg-zinc-100 px-3 py-1 font-mono text-sm dark:bg-zinc-800">
             {bankAccount.data.number}
-          </h2>
-        </div>
-        <div className="flex flex-col gap-4">
-          <Card className="relative flex flex-grow flex-col overflow-hidden bg-gradient-to-br from-slate-800 to-slate-900 text-white">
-            <Meteors number={20} />
-            <CardHeader className="flex-none">{/* <CardTitle>{bankAccount.currency}</CardTitle> */}</CardHeader>
-            <CardContent className="flex flex-grow flex-col justify-end">
-              <div className="grow"></div>
-              <div className="flex-none">
-                <div className="flex scroll-m-20 flex-col items-center justify-end">
-                  <span className="bg-clip-text text-7xl font-extrabold tracking-tight text-transparent text-white lg:text-6xl">
-                    {getBankBalance(bankAccount.data.balance, allFeatures.data)}
-                  </span>
-                  <span className="bg-clip-text text-4xl font-bold tracking-tight text-transparent text-white lg:text-3xl">
-                    {bankAccount.data.currency}
-                  </span>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-          <Card className="w-full">
-            <CardHeader>
-              <CardTitle>Transfer your money</CardTitle>
-            </CardHeader>
-            <CardContent>
-              {allUsers.success && allFeatures.success && (
-                <TransactionTransfer
-                  bankAccountNumber={bankAccount.data.number}
-                  userId={session.user.id}
-                  allUsers={allUsers.data}
-                  balance={bankAccount.data.balance}
-                  features={allFeatures.data}
-                />
-              )}
-            </CardContent>
-          </Card>
+          </div>
         </div>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>Your history</CardTitle>
-          </CardHeader>
-          <CardContent>
+        {/* Balance Card */}
+        <div
+          className="relative mb-8 overflow-hidden rounded-2xl border-3 border-black p-8 shadow-[6px_6px_0px_0px_rgba(0,0,0,1)]"
+          style={{ backgroundColor: colors.pink }}
+        >
+          {/* Decorative elements */}
+          <div className="absolute -right-8 -top-8 h-32 w-32 rounded-full border-4 border-black bg-white/20" />
+          <div className="absolute -bottom-4 -left-4 h-20 w-20 rounded-full border-4 border-black bg-white/20" />
+
+          <div className="relative">
+            <div className="mb-2 flex items-center gap-2">
+              <Wallet className="h-5 w-5" />
+              <span className="text-sm font-bold uppercase">Current Balance</span>
+            </div>
+            <div className="flex items-center gap-4">
+              <Image src="/czechitoken-black.svg" alt="Czechitoken" width={48} height={48} />
+              <span className="text-6xl font-black">{getBankBalance(bankAccount.data.balance, allFeatures.data)}</span>
+            </div>
+            <p className="mt-2 text-sm font-bold">{bankAccount.data.currency}</p>
+          </div>
+        </div>
+
+        {/* Transfer Card */}
+        <div className="mb-8 rounded-2xl border-3 border-black bg-white shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] dark:bg-zinc-900">
+          <div className="border-b-3 border-black p-5">
+            <div className="flex items-center gap-3">
+              <div
+                className="flex h-10 w-10 items-center justify-center rounded-xl border-2 border-black"
+                style={{ backgroundColor: colors.green }}
+              >
+                <Send className="h-5 w-5" />
+              </div>
+              <div>
+                <h2 className="text-lg font-black">Transfer Money</h2>
+                <p className="text-sm text-muted-foreground">Send tokens to another account</p>
+              </div>
+            </div>
+          </div>
+          <div className="p-5">
+            {allUsers.success && allFeatures.success && (
+              <TransactionTransfer
+                bankAccountNumber={bankAccount.data.number}
+                userId={session.user.id}
+                allUsers={allUsers.data}
+                balance={bankAccount.data.balance}
+                features={allFeatures.data}
+              />
+            )}
+          </div>
+        </div>
+
+        {/* Transaction History Card */}
+        <div className="rounded-2xl border-3 border-black bg-white shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] dark:bg-zinc-900">
+          <div className="border-b-3 border-black p-5">
+            <div className="flex items-center gap-3">
+              <div
+                className="flex h-10 w-10 items-center justify-center rounded-xl border-2 border-black"
+                style={{ backgroundColor: colors.yellow }}
+              >
+                <History className="h-5 w-5" />
+              </div>
+              <div>
+                <h2 className="text-lg font-black">Transaction History</h2>
+                <p className="text-sm text-muted-foreground">Your recent transactions</p>
+              </div>
+            </div>
+          </div>
+          <div className="p-5">
             <TransactionTable bankAccountId={bankAccount.data.id} />
-          </CardContent>
-        </Card>
+          </div>
+        </div>
       </div>
     );
   }

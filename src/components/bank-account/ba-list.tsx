@@ -3,6 +3,7 @@
 import { CreateDialog } from "@/components/bank-account/create-ba-dialog";
 import bankAccountService from "@/domain/bankAccount-domain/ba-service";
 import { BankAccount } from "@prisma/client";
+import { CreditCard } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import CustomSession from "../../../types/session-betterAuth";
@@ -46,23 +47,46 @@ export default function BankAccountsList({ initialBankAccounts, session }: BankA
   }, []);
 
   return (
-    <>
-      <div className="mb-4 flex justify-end">
+    <div>
+      {/* Section header with create button */}
+      <div className="mb-6 flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl border-3 border-black bg-[#6EC1E4] shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]">
+            <CreditCard className="h-5 w-5" />
+          </div>
+          <div>
+            <h2 className="text-xl font-black">Your Accounts</h2>
+            <p className="text-sm text-muted-foreground">
+              {accounts.length} account{accounts.length !== 1 ? "s" : ""}
+            </p>
+          </div>
+        </div>
         <CreateDialog
           session={session}
           onCreated={(newBankAccount: BankAccount) => setAccounts((prev) => [...prev, newBankAccount])}
         />
       </div>
-      <div className="grid grid-cols-2 gap-4">
-        {accounts.map((ba) => (
-          //comment Silviczka> div added to avoid oppening of bank account card while renaming
-          <div key={ba.id}>
-            <Link href={`/bankAccount/${ba.id}`}>
-              <BankAccountCard bankAccount={ba} session={session} onDelete={handleRefresh} onRename={handleRefresh} />
-            </Link>
+
+      {/* Accounts grid */}
+      {accounts.length === 0 ? (
+        <div className="rounded-2xl border-3 border-dashed border-black bg-zinc-50 p-12 text-center dark:bg-zinc-900">
+          <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full border-3 border-black bg-[#FFE566]">
+            <CreditCard className="h-8 w-8" />
           </div>
-        ))}
-      </div>
-    </>
+          <h3 className="mb-2 text-lg font-black">No accounts yet</h3>
+          <p className="mb-4 text-muted-foreground">Create your first bank account to get started!</p>
+        </div>
+      ) : (
+        <div className="grid gap-6 sm:grid-cols-2">
+          {accounts.map((ba) => (
+            <div key={ba.id}>
+              <Link href={`/bankAccount/${ba.id}`}>
+                <BankAccountCard bankAccount={ba} session={session} onDelete={handleRefresh} onRename={handleRefresh} />
+              </Link>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
   );
 }

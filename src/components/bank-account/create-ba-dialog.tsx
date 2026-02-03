@@ -89,44 +89,53 @@ export function CreateDialog({ session, onCreated }: CreateBankAccountDialogProp
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button className="flex items-center gap-2">
-          <Plus className="h-4 w-4" />
-          Create new
+        <Button className="border-3 border-black bg-[#7ED957] font-bold text-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] transition-all hover:bg-[#6bc348] hover:shadow-[5px_5px_0px_0px_rgba(0,0,0,1)]">
+          <Plus className="mr-2 h-4 w-4" />
+          Create Account
         </Button>
       </DialogTrigger>
-      <DialogContent>
+      <DialogContent className="border-3 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]">
         <DialogHeader>
-          <DialogTitle>Create New Bank Account</DialogTitle>
-          <DialogDescription>Please fill out the form below to create a new bank account.</DialogDescription>
+          <DialogTitle className="text-xl font-black">Create New Bank Account</DialogTitle>
+          <DialogDescription>Fill out the form below to create a new bank account.</DialogDescription>
         </DialogHeader>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 py-4">
           <div className="space-y-2">
-            <Label htmlFor="name">Account Name</Label>
+            <Label htmlFor="name" className="font-bold">
+              Account Name
+            </Label>
             <Input
               id="name"
               {...form.register("name")}
               placeholder="Enter account name"
               aria-invalid={!!form.formState.errors.name}
+              className="border-2 border-black focus-visible:ring-[#ff4c91]"
             />
             {form.formState.errors.name && <p className="text-sm text-red-600">{form.formState.errors.name.message}</p>}
           </div>
           <div className="space-y-2">
-            <Label htmlFor="currency">Currency</Label>
+            <Label htmlFor="currency" className="font-bold">
+              Currency
+            </Label>
             <Select
               defaultValue={form.getValues("currency")}
               onValueChange={(val) => form.setValue("currency", val as "CZECHITOKEN")}
             >
-              <SelectTrigger id="currency">
+              <SelectTrigger id="currency" className="border-2 border-black">
                 <SelectValue />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent className="border-2 border-black">
                 <SelectItem value="CZECHITOKEN">CZECHITOKEN</SelectItem>
               </SelectContent>
             </Select>
           </div>
           <DialogFooter>
-            <Button type="submit" disabled={form.formState.isSubmitting}>
-              Create
+            <Button
+              type="submit"
+              disabled={form.formState.isSubmitting}
+              className="border-3 border-black bg-[#ff4c91] font-bold text-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] transition-all hover:bg-[#e6447f] hover:shadow-[5px_5px_0px_0px_rgba(0,0,0,1)]"
+            >
+              Create Account
             </Button>
           </DialogFooter>
         </form>
