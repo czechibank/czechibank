@@ -4,13 +4,17 @@ export const config = {
   BASE_URL: "http://" + env.HOST,
 };
 
-import { apiKeysExport } from "../../../scripts/seed-helpers/generated-api-keys-export";
+// Generate API key the same way as seed script (must match exactly)
+function generateApiKey(email: string, index: number = 0): string {
+  const prefix = `key__${index}_${email.toLowerCase()}`;
+  return prefix + "0".repeat(64 - prefix.length);
+}
 
 export const apiKeys = {
-  standardUser: apiKeysExport.find((key) => key.email === "standard.user@example.com")?.apiKeys,
-  expiredUser: apiKeysExport.find((key) => key.email === "expired.key@example.com")?.apiKeys,
-  multipleKeysUser: apiKeysExport.find((key) => key.email === "multiple.keys@example.com")?.apiKeys,
-  highBalanceUser: apiKeysExport.find((key) => key.email === "high.balance@example.com")?.apiKeys,
-  appAdmin: apiKeysExport.find((key) => key.email === "app_admin@email.com")?.apiKeys,
-  vojta: apiKeysExport.find((key) => key.email === "vojta@czechibank.ostrava.digital")?.apiKeys,
+  standardUser: generateApiKey("standard.user@example.com"),
+  highBalanceUser: generateApiKey("high.balance@example.com"),
+  zeroBalanceUser: generateApiKey("zero.balance@example.com"),
+  multipleKeysUser: generateApiKey("multiple.keys@example.com"),
+  appAdmin: generateApiKey("app_admin@email.com"),
+  vojta: generateApiKey("vojta@czechibank.ostrava.digital"),
 } as const;

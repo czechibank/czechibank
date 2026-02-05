@@ -26,7 +26,7 @@ describe("Transactions API", () => {
     it("should return transactions with valid API key", async () => {
       const response = await fetch(`${config.BASE_URL}/api/v1/transactions`, {
         headers: {
-          "X-API-Key": apiKeys.vojta?.[0]?.key || "", // Vojta's account with 100 transactions
+          "X-API-Key": apiKeys.vojta, // Vojta's account with 100 transactions
         },
       });
       expect(response.status).toBe(200);
@@ -40,7 +40,7 @@ describe("Transactions API", () => {
       it("should return first page with default limit (10)", async () => {
         const response = await fetch(`${config.BASE_URL}/api/v1/transactions`, {
           headers: {
-            "X-API-Key": apiKeys.highBalanceUser?.[0]?.key || "",
+            "X-API-Key": apiKeys.highBalanceUser,
           },
         });
         expect(response.status).toBe(200);
@@ -58,7 +58,7 @@ describe("Transactions API", () => {
       it("should return second page with 10 items", async () => {
         const response = await fetch(`${config.BASE_URL}/api/v1/transactions?page=2`, {
           headers: {
-            "X-API-Key": apiKeys.highBalanceUser?.[0]?.key || "",
+            "X-API-Key": apiKeys.highBalanceUser,
           },
         });
         expect(response.status).toBe(200);
@@ -76,7 +76,7 @@ describe("Transactions API", () => {
       it("should return 400 for invalid pagination parameters", async () => {
         const response = await fetch(`${config.BASE_URL}/api/v1/transactions?page=0&limit=0`, {
           headers: {
-            "X-API-Key": apiKeys.highBalanceUser?.[0]?.key || "",
+            "X-API-Key": apiKeys.highBalanceUser,
           },
         });
         expect(response.status).toBe(400);
@@ -88,7 +88,7 @@ describe("Transactions API", () => {
       it("should return empty array for page beyond total pages", async () => {
         const response = await fetch(`${config.BASE_URL}/api/v1/transactions?page=921`, {
           headers: {
-            "X-API-Key": apiKeys.vojta?.[0]?.key || "",
+            "X-API-Key": apiKeys.vojta,
           },
         });
         expect(response.status).toBe(200);
@@ -108,7 +108,7 @@ describe("Transactions API", () => {
       it("should sort by createdAt in descending order by default", async () => {
         const response = await fetch(`${config.BASE_URL}/api/v1/transactions`, {
           headers: {
-            "X-API-Key": apiKeys.highBalanceUser?.[0]?.key || "",
+            "X-API-Key": apiKeys.highBalanceUser,
           },
         });
         expect(response.status).toBe(200);
@@ -123,7 +123,7 @@ describe("Transactions API", () => {
       it("should sort by amount in ascending order", async () => {
         const response = await fetch(`${config.BASE_URL}/api/v1/transactions?sortBy=amount&sortOrder=asc`, {
           headers: {
-            "X-API-Key": apiKeys.highBalanceUser?.[0]?.key || "",
+            "X-API-Key": apiKeys.highBalanceUser,
           },
         });
         expect(response.status).toBe(200);
@@ -147,7 +147,7 @@ describe("Transactions API", () => {
     it("should return 404 for non-existent transaction", async () => {
       const response = await fetch(`${config.BASE_URL}/api/v1/transactions/non-existent-id`, {
         headers: {
-          "X-API-Key": apiKeys.highBalanceUser?.[0]?.key || "",
+          "X-API-Key": apiKeys.highBalanceUser,
         },
       });
       expect(response.status).toBe(404);
@@ -160,7 +160,7 @@ describe("Transactions API", () => {
       // First get a list of transactions to get a valid ID
       const listResponse = await fetch(`${config.BASE_URL}/api/v1/transactions`, {
         headers: {
-          "X-API-Key": apiKeys.highBalanceUser?.[0]?.key || "",
+          "X-API-Key": apiKeys.highBalanceUser,
         },
       });
       const listData = await listResponse.json();
@@ -169,7 +169,7 @@ describe("Transactions API", () => {
       // Then get the details for that transaction
       const response = await fetch(`${config.BASE_URL}/api/v1/transactions/${transactionId}`, {
         headers: {
-          "X-API-Key": apiKeys.highBalanceUser?.[0]?.key || "",
+          "X-API-Key": apiKeys.highBalanceUser,
         },
       });
       expect(response.status).toBe(200);
@@ -183,12 +183,12 @@ describe("Transactions API", () => {
     it("should return 201 for valid request", async () => {
       console.log(config.BASE_URL);
       console.log("-------------------------------- API KEY --------------------------------");
-      console.log(apiKeys.highBalanceUser?.[0]?.key);
+      console.log(apiKeys.highBalanceUser);
       const response = await fetch(`${config.BASE_URL}/api/v1/transactions/create`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "X-API-Key": apiKeys.highBalanceUser?.[0]?.key || "",
+          "X-API-Key": apiKeys.highBalanceUser,
         },
         body: JSON.stringify({
           amount: 1,
@@ -224,7 +224,7 @@ describe("Transactions API", () => {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "X-API-Key": apiKeys.highBalanceUser?.[0]?.key || "",
+          "X-API-Key": apiKeys.highBalanceUser,
         },
         body: JSON.stringify({}),
       });
@@ -239,7 +239,7 @@ describe("Transactions API", () => {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "X-API-Key": apiKeys.highBalanceUser?.[0]?.key || "",
+          "X-API-Key": apiKeys.highBalanceUser,
         },
         body: JSON.stringify({
           amount: -1,
@@ -263,7 +263,7 @@ describe("Transactions API", () => {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "X-API-Key": apiKeys.highBalanceUser?.[0]?.key || "",
+          "X-API-Key": apiKeys.highBalanceUser,
         },
         body: JSON.stringify({
           amount: 100,
@@ -283,7 +283,7 @@ describe("Transactions API", () => {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "X-API-Key": apiKeys.highBalanceUser?.[0]?.key || "",
+          "X-API-Key": apiKeys.highBalanceUser,
         },
         body: JSON.stringify({
           amount: Number.MAX_SAFE_INTEGER + 1,
