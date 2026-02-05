@@ -71,6 +71,7 @@ jobs:
         env:
           DATABASE_URL: postgresql://postgres:postgres@localhost:5432/czechibank
           SECRET_KEY: "test-secret-key-for-jwt-encryption"
+          BETTER_AUTH_SECRET: "test-secret-key-for-better-auth!"
           DISCORD_WEBHOOK_URL: "https://discord.com/api/webhooks/test"
           HOST: "localhost:3000"
           ENV: "CI"
@@ -79,6 +80,7 @@ jobs:
         env:
           DATABASE_URL: postgresql://postgres:postgres@localhost:5432/czechibank
           SECRET_KEY: "test-secret-key-for-jwt-encryption"
+          BETTER_AUTH_SECRET: "test-secret-key-for-better-auth!"
           DISCORD_WEBHOOK_URL: "https://discord.com/api/webhooks/test"
           HOST: "localhost:3000"
           ENV: "CI"
