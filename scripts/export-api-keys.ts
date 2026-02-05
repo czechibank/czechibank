@@ -1,7 +1,7 @@
 import { PrismaClient } from "@prisma/client";
 import * as fs from "fs";
+import _ from "lodash";
 import * as path from "path";
-
 const prisma = new PrismaClient();
 
 interface ApiKeyExport {
@@ -29,7 +29,7 @@ async function exportApiKeys() {
       },
     });
 
-    console.log(`[export-api-keys] Found ${users.length} users`);
+    console.log(`[export-api-keys] Found ${_.uniqBy(users, "email").length} users`);
 
     const exportData: ApiKeyExport[] = [];
 

@@ -181,6 +181,9 @@ describe("Transactions API", () => {
 
   describe("POST /api/v1/transactions/create", () => {
     it("should return 201 for valid request", async () => {
+      console.log(config.BASE_URL);
+      console.log("-------------------------------- API KEY --------------------------------");
+      console.log(apiKeys.highBalanceUser?.[0]?.key);
       const response = await fetch(`${config.BASE_URL}/api/v1/transactions/create`, {
         method: "POST",
         headers: {
@@ -195,6 +198,7 @@ describe("Transactions API", () => {
       });
       expect(response.status).toBe(201);
       const data = await response.json();
+      console.log(JSON.stringify(data, null, 2));
       expect(data.success).toBe(true);
     });
 
