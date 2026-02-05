@@ -48,7 +48,7 @@ jobs:
           version: 9
       - uses: actions/setup-node@v4
         with:
-          node-version: lts/*
+          node-version: 20
           cache: "pnpm"
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
@@ -64,6 +64,8 @@ jobs:
         run: pnpm db:seed:users && pnpm db:seed:features
         env:
           DATABASE_URL: postgresql://postgres:postgres@localhost:5432/czechibank
+          SECRET_KEY: "test-secret-key-for-jwt-encryption"
+          HOST: "localhost:3000"
       - name: Build application
         run: pnpm run build
         env:
@@ -132,7 +134,7 @@ jobs:
           version: 9
       - uses: actions/setup-node@v4
         with:
-          node-version: lts/*
+          node-version: 20
           cache: "pnpm"
 
       - name: Install dependencies

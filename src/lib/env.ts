@@ -6,7 +6,6 @@ import { z } from "zod";
 const envSchema = z.object({
   DISCORD_WEBHOOK_URL: z.string().url().optional().or(z.literal("")),
   HOST: z.string().min(1),
-  BETTER_AUTH_URL: z.string().url().optional().or(z.literal("")),
   ENV: z.enum(["development", "CI", "PROD"]).optional(),
 });
 
