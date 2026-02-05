@@ -61,7 +61,7 @@ jobs:
         env:
           DATABASE_URL: postgresql://postgres:postgres@localhost:5432/czechibank
       - name: Fill database with test data
-        run: pnpm run fill:db
+        run: pnpm db:seed:users && pnpm db:seed:features
         env:
           DATABASE_URL: postgresql://postgres:postgres@localhost:5432/czechibank
       - name: Build application
