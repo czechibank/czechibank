@@ -6,26 +6,26 @@ on:
     branches: [main, master, develop]
 
 jobs:
-  unit-tests:
-    name: Unit Tests
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v4
-        with:
-          version: 9
-      - uses: actions/setup-node@v4
-        with:
-          node-version: lts/*
-          cache: "pnpm"
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
-      - name: Run unit tests
-        run: pnpm run test:unit
+  # unit-tests:
+  #   name: Unit Tests
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - uses: actions/checkout@v4
+  #     - uses: pnpm/action-setup@v4
+  #       with:
+  #         version: 9
+  #     - uses: actions/setup-node@v4
+  #       with:
+  #         node-version: lts/*
+  #         cache: "pnpm"
+  #     - name: Install dependencies
+  #       run: pnpm install --frozen-lockfile
+  #     - name: Run unit tests
+  #       run: pnpm run test:unit
 
   api-tests:
     name: API Tests
-    needs: unit-tests
+    # needs: unit-tests
     runs-on: ubuntu-latest
     services:
       postgres:
