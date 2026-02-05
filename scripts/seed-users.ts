@@ -44,7 +44,7 @@ export const PRIMARY_BALANCE_INDEX = 0; // Default: use 1st bank account
  * // Returns "test_" + 59 zeros = 64 characters total
  * ```
  */
-function generateApiKey(startingValue: string = "", length: number = 64): string {
+export function generateApiKey(startingValue: string = "", length: number = 64): string {
   return startingValue + "0".repeat(length - startingValue.length);
 }
 
@@ -87,7 +87,7 @@ export const adminUserToSeed: Omit<
   role: "admin",
 };
 
-const usersToSeed: UserSeedConfig[] = [
+export const usersToSeed: UserSeedConfig[] = [
   // Admin user
   {
     ...adminUserToSeed,

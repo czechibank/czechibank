@@ -1,9 +1,23 @@
+import env from "./lib/env";
+
 export const MIN_PASSWORD_LENGTH = 8;
 
-export const RATE_LIMIT = {
-  TIME_WINDOW: 1000 * 60 * 1, // 1 minute
-  MAX_REQUESTS: 20, // 20 requests per minute
+const rateLimit = {
+  development: {
+    TIME_WINDOW: 1000 * 60 * 1, // 1 minute
+    MAX_REQUESTS: 2000, // 2000 requests per minute
+  },
+  CI: {
+    TIME_WINDOW: 1000 * 60 * 1, // 1 minute
+    MAX_REQUESTS: 2000, // 2000 requests per minute
+  },
+  PROD: {
+    TIME_WINDOW: 1000 * 60 * 1, // 1 minute
+    MAX_REQUESTS: 20, // 20 requests per minute
+  },
 };
+
+export const RATE_LIMIT = rateLimit[env.ENV || "PROD"];
 
 export const SESSION = {
   EXPIRES_IN: 60 * 30, // 30 minutes

@@ -11,15 +11,20 @@ RUN \
   else echo "Lockfile not found." && exit 1; \
   fi
 
-# Copy only the prisma directory (and schema)
+# Copy prisma directory (schema and migrations)
 COPY prisma ./prisma
 
-# Copy the scripts directory for seeding
+# Copy scripts directory for seeding
 COPY scripts ./scripts
 
-# Copy source files needed for seeding
+# Copy source files needed for seeding (includes domain, lib, etc.)
 COPY src ./src
+
+# Copy auth.ts (required by seed script)
+COPY auth.ts ./
+
+# Copy TypeScript config for path aliases
 COPY tsconfig.json ./
 
-# Default command - run migrations then seed features
-CMD ["sh", "-c", "npx prisma migrate deploy && npm run db:seed:features"] 
+# Default command - generate prisma client, run migrations, then seed features
+CMD ["sh", "-c", "npx prisma generate && npx prisma migrate deploy && npm run db:seed:features && npm run db:seed:users"] 

@@ -1,9 +1,9 @@
 name: Test Suite
 on:
   push:
-    branches: [main, master]
+    branches: [main, master, develop]
   pull_request:
-    branches: [main, master]
+    branches: [main, master, develop]
 
 jobs:
   unit-tests:
@@ -11,13 +11,17 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
       - uses: actions/setup-node@v4
         with:
           node-version: lts/*
+          cache: "pnpm"
       - name: Install dependencies
-        run: npm ci
+        run: pnpm install --frozen-lockfile
       - name: Run unit tests
-        run: npm run test:unit
+        run: pnpm run test:unit
 
   api-tests:
     name: API Tests
@@ -39,31 +43,35 @@ jobs:
           --health-retries 5
     steps:
       - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
       - uses: actions/setup-node@v4
         with:
           node-version: lts/*
+          cache: "pnpm"
       - name: Install dependencies
-        run: npm ci
+        run: pnpm install --frozen-lockfile
       - name: Generate Prisma Client
-        run: npx prisma generate
+        run: pnpm exec prisma generate
         env:
           DATABASE_URL: postgresql://postgres:postgres@localhost:5432/czechibank
       - name: Run database migrations
-        run: npx prisma migrate deploy
+        run: pnpm exec prisma migrate deploy
         env:
           DATABASE_URL: postgresql://postgres:postgres@localhost:5432/czechibank
       - name: Fill database with test data
-        run: npm run fill:db
+        run: pnpm run fill:db
         env:
           DATABASE_URL: postgresql://postgres:postgres@localhost:5432/czechibank
       - name: Build application
-        run: npm run build
+        run: pnpm run build
         env:
           DATABASE_URL: postgresql://postgres:postgres@localhost:5432/czechibank
           SECRET_KEY: "test-secret-key-for-jwt-encryption"
           DISCORD_WEBHOOK_URL: "https://discord.com/api/webhooks/test"
       - name: Start application
-        run: npm start &
+        run: pnpm start &
         env:
           DATABASE_URL: postgresql://postgres:postgres@localhost:5432/czechibank
           SECRET_KEY: "test-secret-key-for-jwt-encryption"
@@ -81,24 +89,71 @@ jobs:
           echo "Application failed to start"
           exit 1
       - name: Run API tests
-        run: npm run test:api
+        run: pnpm run test:api
         env:
           DATABASE_URL: postgresql://postgres:postgres@localhost:5432/czechibank
           SECRET_KEY: "test-secret-key-for-jwt-encryption"
           DISCORD_WEBHOOK_URL: "https://discord.com/api/webhooks/test"
-
+          HOST: "localhost:3000"
   e2e-tests:
     name: E2E Tests
     needs: api-tests
     runs-on: ubuntu-latest
+    env:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: czechibank
+      SECRET_KEY: test-secret-key-for-jwt-encryption
+      DISCORD_WEBHOOK_URL: https://discord.com/api/webhooks/test
     steps:
       - uses: actions/checkout@v4
+
+      - name: Start application with Docker Compose
+        run: docker compose -f docker-compose.ci.yml up -d --build --wait
+        timeout-minutes: 10
+
+      - name: Wait for application to be healthy
+        run: |
+          echo "Waiting for application to be healthy..."
+          for i in {1..60}; do
+            if curl -s http://localhost:3000/api/health | grep -q '"status":"ok"'; then
+              echo "Application is ready!"
+              exit 0
+            fi
+            echo "Waiting for application to start... ($i/60)"
+            sleep 2
+          done
+          echo "Application failed to start"
+          docker compose -f docker-compose.ci.yml logs
+          exit 1
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
       - uses: actions/setup-node@v4
         with:
           node-version: lts/*
+          cache: "pnpm"
+
       - name: Install dependencies
-        run: npm ci
+        run: pnpm install --frozen-lockfile
+
       - name: Install Playwright Browsers
-        run: npx playwright install --with-deps
+        run: pnpm exec playwright install --with-deps
+
       - name: Run Playwright tests
-        run: npx playwright test
+        run: pnpm test:e2e
+        env:
+          BASE_URL: http://localhost:3000
+
+      - name: Upload Playwright Report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: playwright-report
+          path: playwright-report/
+          retention-days: 30
+
+      - name: Stop Docker Compose
+        if: always()
+        run: docker compose -f docker-compose.ci.yml down -v

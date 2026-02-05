@@ -23,8 +23,8 @@
     "deploy:dev": "next build && pm2 startOrRestart ecosystem.config.js --env dev",
     "deploy:prod": "next build && pm2 startOrRestart ecosystem.config.js --env prod",
     "test:performance": "k6 run -e APIKEY=33 tests/performance/script.js ",
-    "test:unit": "vitest tests/unit/",
-    "test:api": "vitest tests/api/",
+    "test:unit": "vitest run ./tests/unit",
+    "test:api": "vitest run ./tests/api",
     "test:e2e": "bddgen && playwright test"
   },
   "dependencies": {
