@@ -23,8 +23,8 @@ jobs:
   #     - name: Run unit tests
   #       run: pnpm run test:unit
 
-  api-tests:
-    name: API Tests
+  tests:
+    name: Tests
     # needs: unit-tests
     runs-on: ubuntu-latest
     services:
@@ -65,6 +65,7 @@ jobs:
         env:
           DATABASE_URL: postgresql://postgres:postgres@localhost:5432/czechibank
           SECRET_KEY: "test-secret-key-for-jwt-encryption"
+          BETTER_AUTH_SECRET: "test-secret-key-for-better-auth!"
           HOST: "localhost:3000"
       - name: Build application
         run: pnpm run build
@@ -103,49 +104,6 @@ jobs:
           SECRET_KEY: "test-secret-key-for-jwt-encryption"
           DISCORD_WEBHOOK_URL: "https://discord.com/api/webhooks/test"
           HOST: "localhost:3000"
-  e2e-tests:
-    name: E2E Tests
-    needs: api-tests
-    runs-on: ubuntu-latest
-    env:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
-      POSTGRES_DB: czechibank
-      SECRET_KEY: test-secret-key-for-jwt-encryption
-      DISCORD_WEBHOOK_URL: https://discord.com/api/webhooks/test
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Start application with Docker Compose
-        run: docker compose -f docker-compose.ci.yml up -d --build --wait
-        timeout-minutes: 10
-
-      - name: Wait for application to be healthy
-        run: |
-          echo "Waiting for application to be healthy..."
-          for i in {1..60}; do
-            if curl -s http://localhost:3000/api/health | grep -q '"status":"ok"'; then
-              echo "Application is ready!"
-              exit 0
-            fi
-            echo "Waiting for application to start... ($i/60)"
-            sleep 2
-          done
-          echo "Application failed to start"
-          docker compose -f docker-compose.ci.yml logs
-          exit 1
-
-      - uses: pnpm/action-setup@v4
-        with:
-          version: 9
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 20
-          cache: "pnpm"
-
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
-
       - name: Install Playwright Browsers
         run: pnpm exec playwright install --with-deps
 
@@ -161,7 +119,3 @@ jobs:
           name: playwright-report
           path: playwright-report/
           retention-days: 30
-
-      - name: Stop Docker Compose
-        if: always()
-        run: docker compose -f docker-compose.ci.yml down -v
