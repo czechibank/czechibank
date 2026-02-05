@@ -1,9 +1,7 @@
-import dotenv from "dotenv";
-
-dotenv.config();
+import env from "../../../src/lib/env";
 
 export const config = {
-  BASE_URL: "http://" + (process.env.HOST || "localhost:3000"),
+  BASE_URL: "http://" + env.HOST,
 };
 
 import { apiKeysExport } from "../../../scripts/seed-helpers/generated-api-keys-export";
