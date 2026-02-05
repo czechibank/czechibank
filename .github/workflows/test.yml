@@ -73,6 +73,7 @@ jobs:
           SECRET_KEY: "test-secret-key-for-jwt-encryption"
           DISCORD_WEBHOOK_URL: "https://discord.com/api/webhooks/test"
           HOST: "localhost:3000"
+          ENV: "CI"
       - name: Start application
         run: pnpm start &
         env:
@@ -80,6 +81,7 @@ jobs:
           SECRET_KEY: "test-secret-key-for-jwt-encryption"
           DISCORD_WEBHOOK_URL: "https://discord.com/api/webhooks/test"
           HOST: "localhost:3000"
+          ENV: "CI"
       - name: Wait for application to start
         run: |
           for i in {1..30}; do
