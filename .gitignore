@@ -2,7 +2,6 @@
 
 
 /exports
-scripts/seed-helpers/generated-api-keys-export.ts
 # dependencies
 /node_modules
 /.pnp

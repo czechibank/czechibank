@@ -1,5 +1,6 @@
 import { describe, expect, it, test } from "vitest";
-import { apiKeys, config } from "./config/config";
+import { apiKey } from "../../shared/fixtures";
+import { config } from "./config/config";
 
 test.skip("should create a bank account", async () => {
   const response = await fetch(`${config.BASE_URL}/api/v1/bank-account`, {
@@ -43,7 +44,7 @@ describe("Bank Account API", () => {
     it("should return bank accounts with valid API key", async () => {
       const response = await fetch(`${config.BASE_URL}/api/v1/bank-account`, {
         headers: {
-          "X-API-Key": apiKeys.standardUser,
+          "X-API-Key": apiKey.standardUser,
         },
       });
 
@@ -57,7 +58,7 @@ describe("Bank Account API", () => {
     it("should handle pagination parameters", async () => {
       const response = await fetch(`${config.BASE_URL}/api/v1/bank-account?page=1&limit=5`, {
         headers: {
-          "X-API-Key": apiKeys.highBalanceUser,
+          "X-API-Key": apiKey.highBalance,
         },
       });
       expect(response.status).toBe(200);
@@ -70,7 +71,7 @@ describe("Bank Account API", () => {
     it("should return 400 for invalid pagination parameters", async () => {
       const response = await fetch(`${config.BASE_URL}/api/v1/bank-account?page=0&limit=0`, {
         headers: {
-          "X-API-Key": apiKeys.highBalanceUser,
+          "X-API-Key": apiKey.highBalance,
         },
       });
       expect(response.status).toBe(400);

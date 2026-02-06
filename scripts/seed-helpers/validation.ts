@@ -1,5 +1,5 @@
 import { PrismaClient } from "@prisma/client";
-import { UserSeedConfig } from "../seed-users";
+import { SeedUserDef } from "../../shared/fixtures/users";
 
 /**
  * Validates bank account numbers in the seed configuration before seeding.
@@ -22,12 +22,10 @@ import { UserSeedConfig } from "../seed-users";
  * // Throws if validation fails, otherwise returns void
  * ```
  */
-export default async function validateSeedBankAccounts(prisma: PrismaClient, usersToSeed: UserSeedConfig[]) {
+export default async function validateSeedBankAccounts(prisma: PrismaClient, usersToSeed: SeedUserDef[]) {
   // Quick validation: ensure seed file doesn't contain duplicate BA numbers
   // and that provided BA numbers don't already belong to other DB users.
-  const allProvidedBAs = usersToSeed
-    .flatMap((u) => (Array.isArray(u.bankAccountNumber) ? u.bankAccountNumber : [u.bankAccountNumber]))
-    .filter(Boolean);
+  const allProvidedBAs = usersToSeed.flatMap((u) => u.bankAccounts.map((ba) => ba.number));
 
   // check for duplicates inside seed file
   const dup = allProvidedBAs.filter((v, i, a) => a.indexOf(v) !== i);
@@ -37,7 +35,7 @@ export default async function validateSeedBankAccounts(prisma: PrismaClient, use
   }
   // Validate that primaryBalanceIndex and primaryTransactionIndex point to real array entries
   usersToSeed.forEach((u) => {
-    const accountCount = Array.isArray(u.bankAccountNumber) ? u.bankAccountNumber.length : 1;
+    const accountCount = u.bankAccounts.length;
 
     if (u.primaryBalanceIndex !== undefined && u.primaryBalanceIndex >= accountCount) {
       throw new Error(
@@ -58,9 +56,7 @@ export default async function validateSeedBankAccounts(prisma: PrismaClient, use
       include: { user: true },
     });
     const conflicts = existing.filter((e) => {
-      const seedEntry = usersToSeed.find((s) =>
-        (Array.isArray(s.bankAccountNumber) ? s.bankAccountNumber : [s.bankAccountNumber]).includes(e.number),
-      );
+      const seedEntry = usersToSeed.find((s) => s.bankAccounts.some((ba) => ba.number === e.number));
       return !seedEntry || seedEntry.email.toLowerCase() !== e.user.email.toLowerCase();
     });
     if (conflicts.length > 0) {

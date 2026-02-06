@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { apiKeys, config } from "./config/config";
+import { apiKey, SEED_USERS } from "../../shared/fixtures";
+import { config } from "./config/config";
 
 describe("Transactions API", () => {
   describe("GET /api/v1/transactions", () => {
@@ -26,7 +27,7 @@ describe("Transactions API", () => {
     it("should return transactions with valid API key", async () => {
       const response = await fetch(`${config.BASE_URL}/api/v1/transactions`, {
         headers: {
-          "X-API-Key": apiKeys.vojta, // Vojta's account with 100 transactions
+          "X-API-Key": apiKey.vojta,
         },
       });
       expect(response.status).toBe(200);
@@ -40,7 +41,7 @@ describe("Transactions API", () => {
       it("should return first page with default limit (10)", async () => {
         const response = await fetch(`${config.BASE_URL}/api/v1/transactions`, {
           headers: {
-            "X-API-Key": apiKeys.highBalanceUser,
+            "X-API-Key": apiKey.highBalance,
           },
         });
         expect(response.status).toBe(200);
@@ -58,7 +59,7 @@ describe("Transactions API", () => {
       it("should return second page with 10 items", async () => {
         const response = await fetch(`${config.BASE_URL}/api/v1/transactions?page=2`, {
           headers: {
-            "X-API-Key": apiKeys.highBalanceUser,
+            "X-API-Key": apiKey.highBalance,
           },
         });
         expect(response.status).toBe(200);
@@ -76,7 +77,7 @@ describe("Transactions API", () => {
       it("should return 400 for invalid pagination parameters", async () => {
         const response = await fetch(`${config.BASE_URL}/api/v1/transactions?page=0&limit=0`, {
           headers: {
-            "X-API-Key": apiKeys.highBalanceUser,
+            "X-API-Key": apiKey.highBalance,
           },
         });
         expect(response.status).toBe(400);
@@ -88,7 +89,7 @@ describe("Transactions API", () => {
       it("should return empty array for page beyond total pages", async () => {
         const response = await fetch(`${config.BASE_URL}/api/v1/transactions?page=921`, {
           headers: {
-            "X-API-Key": apiKeys.vojta,
+            "X-API-Key": apiKey.vojta,
           },
         });
         expect(response.status).toBe(200);
@@ -108,7 +109,7 @@ describe("Transactions API", () => {
       it("should sort by createdAt in descending order by default", async () => {
         const response = await fetch(`${config.BASE_URL}/api/v1/transactions`, {
           headers: {
-            "X-API-Key": apiKeys.highBalanceUser,
+            "X-API-Key": apiKey.highBalance,
           },
         });
         expect(response.status).toBe(200);
@@ -123,7 +124,7 @@ describe("Transactions API", () => {
       it("should sort by amount in ascending order", async () => {
         const response = await fetch(`${config.BASE_URL}/api/v1/transactions?sortBy=amount&sortOrder=asc`, {
           headers: {
-            "X-API-Key": apiKeys.highBalanceUser,
+            "X-API-Key": apiKey.highBalance,
           },
         });
         expect(response.status).toBe(200);
@@ -147,7 +148,7 @@ describe("Transactions API", () => {
     it("should return 404 for non-existent transaction", async () => {
       const response = await fetch(`${config.BASE_URL}/api/v1/transactions/non-existent-id`, {
         headers: {
-          "X-API-Key": apiKeys.highBalanceUser,
+          "X-API-Key": apiKey.highBalance,
         },
       });
       expect(response.status).toBe(404);
@@ -160,7 +161,7 @@ describe("Transactions API", () => {
       // First get a list of transactions to get a valid ID
       const listResponse = await fetch(`${config.BASE_URL}/api/v1/transactions`, {
         headers: {
-          "X-API-Key": apiKeys.highBalanceUser,
+          "X-API-Key": apiKey.highBalance,
         },
       });
       const listData = await listResponse.json();
@@ -169,7 +170,7 @@ describe("Transactions API", () => {
       // Then get the details for that transaction
       const response = await fetch(`${config.BASE_URL}/api/v1/transactions/${transactionId}`, {
         headers: {
-          "X-API-Key": apiKeys.highBalanceUser,
+          "X-API-Key": apiKey.highBalance,
         },
       });
       expect(response.status).toBe(200);
@@ -181,24 +182,21 @@ describe("Transactions API", () => {
 
   describe("POST /api/v1/transactions/create", () => {
     it("should return 201 for valid request", async () => {
-      console.log(config.BASE_URL);
-      console.log("-------------------------------- API KEY --------------------------------");
-      console.log(apiKeys.highBalanceUser);
+      const hb = SEED_USERS.highBalance;
       const response = await fetch(`${config.BASE_URL}/api/v1/transactions/create`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "X-API-Key": apiKeys.highBalanceUser,
+          "X-API-Key": apiKey.highBalance,
         },
         body: JSON.stringify({
           amount: 1,
-          toBankNumber: "100009000003/5555", // High balance user's second bank account
-          fromBankNumber: "100000000003/5555", // High balance user's first bank account
+          toBankNumber: hb.bankAccounts[1].number,
+          fromBankNumber: hb.bankAccounts[0].number,
         }),
       });
       expect(response.status).toBe(201);
       const data = await response.json();
-      console.log(JSON.stringify(data, null, 2));
       expect(data.success).toBe(true);
     });
 
@@ -224,7 +222,7 @@ describe("Transactions API", () => {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "X-API-Key": apiKeys.highBalanceUser,
+          "X-API-Key": apiKey.highBalance,
         },
         body: JSON.stringify({}),
       });
@@ -235,16 +233,17 @@ describe("Transactions API", () => {
     });
 
     it("should return 400 for invalid amount", async () => {
+      const hb = SEED_USERS.highBalance;
       const response = await fetch(`${config.BASE_URL}/api/v1/transactions/create`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "X-API-Key": apiKeys.highBalanceUser,
+          "X-API-Key": apiKey.highBalance,
         },
         body: JSON.stringify({
           amount: -1,
-          toBankNumber: "000000000001/5555",
-          fromBankNumber: "100000000003/5555",
+          toBankNumber: SEED_USERS.vojta.bankAccounts[0].number,
+          fromBankNumber: hb.bankAccounts[0].number,
         }),
       });
       expect(response.status).toBe(400);
@@ -259,16 +258,17 @@ describe("Transactions API", () => {
     });
 
     it("should return 404 for non-existent recipient bank account", async () => {
+      const hb = SEED_USERS.highBalance;
       const response = await fetch(`${config.BASE_URL}/api/v1/transactions/create`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "X-API-Key": apiKeys.highBalanceUser,
+          "X-API-Key": apiKey.highBalance,
         },
         body: JSON.stringify({
           amount: 100,
-          toBankNumber: "123456789012/5555", // Exactly 17 characters
-          fromBankNumber: "100000000003/5555",
+          toBankNumber: "123456789012/5555",
+          fromBankNumber: hb.bankAccounts[0].number,
         }),
       });
       const data = await response.json();
@@ -279,16 +279,17 @@ describe("Transactions API", () => {
     });
 
     it("should return 400 for amount greater than Number.MAX_SAFE_INTEGER", async () => {
+      const hb = SEED_USERS.highBalance;
       const response = await fetch(`${config.BASE_URL}/api/v1/transactions/create`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "X-API-Key": apiKeys.highBalanceUser,
+          "X-API-Key": apiKey.highBalance,
         },
         body: JSON.stringify({
           amount: Number.MAX_SAFE_INTEGER + 1,
-          toBankNumber: "000000000002/5555",
-          fromBankNumber: "100000000003/5555",
+          toBankNumber: SEED_USERS.zeroBalance.bankAccounts[0].number,
+          fromBankNumber: hb.bankAccounts[0].number,
         }),
       });
       const data = await response.json();
