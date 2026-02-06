@@ -1,7 +1,7 @@
-import { RATE_LIMIT, SESSION } from "@/constants";
 import bankAccountService from "@/domain/bankAccount-domain/ba-service";
 import prisma from "@/lib/db";
 import { ac, admin, user } from "@/lib/permissions";
+import { RATE_LIMIT, SESSION } from "@/server-constants";
 import { betterAuth } from "better-auth";
 import { prismaAdapter } from "better-auth/adapters/prisma";
 import { admin as adminPlugin, apiKey } from "better-auth/plugins";
