@@ -6,27 +6,19 @@ on:
     branches: [main, master, develop]
 
 jobs:
-  # unit-tests:
-  #   name: Unit Tests
-  #   runs-on: ubuntu-latest
-  #   steps:
-  #     - uses: actions/checkout@v4
-  #     - uses: pnpm/action-setup@v4
-  #       with:
-  #         version: 9
-  #     - uses: actions/setup-node@v4
-  #       with:
-  #         node-version: lts/*
-  #         cache: "pnpm"
-  #     - name: Install dependencies
-  #       run: pnpm install --frozen-lockfile
-  #     - name: Run unit tests
-  #       run: pnpm run test:unit
-
   tests:
     name: Tests
-    # needs: unit-tests
     runs-on: ubuntu-latest
+
+    env:
+      DATABASE_URL: postgresql://postgres:postgres@localhost:5432/czechibank
+      SECRET_KEY: "test-secret-key-for-jwt-encryption"
+      BETTER_AUTH_SECRET: "test-secret-key-for-better-auth!"
+      BETTER_AUTH_URL: "http://localhost:3000"
+      HOST: "localhost:3000"
+      DISCORD_WEBHOOK_URL: ""
+      ENV: "CI"
+
     services:
       postgres:
         image: postgres:16
@@ -54,37 +46,14 @@ jobs:
         run: pnpm install --frozen-lockfile
       - name: Generate Prisma Client
         run: pnpm exec prisma generate
-        env:
-          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/czechibank
       - name: Run database migrations
         run: pnpm exec prisma migrate deploy
-        env:
-          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/czechibank
       - name: Fill database with test data
         run: pnpm db:seed:users && pnpm db:seed:features
-        env:
-          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/czechibank
-          SECRET_KEY: "test-secret-key-for-jwt-encryption"
-          BETTER_AUTH_SECRET: "test-secret-key-for-better-auth!"
-          HOST: "localhost:3000"
       - name: Build application
         run: pnpm run build
-        env:
-          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/czechibank
-          SECRET_KEY: "test-secret-key-for-jwt-encryption"
-          BETTER_AUTH_SECRET: "test-secret-key-for-better-auth!"
-          DISCORD_WEBHOOK_URL: "https://discord.com/api/webhooks/test"
-          HOST: "localhost:3000"
-          ENV: "CI"
       - name: Start application
         run: pnpm start &
-        env:
-          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/czechibank
-          SECRET_KEY: "test-secret-key-for-jwt-encryption"
-          BETTER_AUTH_SECRET: "test-secret-key-for-better-auth!"
-          DISCORD_WEBHOOK_URL: "https://discord.com/api/webhooks/test"
-          HOST: "localhost:3000"
-          ENV: "CI"
       - name: Wait for application to start
         run: |
           for i in {1..30}; do
@@ -99,20 +68,12 @@ jobs:
           exit 1
       - name: Run API tests
         run: pnpm run test:api
-        env:
-          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/czechibank
-          SECRET_KEY: "test-secret-key-for-jwt-encryption"
-          DISCORD_WEBHOOK_URL: "https://discord.com/api/webhooks/test"
-          HOST: "localhost:3000"
       - name: Install Playwright Browsers
         run: pnpm exec playwright install --with-deps
-
       - name: Run Playwright tests
         run: pnpm test:e2e
         env:
           BASE_URL: http://localhost:3000
-          HOST: "localhost:3000"
-
       - name: Upload Playwright Report
         uses: actions/upload-artifact@v4
         if: always()
