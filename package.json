@@ -25,7 +25,7 @@
     "test:performance": "k6 run -e APIKEY=33 tests/performance/script.js ",
     "test:unit": "vitest tests/unit/",
     "test:api": "vitest tests/api/",
-    "test:e2e": "playwright test"
+    "test:e2e": "bddgen && playwright test"
   },
   "dependencies": {
     "@better-auth/cli": "^1.4.10",
