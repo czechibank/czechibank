@@ -103,6 +103,21 @@ describe("Features API", () => {
       expect(data.success).toBe(true);
     });
 
+    it("should return 403 when user is not admin", async () => {
+      const response = await fetch(`${config.BASE_URL}/api/v1/features/update`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "X-API-Key": apiKey.standardUser,
+        },
+      });
+
+      expect(response.status).toBe(403);
+      const data = await response.json();
+      expect(data.success).toBe(false);
+      expect(data.error.message).toBe("Forbidden");
+    });
+
     it("should return 422 for empty body", async () => {
       const response = await fetch(`${config.BASE_URL}/api/v1/features/update`, {
         method: "POST",

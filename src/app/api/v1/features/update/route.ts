@@ -59,12 +59,18 @@
 import { authenticateRequest } from "@/app/api/v1/auth";
 import featuresService from "@/domain/features-domain/features-service";
 import { AllFeaturesSchema } from "@/domain/features-domain/features.schema";
-import { badRequest } from "@/lib/errors";
+import { badRequest, forbidden } from "@/lib/errors";
 import { toApiResponse, validateWithResult } from "@/lib/result-helpers";
-import { ResultAsync } from "neverthrow";
+import { errAsync, okAsync, ResultAsync } from "neverthrow";
 
 export async function POST(request: Request): Promise<Response> {
   const result = authenticateRequest(request)
+    .andThen((user) => {
+      if (user.role !== "admin") {
+        return errAsync(forbidden("Forbidden"));
+      }
+      return okAsync(user);
+    })
     .andThen(() => ResultAsync.fromPromise(request.json(), () => badRequest("Invalid JSON body")))
     .andThen((body) => validateWithResult(AllFeaturesSchema, body))
     .andThen(({ features }) => featuresService.server.updateFeaturesResult(features))
