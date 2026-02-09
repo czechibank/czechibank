@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { apiKey } from "../../shared/fixtures";
+import { apiKey, SEED_USERS } from "../../shared/fixtures";
 import { config } from "./config/config";
 
 describe("API Key API", () => {
@@ -53,6 +53,16 @@ describe("API Key API", () => {
       for (const item of data.data) {
         expect(item.key).not.toBe(apiKey.standardUser);
       }
+    });
+
+    it("should return 401 for disabled/expired API key", async () => {
+      const response = await fetch(`${config.BASE_URL}/api/v1/apikey`, {
+        headers: { "X-API-Key": SEED_USERS.expiredKey.apiKeys[0].key },
+      });
+      expect(response.status).toBe(401);
+      const data = await response.json();
+      expect(data.success).toBe(false);
+      expect(data.error.message).toBe("Unauthorized");
     });
   });
 });

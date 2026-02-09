@@ -24,6 +24,18 @@ describe("Transactions API", () => {
       expect(data.error.message).toBe("Unauthorized");
     });
 
+    it("should return 401 for disabled/expired API key", async () => {
+      const response = await fetch(`${config.BASE_URL}/api/v1/transactions`, {
+        headers: {
+          "X-API-Key": SEED_USERS.expiredKey.apiKeys[0].key,
+        },
+      });
+      expect(response.status).toBe(401);
+      const data = await response.json();
+      expect(data.success).toBe(false);
+      expect(data.error.message).toBe("Unauthorized");
+    });
+
     it("should return transactions with valid API key", async () => {
       const response = await fetch(`${config.BASE_URL}/api/v1/transactions`, {
         headers: {
@@ -139,6 +151,30 @@ describe("Transactions API", () => {
   describe("GET /api/v1/transactions/[id]", () => {
     it("should return 401 when no API key is provided", async () => {
       const response = await fetch(`${config.BASE_URL}/api/v1/transactions/123`);
+      expect(response.status).toBe(401);
+      const data = await response.json();
+      expect(data.success).toBe(false);
+      expect(data.error.message).toBe("Unauthorized");
+    });
+
+    it("should return 401 for disabled/expired API key", async () => {
+      const response = await fetch(`${config.BASE_URL}/api/v1/transactions/some-id`, {
+        headers: {
+          "X-API-Key": SEED_USERS.expiredKey.apiKeys[0].key,
+        },
+      });
+      expect(response.status).toBe(401);
+      const data = await response.json();
+      expect(data.success).toBe(false);
+      expect(data.error.message).toBe("Unauthorized");
+    });
+
+    it("should return 401 when invalid API key is provided", async () => {
+      const response = await fetch(`${config.BASE_URL}/api/v1/transactions/some-id`, {
+        headers: {
+          "X-API-Key": "invalid-token",
+        },
+      });
       expect(response.status).toBe(401);
       const data = await response.json();
       expect(data.success).toBe(false);
@@ -414,6 +450,118 @@ describe("Transactions API", () => {
         body: JSON.stringify({
           amount: 0,
           toBankNumber: SEED_USERS.vojta.bankAccounts[0].number,
+          fromBankNumber: hb.bankAccounts[0].number,
+        }),
+      });
+      expect(response.status).toBe(422);
+      const data = await response.json();
+      expect(data.success).toBe(false);
+    });
+
+    it("should return 422 when amount is a string", async () => {
+      const hb = SEED_USERS.highBalance;
+      const response = await fetch(`${config.BASE_URL}/api/v1/transactions/create`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "X-API-Key": apiKey.highBalance,
+        },
+        body: JSON.stringify({
+          amount: "one hundred",
+          toBankNumber: hb.bankAccounts[1].number,
+          fromBankNumber: hb.bankAccounts[0].number,
+        }),
+      });
+      expect(response.status).toBe(422);
+      const data = await response.json();
+      expect(data.success).toBe(false);
+    });
+
+    it("should round amount to 1 decimal place", async () => {
+      const hb = SEED_USERS.highBalance;
+      const response = await fetch(`${config.BASE_URL}/api/v1/transactions/create`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "X-API-Key": apiKey.highBalance,
+        },
+        body: JSON.stringify({
+          amount: 1.1234,
+          toBankNumber: hb.bankAccounts[1].number,
+          fromBankNumber: hb.bankAccounts[0].number,
+        }),
+      });
+      expect(response.status).toBe(201);
+      const data = await response.json();
+      expect(data.success).toBe(true);
+      // Amount is rounded to 1 decimal: 1.1234 → 1.1
+      expect(data.data.amount).toBe(1.1);
+    });
+
+    it("should return 422 when toBankNumber field is missing", async () => {
+      const hb = SEED_USERS.highBalance;
+      const response = await fetch(`${config.BASE_URL}/api/v1/transactions/create`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "X-API-Key": apiKey.highBalance,
+        },
+        body: JSON.stringify({
+          amount: 1,
+          fromBankNumber: hb.bankAccounts[0].number,
+        }),
+      });
+      expect(response.status).toBe(422);
+      const data = await response.json();
+      expect(data.success).toBe(false);
+    });
+
+    it("should return 422 when fromBankNumber field is missing", async () => {
+      const response = await fetch(`${config.BASE_URL}/api/v1/transactions/create`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "X-API-Key": apiKey.highBalance,
+        },
+        body: JSON.stringify({
+          amount: 1,
+          toBankNumber: SEED_USERS.vojta.bankAccounts[0].number,
+        }),
+      });
+      expect(response.status).toBe(422);
+      const data = await response.json();
+      expect(data.success).toBe(false);
+    });
+
+    it("should return 422 when amount field is missing", async () => {
+      const hb = SEED_USERS.highBalance;
+      const response = await fetch(`${config.BASE_URL}/api/v1/transactions/create`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "X-API-Key": apiKey.highBalance,
+        },
+        body: JSON.stringify({
+          toBankNumber: hb.bankAccounts[1].number,
+          fromBankNumber: hb.bankAccounts[0].number,
+        }),
+      });
+      expect(response.status).toBe(422);
+      const data = await response.json();
+      expect(data.success).toBe(false);
+    });
+
+    it("should return 422 for toBankNumber that is too long", async () => {
+      const hb = SEED_USERS.highBalance;
+      const response = await fetch(`${config.BASE_URL}/api/v1/transactions/create`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "X-API-Key": apiKey.highBalance,
+        },
+        body: JSON.stringify({
+          amount: 1,
+          toBankNumber: "1234567890123456/5555",
           fromBankNumber: hb.bankAccounts[0].number,
         }),
       });

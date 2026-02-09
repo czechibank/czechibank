@@ -91,5 +91,64 @@ describe("User API", () => {
       const data = await response.json();
       expect(data.success).toBe(false);
     });
+
+    it("should return 422 for missing email", async () => {
+      const response = await fetch(`${config.BASE_URL}/api/v1/user/create`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          password: "password123",
+          name: "No Email User",
+        }),
+      });
+      expect(response.status).toBe(422);
+      const data = await response.json();
+      expect(data.success).toBe(false);
+    });
+
+    it("should return 422 for missing password", async () => {
+      const response = await fetch(`${config.BASE_URL}/api/v1/user/create`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email: `no.pass.${Date.now()}@example.com`,
+          name: "No Pass User",
+        }),
+      });
+      expect(response.status).toBe(422);
+      const data = await response.json();
+      expect(data.success).toBe(false);
+    });
+
+    it("should return 422 for invalid email format", async () => {
+      const response = await fetch(`${config.BASE_URL}/api/v1/user/create`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email: "not-an-email",
+          password: "password123",
+          name: "Bad Email User",
+        }),
+      });
+      expect(response.status).toBe(422);
+      const data = await response.json();
+      expect(data.success).toBe(false);
+    });
+
+    it("should reject duplicate email", async () => {
+      const response = await fetch(`${config.BASE_URL}/api/v1/user/create`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email: SEED_USERS.standardUser.email,
+          password: "password123",
+          name: "Duplicate User",
+        }),
+      });
+      // Duplicate email should not return 201
+      expect(response.status).not.toBe(201);
+      const data = await response.json();
+      expect(data.success).toBe(false);
+    });
   });
 });

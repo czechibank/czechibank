@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { apiKey } from "../../shared/fixtures";
+import { apiKey, SEED_USERS } from "../../shared/fixtures";
 import { config } from "./config/config";
 
 describe("Bank Account CRUD API", () => {
@@ -78,12 +78,19 @@ describe("Bank Account CRUD API", () => {
   });
 
   describe("GET /api/v1/bank-account/[id]", () => {
-    it("should return 422 when no API key is provided (validation runs before auth)", async () => {
-      // GET route validates CUID format before checking auth, so non-CUID IDs get 422
-      const response = await fetch(`${config.BASE_URL}/api/v1/bank-account/not-a-cuid`);
-      expect(response.status).toBe(422);
+    it("should return 401 when no API key is provided (with valid CUID)", async () => {
+      // GET route validates CUID format first — use a real account ID to pass validation
+      const listResponse = await fetch(`${config.BASE_URL}/api/v1/bank-account`, {
+        headers: { "X-API-Key": apiKey.vojta },
+      });
+      const listData = await listResponse.json();
+      const validId = listData.data.bankAccounts[0].id;
+
+      const response = await fetch(`${config.BASE_URL}/api/v1/bank-account/${validId}`);
+      expect(response.status).toBe(401);
       const data = await response.json();
       expect(data.success).toBe(false);
+      expect(data.error.message).toBe("Unauthorized");
     });
 
     it("should return 200 and own account details", async () => {
@@ -191,6 +198,28 @@ describe("Bank Account CRUD API", () => {
     it("should return 401 when no API key is provided", async () => {
       const response = await fetch(`${config.BASE_URL}/api/v1/bank-account/some-id`, {
         method: "DELETE",
+      });
+      expect(response.status).toBe(401);
+      const data = await response.json();
+      expect(data.success).toBe(false);
+      expect(data.error.message).toBe("Unauthorized");
+    });
+
+    it("should return 401 for invalid/incomplete API key", async () => {
+      const response = await fetch(`${config.BASE_URL}/api/v1/bank-account/some-id`, {
+        method: "DELETE",
+        headers: { "X-API-Key": "invalid-token" },
+      });
+      expect(response.status).toBe(401);
+      const data = await response.json();
+      expect(data.success).toBe(false);
+      expect(data.error.message).toBe("Unauthorized");
+    });
+
+    it("should return 401 for disabled/expired API key", async () => {
+      const response = await fetch(`${config.BASE_URL}/api/v1/bank-account/some-id`, {
+        method: "DELETE",
+        headers: { "X-API-Key": SEED_USERS.expiredKey.apiKeys[0].key },
       });
       expect(response.status).toBe(401);
       const data = await response.json();
