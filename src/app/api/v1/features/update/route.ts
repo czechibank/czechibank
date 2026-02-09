@@ -3,7 +3,7 @@
  * /features/update:
  *   post:
  *     summary: Update features
- *     description: Update the status of multiple features
+ *     description: Update the status of multiple features. Requires admin role.
  *     tags: [Features]
  *     security:
  *       - ApiKeyAuth: []
@@ -31,29 +31,35 @@
  *                           items:
  *                             $ref: '#/components/schemas/Feature'
  *       400:
- *         description: Invalid input data
+ *         description: Invalid JSON body
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/ErrorResponse'
+ *               $ref: '#/components/schemas/Error'
  *       401:
- *         description: Unauthorized access
+ *         description: Unauthorized - API key is missing or invalid
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/ErrorResponse'
- *       404:
- *         description: Feature not found
+ *               $ref: '#/components/schemas/Error'
+ *       403:
+ *         description: Forbidden - requires admin role
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/ErrorResponse'
+ *               $ref: '#/components/schemas/Error'
+ *       422:
+ *         description: Validation error - invalid request body
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
  *       500:
  *         description: Internal server error
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/ErrorResponse'
+ *               $ref: '#/components/schemas/Error'
  */
 
 import { authenticateRequest } from "@/app/api/v1/auth";

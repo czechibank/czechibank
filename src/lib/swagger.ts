@@ -419,6 +419,10 @@ All responses follow a consistent format:
         name: "API Keys",
         description: "API key management operations",
       },
+      {
+        name: "Features",
+        description: "Feature flag management operations",
+      },
     ],
   },
   apis: ["./src/app/api/v1/**/*.ts", "./src/app/api/v1/**/*.tsx"],
