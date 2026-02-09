@@ -3,9 +3,9 @@ export { DELETE, HEAD, OPTIONS, PATCH, PUT } from "../../routes";
 import apikeyService from "@/domain/apikey/apikey-service";
 import { UserSchema } from "@/domain/user-domain/user-schema";
 import userService from "@/domain/user-domain/user-service";
-import { ApiErrorCode, errorResponse, successResponse, validateEventHandler } from "@/lib/response";
-import { APIError } from "better-auth/api";
-import { ApiError, handleErrors } from "../../routes";
+import { fromUnknown } from "@/lib/errors";
+import { toApiResponse, validateWithResult } from "@/lib/result-helpers";
+import { ResultAsync } from "neverthrow";
 
 /**
  * @swagger
@@ -66,36 +66,18 @@ import { ApiError, handleErrors } from "../../routes";
  *               $ref: '#/components/schemas/Error'
  */
 export async function POST(request: Request) {
-  try {
-    const body = await request.json();
-    const parsedUser = await validateEventHandler(UserSchema, body);
+  const result = ResultAsync.fromPromise(request.json(), () => fromUnknown(null, "Invalid JSON body"))
+    .andThen((body) => validateWithResult(UserSchema, body))
+    .andThen((parsedUser) =>
+      ResultAsync.fromPromise(userService.server.createUser(parsedUser, "user"), (e) =>
+        fromUnknown(e, "Failed to create user"),
+      ),
+    )
+    .andThen((createdUser) =>
+      ResultAsync.fromPromise(apikeyService.server.createApiKey(createdUser.user.id), (e) =>
+        fromUnknown(e, "Failed to create API key"),
+      ).map((apiKey) => ({ ...createdUser.user, apiKey: apiKey.key })),
+    );
 
-    if ("error" in parsedUser) {
-      return Response.json(parsedUser, { status: 422 });
-    }
-    const createdUser = await userService.server.createUser(parsedUser, "user");
-    const apiKey = await apikeyService.server.createApiKey(createdUser.user.id);
-
-    return Response.json(successResponse("User created successfully", { ...createdUser.user, apiKey: apiKey.key }), {
-      status: 201,
-    });
-  } catch (error) {
-    // TODO: @vojtech-cerveny - handle better-auth - we can reuse their ApiErrorCodes etc.
-    // https://www.better-auth.com/docs/concepts/api#error-handling
-
-    // if (error instanceof BetterAuthAPIError) {
-    //   const newError = new ApiError(error.message, error.statusCode, ApiErrorCode.EMAIL_ALREADY_EXISTS);
-    //   return handleErrors(newError);
-    // }
-    if (error instanceof ApiError || error instanceof APIError) {
-      return handleErrors(error);
-    } else {
-      return Response.json(
-        errorResponse("Internal Server Error", ApiErrorCode.INTERNAL_ERROR, [
-          { code: ApiErrorCode.INTERNAL_ERROR, message: error instanceof Error ? error.message : "Unknown error" },
-        ]),
-        { status: 500 },
-      );
-    }
-  }
+  return toApiResponse(result, "User created successfully", 201);
 }

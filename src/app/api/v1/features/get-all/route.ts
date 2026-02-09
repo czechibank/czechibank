@@ -96,45 +96,30 @@
  *               $ref: '#/components/schemas/Error'
  */
 
-import { ApiError } from "@/app/api/v1/api-error";
-import { handleErrors } from "@/app/api/v1/routes";
-import { checkUserAuthOrThrowError } from "@/app/api/v1/server-actions";
+import { authenticateRequest } from "@/app/api/v1/auth";
 import featuresService from "@/domain/features-domain/features-service";
-import { ApiErrorCode, successResponse } from "@/lib/response";
+import { mapErrorCodeToStatus } from "@/lib/api-error-status-map";
+import { errorResponse, successResponse } from "@/lib/response";
 
 export async function GET(request: Request): Promise<Response> {
-  try {
-    const user = await checkUserAuthOrThrowError(request);
-    if ("errror" in user) {
-      return Response.json(user, { status: 401 });
-    }
+  const result = authenticateRequest(request)
+    .andThen(() => featuresService.server.getAllFeaturesResult())
+    .map((features) => ({ features }));
 
-    const allFeatures = await featuresService.server.getAllFeatures();
-
-    if ("error" in allFeatures) {
-      return Response.json(allFeatures, { status: 404 });
-    }
-
-    return Response.json(
-      successResponse(
-        "Features retrieved successfully",
-        { features: allFeatures.data },
-        {
-          timestamp: new Date().toISOString(),
-          requestId: request.headers.get("x-request-id") || undefined,
-        },
+  return result.match(
+    (data) =>
+      Response.json(
+        successResponse(
+          "Features retrieved successfully",
+          { features: data.features },
+          {
+            requestId: request.headers.get("x-request-id") || undefined,
+          },
+        ),
       ),
-      {
-        status: 200,
-      },
-    );
-  } catch (error) {
-    if (error instanceof ApiError) {
-      return handleErrors(error);
-    } else {
-      throw new ApiError("Internal Server Error", 500, ApiErrorCode.INTERNAL_ERROR, [
-        { code: ApiErrorCode.INTERNAL_ERROR, message: error instanceof Error ? error.message : "Unknown error" },
-      ]);
-    }
-  }
+    (error) =>
+      Response.json(errorResponse(error.message, error.code, error.details), {
+        status: mapErrorCodeToStatus(error.code),
+      }),
+  );
 }

@@ -1,7 +1,10 @@
-import { checkUserAuthOrThrowError } from "@/app/api/v1/server-actions";
+import { authenticateRequest } from "@/app/api/v1/auth";
 import bankAccountService from "@/domain/bankAccount-domain/ba-service";
+import { mapErrorCodeToStatus } from "@/lib/api-error-status-map";
+import { validationError } from "@/lib/errors";
 import { ApiErrorCode, createPaginationMeta, errorResponse, successResponse } from "@/lib/response";
-import { ApiError, DELETE, HEAD, OPTIONS, PATCH, POST, PUT, handleErrors } from "../../routes";
+import { errAsync } from "neverthrow";
+import { DELETE, HEAD, OPTIONS, PATCH, POST, PUT } from "../../routes";
 /**
  * @swagger
  * /bank-account/get-all:
@@ -87,51 +90,40 @@ import { ApiError, DELETE, HEAD, OPTIONS, PATCH, POST, PUT, handleErrors } from 
  *               $ref: '#/components/schemas/Error'
  */
 export async function GET(request: Request) {
-  try {
-    // this returns ApiError if the user is not authenticated
-    const user = await checkUserAuthOrThrowError(request);
-    if ("error" in user) {
-      return Response.json(user, { status: 401 });
+  const { searchParams } = new URL(request.url);
+  const page = parseInt(searchParams.get("page") || "1");
+  const limit = parseInt(searchParams.get("limit") || "10");
+
+  const result = authenticateRequest(request).andThen(() => {
+    if (isNaN(page) || isNaN(limit) || page < 1 || limit < 1) {
+      return errAsync(
+        validationError("Invalid pagination parameters", [
+          { code: ApiErrorCode.VALIDATION_ERROR, message: "Page and limit must be positive numbers" },
+        ]),
+      );
     }
-    const { searchParams } = new URL(request.url);
-    const page = parseInt(searchParams.get("page") || "1");
-    const limit = parseInt(searchParams.get("limit") || "10");
+    return bankAccountService.getAllBankAccountsResult({ page, limit });
+  });
 
-    if (page < 1 || limit < 1) {
-      return Response.json(errorResponse("Invalid pagination parameters", ApiErrorCode.VALIDATION_ERROR), {
-        status: 422,
-      });
-    }
-
-    const result = await bankAccountService.getAllBankAccounts({ page, limit });
-
-    if ("error" in result) {
-      return Response.json(result);
-    }
-
-    return Response.json(
-      successResponse(
-        "Bank accounts retrieved successfully",
-        { bankAccounts: result.data.items },
-        {
-          timestamp: new Date().toISOString(),
-          requestId: request.headers.get("x-request-id") || undefined,
-          pagination: createPaginationMeta(result.data.page, result.data.limit, result.data.total),
-        },
+  return result.match(
+    (data) =>
+      Response.json(
+        successResponse(
+          "Bank accounts retrieved successfully",
+          { bankAccounts: data.items },
+          {
+            timestamp: new Date().toISOString(),
+            requestId: request.headers.get("x-request-id") || undefined,
+            pagination: createPaginationMeta(data.page, data.limit, data.total),
+          },
+        ),
+        { status: 200 },
       ),
-      {
-        status: 200,
-      },
-    );
-  } catch (error) {
-    if (error instanceof ApiError) {
-      return handleErrors(error);
-    } else {
-      throw new ApiError("Internal Server Error", 500, ApiErrorCode.INTERNAL_ERROR, [
-        { code: ApiErrorCode.INTERNAL_ERROR, message: error instanceof Error ? error.message : "Unknown error" },
-      ]);
-    }
-  }
+    (error) =>
+      Response.json(errorResponse(error.message, error.code, error.details), {
+        status: mapErrorCodeToStatus(error.code),
+      }),
+  );
 }
 
 export { DELETE, HEAD, OPTIONS, PATCH, POST, PUT };

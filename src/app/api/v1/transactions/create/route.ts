@@ -1,9 +1,10 @@
-import { checkUserAuthOrThrowError } from "@/app/api/v1/server-actions";
+import { authenticateRequest } from "@/app/api/v1/auth";
 import bankAccountService from "@/domain/bankAccount-domain/ba-service";
 import transactionService from "@/domain/transaction-domain/transaction-service";
 import { ApiTransactionCreateSchema } from "@/domain/transaction-domain/transation-schema";
-import { ApiErrorCode, errorResponse, validateEventHandler } from "@/lib/response";
-import { NextRequest, NextResponse } from "next/server";
+import { badRequest } from "@/lib/errors";
+import { toApiResponse, validateWithResult } from "@/lib/result-helpers";
+import { errAsync, ResultAsync } from "neverthrow";
 /**
  * @swagger
  * /transactions/create:
@@ -60,54 +61,27 @@ import { NextRequest, NextResponse } from "next/server";
  *               $ref: '#/components/schemas/Error'
  *
  */
-export async function POST(request: NextRequest) {
-  try {
-    const user = await checkUserAuthOrThrowError(request);
-    if ("error" in user) {
-      return NextResponse.json(errorResponse(user.error.message, user.error.code), { status: 401 });
-    }
+export async function POST(request: Request) {
+  const result = authenticateRequest(request).andThen((user) =>
+    ResultAsync.fromPromise(request.json(), () => badRequest("Invalid JSON body"))
+      .andThen((body) => validateWithResult(ApiTransactionCreateSchema, body))
+      .andThen((validated) =>
+        // Verify user has at least one bank account
+        bankAccountService.getMyBankAccountsResult(user.id, { page: 1, limit: 1 }).andThen((accounts) => {
+          if (accounts.items.length === 0) {
+            return errAsync(badRequest("No bank account found for user"));
+          }
+          return transactionService.sendMoneyToBankNumberResult({
+            amount: validated.amount,
+            toBankNumber: validated.toBankNumber,
+            fromBankNumber: validated.fromBankNumber,
+            userId: user.id,
+            currency: "CZECHITOKEN",
+            applicationType: "api",
+          });
+        }),
+      ),
+  );
 
-    const body = await request.json();
-
-    const validatedBody = await validateEventHandler(ApiTransactionCreateSchema, body);
-
-    if ("error" in validatedBody) {
-      return NextResponse.json(validatedBody, { status: 400 });
-    }
-
-    const { amount, toBankNumber, fromBankNumber } = validatedBody;
-
-    const userBankAccounts = await bankAccountService.getMyBankAccounts(user.id, { page: 1, limit: 1 });
-    if ("error" in userBankAccounts || userBankAccounts.data.items.length === 0) {
-      return NextResponse.json(errorResponse("No bank account found for user", "400"), { status: 400 });
-    }
-
-    const result = await transactionService.sendMoneyToBankNumber({
-      amount,
-      toBankNumber,
-      fromBankNumber,
-      userId: user.id,
-      currency: "CZECHITOKEN",
-      applicationType: "api",
-    });
-
-    if ("error" in result) {
-      const error = result.error as { code: ApiErrorCode; message: string };
-      if (error.code === "NOT_FOUND") {
-        return NextResponse.json(errorResponse("Bank account not found", "404"), { status: 404 });
-      }
-      return NextResponse.json(errorResponse(error.message, "400"), { status: 400 });
-    }
-
-    return NextResponse.json(
-      {
-        success: true,
-        data: result.data,
-      },
-      { status: 201 },
-    );
-  } catch (error) {
-    console.error("Error in POST /api/v1/transactions/create:", error);
-    return NextResponse.json(errorResponse("Internal server error", "500"), { status: 500 });
-  }
+  return toApiResponse(result, "Transaction successful", 201);
 }

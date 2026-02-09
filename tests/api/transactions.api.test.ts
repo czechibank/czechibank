@@ -74,13 +74,13 @@ describe("Transactions API", () => {
         );
       });
 
-      it("should return 400 for invalid pagination parameters", async () => {
+      it("should return 422 for invalid pagination parameters", async () => {
         const response = await fetch(`${config.BASE_URL}/api/v1/transactions?page=0&limit=0`, {
           headers: {
             "X-API-Key": apiKey.highBalance,
           },
         });
-        expect(response.status).toBe(400);
+        expect(response.status).toBe(422);
         const data = await response.json();
         expect(data.success).toBe(false);
         expect(data.error.details[0].message).toBe("Page and limit must be positive numbers");
@@ -217,7 +217,7 @@ describe("Transactions API", () => {
       expect(data.error.message).toBe("Unauthorized");
     });
 
-    it("should return 400 for missing required fields", async () => {
+    it("should return 422 for missing required fields", async () => {
       const response = await fetch(`${config.BASE_URL}/api/v1/transactions/create`, {
         method: "POST",
         headers: {
@@ -226,13 +226,13 @@ describe("Transactions API", () => {
         },
         body: JSON.stringify({}),
       });
-      expect(response.status).toBe(400);
+      expect(response.status).toBe(422);
       const data = await response.json();
       expect(data.success).toBe(false);
       expect(data.error.details[0].message).toBe("Required");
     });
 
-    it("should return 400 for invalid amount", async () => {
+    it("should return 422 for invalid amount", async () => {
       const hb = SEED_USERS.highBalance;
       const response = await fetch(`${config.BASE_URL}/api/v1/transactions/create`, {
         method: "POST",
@@ -246,7 +246,7 @@ describe("Transactions API", () => {
           fromBankNumber: hb.bankAccounts[0].number,
         }),
       });
-      expect(response.status).toBe(400);
+      expect(response.status).toBe(422);
       const data = await response.json();
 
       expect(data.error.details[0].message).toBe("Amount should be positive, this incident was reported. Nice day!");
@@ -278,7 +278,7 @@ describe("Transactions API", () => {
       expect(data.error.message).toBe("Bank account not found");
     });
 
-    it("should return 400 for amount greater than Number.MAX_SAFE_INTEGER", async () => {
+    it("should return 422 for amount greater than Number.MAX_SAFE_INTEGER", async () => {
       const hb = SEED_USERS.highBalance;
       const response = await fetch(`${config.BASE_URL}/api/v1/transactions/create`, {
         method: "POST",
@@ -294,7 +294,7 @@ describe("Transactions API", () => {
       });
       const data = await response.json();
 
-      expect(response.status).toBe(400);
+      expect(response.status).toBe(422);
       expect(data.success).toBe(false);
       expect(data.error.details[0].message).toMatch(
         /Amount must be less than or equal to 9007199254740991 due security reasons./,

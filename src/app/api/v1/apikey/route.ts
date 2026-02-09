@@ -1,6 +1,9 @@
+import { authenticateRequest } from "@/app/api/v1/auth";
 import apikeyService from "@/domain/apikey/apikey-service";
+import { fromUnknown } from "@/lib/errors";
+import { toApiResponse } from "@/lib/result-helpers";
+import { ResultAsync } from "neverthrow";
 import { headers } from "next/headers";
-import { checkUserAuthOrThrowError } from "../server-actions";
 
 /**
  * @swagger
@@ -148,12 +151,12 @@ import { checkUserAuthOrThrowError } from "../server-actions";
  */
 
 export async function GET(request: Request) {
-  const user = await checkUserAuthOrThrowError(request);
-  if ("error" in user) {
-    return Response.json(user, { status: 401 });
-  }
+  const result = authenticateRequest(request).andThen(() =>
+    ResultAsync.fromPromise(
+      headers().then((h) => apikeyService.server.listUserApiKey(h)),
+      (e) => fromUnknown(e, "Failed to list API keys"),
+    ),
+  );
 
-  const apiKeys = await apikeyService.server.listUserApiKey(await headers());
-
-  return Response.json(apiKeys);
+  return toApiResponse(result, "API keys retrieved successfully");
 }

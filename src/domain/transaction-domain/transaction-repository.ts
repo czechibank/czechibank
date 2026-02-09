@@ -1,6 +1,5 @@
 "use server";
 import prisma from "@/lib/db";
-import { successResponse } from "@/lib/response";
 import { Currency } from "@prisma/client";
 import { revalidatePath } from "next/cache";
 
@@ -69,7 +68,7 @@ export async function sendMoney({
 
   revalidatePath("/bankAccount");
 
-  return successResponse("Money sent successfully", { message: response[0] });
+  return response[0];
 }
 
 export async function getAllTransactionsByUserId(userId: string) {

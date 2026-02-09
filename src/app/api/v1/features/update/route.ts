@@ -56,54 +56,21 @@
  *               $ref: '#/components/schemas/ErrorResponse'
  */
 
-import { ApiError } from "@/app/api/v1/api-error";
-import { handleErrors } from "@/app/api/v1/routes";
-import { checkUserAuthOrThrowError } from "@/app/api/v1/server-actions";
+import { authenticateRequest } from "@/app/api/v1/auth";
 import featuresService from "@/domain/features-domain/features-service";
 import { AllFeaturesSchema } from "@/domain/features-domain/features.schema";
-import { ApiErrorCode, successResponse, validateEventHandler } from "@/lib/response";
+import { badRequest } from "@/lib/errors";
+import { toApiResponse, validateWithResult } from "@/lib/result-helpers";
+import { ResultAsync } from "neverthrow";
 
 export async function POST(request: Request): Promise<Response> {
-  try {
-    const user = await checkUserAuthOrThrowError(request);
-    if ("errror" in user) {
-      return Response.json(user, { status: 401 });
-    }
+  const result = authenticateRequest(request)
+    .andThen(() => ResultAsync.fromPromise(request.json(), () => badRequest("Invalid JSON body")))
+    .andThen((body) => validateWithResult(AllFeaturesSchema, body))
+    .andThen(({ features }) => featuresService.server.updateFeaturesResult(features))
+    .map((features) => ({ features }));
 
-    const body = await request.json();
-    const validatedBody = await validateEventHandler(AllFeaturesSchema, body);
-
-    if ("error" in validatedBody) {
-      return Response.json(validatedBody, { status: 400 });
-    }
-
-    const { features } = validatedBody;
-    const updatedFeatures = await featuresService.server.updateFeatures(features);
-
-    if ("error" in updatedFeatures) {
-      return Response.json(updatedFeatures, { status: 404 });
-    }
-
-    return Response.json(
-      successResponse(
-        "Features updated successfully",
-        { features: updatedFeatures.data },
-        {
-          timestamp: new Date().toISOString(),
-          requestId: request.headers.get("x-request-id") || undefined,
-        },
-      ),
-      {
-        status: 200,
-      },
-    );
-  } catch (error) {
-    if (error instanceof ApiError) {
-      return handleErrors(error);
-    } else {
-      throw new ApiError("Internal Server Error", 500, ApiErrorCode.INTERNAL_ERROR, [
-        { code: ApiErrorCode.INTERNAL_ERROR, message: error instanceof Error ? error.message : "Unknown error" },
-      ]);
-    }
-  }
+  return toApiResponse(result, "Features updated successfully", 200, {
+    requestId: request.headers.get("x-request-id") || undefined,
+  });
 }

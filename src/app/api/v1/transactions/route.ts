@@ -1,7 +1,10 @@
+import { authenticateRequest } from "@/app/api/v1/auth";
 import transactionService from "@/domain/transaction-domain/transaction-service";
-import { ApiErrorCode, errorResponse } from "@/lib/response";
-import { NextRequest, NextResponse } from "next/server";
-import { checkUserAuthOrThrowError } from "../server-actions";
+import { mapErrorCodeToStatus } from "@/lib/api-error-status-map";
+import { validationError } from "@/lib/errors";
+import { ApiErrorCode, errorResponse, successResponse } from "@/lib/response";
+import { errAsync } from "neverthrow";
+import { NextRequest } from "next/server";
 export { DELETE, HEAD, OPTIONS, PATCH, PUT } from "../routes";
 
 /**
@@ -74,54 +77,40 @@ export { DELETE, HEAD, OPTIONS, PATCH, PUT } from "../routes";
  *               $ref: '#/components/schemas/Error'
  */
 export async function GET(request: NextRequest) {
-  try {
-    const user = await checkUserAuthOrThrowError(request);
-    if ("error" in user) {
-      return NextResponse.json(errorResponse(user.error.message, user.error.code), { status: 401 });
-    }
+  const searchParams = request.nextUrl.searchParams;
+  const page = searchParams.get("page") || "1";
+  const limit = searchParams.get("limit") || "10";
+  const sortBy = searchParams.get("sortBy") || "createdAt";
+  const sortOrder = (searchParams.get("sortOrder") || "desc") as "asc" | "desc";
 
-    const searchParams = request.nextUrl.searchParams;
-    const page = searchParams.get("page") || "1";
-    const limit = searchParams.get("limit") || "10";
-    const sortBy = searchParams.get("sortBy") || "createdAt";
-    const sortOrder = (searchParams.get("sortOrder") || "desc") as "asc" | "desc";
+  const pageNum = parseInt(page, 10);
+  const limitNum = parseInt(limit, 10);
 
-    // Validate pagination parameters
-    const pageNum = parseInt(page, 10);
-    const limitNum = parseInt(limit, 10);
-
+  const result = authenticateRequest(request).andThen((user) => {
     if (isNaN(pageNum) || isNaN(limitNum) || pageNum < 1 || limitNum < 1) {
-      return NextResponse.json(
-        errorResponse("Invalid pagination parameters", "400", [
-          {
-            code: ApiErrorCode.VALIDATION_ERROR,
-            message: "Page and limit must be positive numbers",
-          },
+      return errAsync(
+        validationError("Invalid pagination parameters", [
+          { code: ApiErrorCode.VALIDATION_ERROR, message: "Page and limit must be positive numbers" },
         ]),
-        { status: 400 },
       );
     }
+    return transactionService.getAllTransactionsByUserIdForAPIResult(user.id, sortBy, sortOrder, page, limit);
+  });
 
-    const result = await transactionService.getAllTransactionsByIdFromAPI(user.id, sortBy, sortOrder, page, limit);
-
-    if ("error" in result) {
-      if (result.error.code === "VALIDATION_ERROR") {
-        return NextResponse.json(errorResponse(result.error.message, "400"), { status: 400 });
-      }
-      return NextResponse.json(errorResponse(result.error.message, "500"), { status: 500 });
-    }
-
-    return NextResponse.json({
-      success: true,
-      data: {
-        transactions: result.data.transactions,
-      },
-      meta: {
-        pagination: result.data.pagination,
-      },
-    });
-  } catch (error) {
-    console.error("Error in GET /api/v1/transactions:", error);
-    return NextResponse.json(errorResponse("Internal server error", "500"), { status: 500 });
-  }
+  return result.match(
+    (data) =>
+      Response.json(
+        successResponse(
+          "Transactions retrieved successfully",
+          { transactions: data.transactions },
+          {
+            pagination: data.pagination,
+          },
+        ),
+      ),
+    (error) =>
+      Response.json(errorResponse(error.message, error.code, error.details), {
+        status: mapErrorCodeToStatus(error.code),
+      }),
+  );
 }

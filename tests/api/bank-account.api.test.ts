@@ -68,13 +68,13 @@ describe("Bank Account API", () => {
       expect(data.meta.pagination.limit).toBe(5);
     });
 
-    it("should return 400 for invalid pagination parameters", async () => {
+    it("should return 422 for invalid pagination parameters", async () => {
       const response = await fetch(`${config.BASE_URL}/api/v1/bank-account?page=0&limit=0`, {
         headers: {
           "X-API-Key": apiKey.highBalance,
         },
       });
-      expect(response.status).toBe(400);
+      expect(response.status).toBe(422);
       const data = await response.json();
 
       expect(data.success).toBe(false);

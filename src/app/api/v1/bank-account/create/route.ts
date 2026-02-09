@@ -1,9 +1,9 @@
-import { checkUserAuthOrThrowError } from "@/app/api/v1/server-actions";
+import { authenticateRequest } from "@/app/api/v1/auth";
 import { BankAccountSchema } from "@/domain/bankAccount-domain/ba-schema";
 import bankAccountService from "@/domain/bankAccount-domain/ba-service";
-import { ApiErrorCode, errorResponse, successResponse } from "@/lib/response";
-import { NextResponse } from "next/server";
-import { ApiError, handleErrors } from "../../routes";
+import { badRequest } from "@/lib/errors";
+import { toApiResponse, validateWithResult } from "@/lib/result-helpers";
+import { ResultAsync } from "neverthrow";
 /**
  * @swagger
  * /bank-account/create:
@@ -48,36 +48,20 @@ import { ApiError, handleErrors } from "../../routes";
  *               $ref: '#/components/schemas/Error'
  */
 export async function POST(request: Request) {
-  try {
-    const user = await checkUserAuthOrThrowError(request);
-    if ("error" in user) {
-      return NextResponse.json(user, { status: 401 });
-    }
-    const body = await request.json();
-    const parsedBody = BankAccountSchema.safeParse(body);
+  const result = authenticateRequest(request)
+    .andThen((user) =>
+      ResultAsync.fromPromise(request.json(), () => badRequest("Invalid JSON body")).andThen((body) =>
+        validateWithResult(BankAccountSchema, body).map((parsed) => ({ user, parsed })),
+      ),
+    )
+    .andThen(({ user, parsed }) =>
+      bankAccountService.createBankAccountResult({
+        userId: user.id,
+        currency: parsed.currency,
+        name: parsed.name,
+      }),
+    )
+    .map((bankAccount) => ({ bankAccount }));
 
-    if (!parsedBody.success) {
-      return NextResponse.json(errorResponse(parsedBody.error.message, ApiErrorCode.VALIDATION_ERROR), { status: 400 });
-    }
-
-    const result = await bankAccountService.createBankAccount({
-      userId: user.id,
-      currency: parsedBody.data.currency,
-      name: parsedBody.data.name,
-    });
-
-    return NextResponse.json(successResponse("Bank account created successfully", { bankAccount: result }), {
-      status: 201,
-    });
-  } catch (error) {
-    if (error instanceof ApiError) {
-      return handleErrors(error);
-    } else {
-      return handleErrors(
-        new ApiError("Internal Server Error", 500, ApiErrorCode.INTERNAL_ERROR, [
-          { code: ApiErrorCode.INTERNAL_ERROR, message: error instanceof Error ? error.message : "Unknown error" },
-        ]),
-      );
-    }
-  }
+  return toApiResponse(result, "Bank account created successfully", 201);
 }

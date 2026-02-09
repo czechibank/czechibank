@@ -1,5 +1,8 @@
-import { ApiErrorCode, ErrorResponse, errorResponse, SuccessResponse, successResponse } from "@/lib/response";
+import { type AppError, fromUnknown, notFound, validationError } from "@/lib/errors";
+import { type ErrorResponse, type SuccessResponse } from "@/lib/response";
+import { toServiceResponse } from "@/lib/result-helpers";
 import { BankAccount } from "@prisma/client";
+import { errAsync, okAsync, ResultAsync } from "neverthrow";
 import {
   enforceMinActiveBankAccount,
   enforceZeroBalance,
@@ -14,124 +17,128 @@ type Pagination = {
 };
 
 const bankAccountService = {
+  // --- Result-based methods (used by API routes) ---
+
+  createBankAccountResult(
+    bankAccount: Pick<BankAccount, "userId" | "currency"> & { name?: string; number?: string; balance?: number },
+  ): ResultAsync<BankAccount, AppError> {
+    return ResultAsync.fromPromise(
+      getUniqueBankAccountName(bankAccount.name || "My Bank Account", bankAccount.userId),
+      (e) => fromUnknown(e),
+    )
+      .andThen((finalName) => {
+        if (bankAccount.balance !== undefined) {
+          return okAsync({ finalName, balance: bankAccount.balance });
+        }
+        return getInitialBalanceForUser(bankAccount.userId).map((balance) => ({ finalName, balance }));
+      })
+      .andThen(({ finalName, balance }) =>
+        ResultAsync.fromPromise(repository.createBankAccount({ ...bankAccount, name: finalName, balance }), (e) =>
+          fromUnknown(e, "Failed to create bank account"),
+        ),
+      );
+  },
+
+  getBankAccountByIdAndUserIdResult(id: string, userId: string): ResultAsync<BankAccount, AppError> {
+    return ResultAsync.fromPromise(repository.getBankAccountByIdAndUserId(id, userId), (e) => fromUnknown(e)).andThen(
+      (ba) => (ba ? okAsync(ba) : errAsync(notFound("Bank account not found"))),
+    );
+  },
+
+  getBankAccountByIdResult(id: string): ResultAsync<BankAccount, AppError> {
+    return ResultAsync.fromPromise(repository.getBankAccountById(id), (e) => fromUnknown(e)).andThen((ba) =>
+      ba ? okAsync(ba) : errAsync(notFound("Bank account not found")),
+    );
+  },
+
+  getMyBankAccountsResult(
+    userId: string,
+    pagination: Pagination,
+  ): ResultAsync<repository.PaginatedResult<any>, AppError> {
+    if (pagination.page < 1 || pagination.limit < 1) {
+      return errAsync(validationError("Invalid pagination parameters"));
+    }
+    return ResultAsync.fromPromise(repository.getBankAccountsByUserId(userId, pagination), (e) =>
+      fromUnknown(e, "Failed to retrieve bank accounts"),
+    );
+  },
+
+  getAllBankAccountsResult(pagination: Pagination): ResultAsync<repository.PaginatedResult<any>, AppError> {
+    if (pagination.page < 1 || pagination.limit < 1) {
+      return errAsync(validationError("Invalid pagination parameters"));
+    }
+    return ResultAsync.fromPromise(repository.getAllBankAccounts(pagination), (e) => fromUnknown(e));
+  },
+
+  deleteBankAccountResult(bankAccount: BankAccount, userId: string): ResultAsync<BankAccount, AppError> {
+    return enforceMinActiveBankAccount(userId)
+      .andThen(() => {
+        const check = enforceZeroBalance(bankAccount);
+        return check.isErr() ? errAsync(check.error) : okAsync(undefined);
+      })
+      .andThen(() =>
+        ResultAsync.fromPromise(repository.deleteBankAccount(bankAccount.id), (e) =>
+          fromUnknown(e, "Failed to delete bank account"),
+        ),
+      );
+  },
+
+  getBankAccountByNumberResult(bankNumber: string): ResultAsync<BankAccount, AppError> {
+    return ResultAsync.fromPromise(repository.getBankAccountByNumber(bankNumber), (e) => fromUnknown(e)).andThen(
+      (ba) => (ba ? okAsync(ba) : errAsync(notFound("Bank account not found"))),
+    );
+  },
+
+  renameBankAccountResult(id: string, userId: string, newName: string): ResultAsync<BankAccount, AppError> {
+    return ResultAsync.fromPromise(getUniqueBankAccountName(newName, userId, id), (e) => fromUnknown(e)).andThen(
+      (finalName) =>
+        ResultAsync.fromPromise(repository.updateBankAccountName(id, finalName), (e) =>
+          fromUnknown(e, "Failed to rename bank account"),
+        ),
+    );
+  },
+
+  // --- Legacy wrapper methods (used by web components via server actions) ---
+
   async createBankAccount(
     bankAccount: Pick<BankAccount, "userId" | "currency"> & { name?: string; number?: string; balance?: number },
   ): Promise<SuccessResponse<BankAccount> | ErrorResponse> {
-    try {
-      const finalName = await getUniqueBankAccountName(bankAccount.name || "My Bank Account", bankAccount.userId);
-
-      const balanceToSet =
-        bankAccount.balance !== undefined ? bankAccount.balance : await getInitialBalanceForUser(bankAccount.userId);
-
-      const result = await repository.createBankAccount({
-        ...bankAccount,
-        name: finalName,
-        balance: balanceToSet,
-        number: bankAccount.number,
-      });
-      return successResponse("Bank account created successfully", result);
-    } catch (error: any) {
-      return errorResponse(error?.message || "Failed to create bank account", ApiErrorCode.INTERNAL_ERROR);
-    }
+    return toServiceResponse(this.createBankAccountResult(bankAccount), "Bank account created successfully");
   },
 
   async getBankAccountByIdAndUserId(id: string, userId: string) {
-    const bankAccount = await repository.getBankAccountByIdAndUserId(id, userId);
-
-    if (!bankAccount) {
-      return errorResponse("Bank account not found", ApiErrorCode.NOT_FOUND);
-    }
-
-    return successResponse("Bank account retrieved successfully", bankAccount);
+    return toServiceResponse(this.getBankAccountByIdAndUserIdResult(id, userId), "Bank account retrieved successfully");
   },
 
   async getBankAccountById(id: string) {
-    const bankAccount = await repository.getBankAccountById(id);
-    if (!bankAccount) {
-      return errorResponse("Bank account not found", ApiErrorCode.NOT_FOUND);
-    }
-
-    return successResponse("Bank account retrieved successfully", bankAccount);
+    return toServiceResponse(this.getBankAccountByIdResult(id), "Bank account retrieved successfully");
   },
 
   async getMyBankAccounts(userId: string, pagination: Pagination) {
-    if (pagination.page < 1 || pagination.limit < 1) {
-      return errorResponse("Invalid pagination parameters", ApiErrorCode.VALIDATION_ERROR);
-    }
-
-    try {
-      const bankAccounts = await repository.getBankAccountsByUserId(userId, pagination);
-      return successResponse("Bank accounts retrieved successfully", bankAccounts);
-    } catch (error: any) {
-      return errorResponse(error?.message || "Failed to retrieve bank accounts", ApiErrorCode.INTERNAL_ERROR);
-    }
+    return toServiceResponse(this.getMyBankAccountsResult(userId, pagination), "Bank accounts retrieved successfully");
   },
 
   async getAllBankAccounts(pagination: Pagination) {
-    if (pagination.page < 1 || pagination.limit < 1) {
-      return errorResponse("Invalid pagination parameters", ApiErrorCode.VALIDATION_ERROR);
-    }
-
-    const bankAccounts = await repository.getAllBankAccounts(pagination);
-    return successResponse("Bank accounts retrieved successfully", bankAccounts);
+    return toServiceResponse(this.getAllBankAccountsResult(pagination), "Bank accounts retrieved successfully");
   },
 
   async deleteBankAccount(
     bankAccount: BankAccount,
     userId: string,
   ): Promise<SuccessResponse<BankAccount> | ErrorResponse> {
-    try {
-      await enforceMinActiveBankAccount(userId);
-      await enforceZeroBalance(bankAccount);
-      const deletedBankAccount = await repository.deleteBankAccount(bankAccount.id);
-      return successResponse("Bank account deleted successfully", deletedBankAccount);
-    } catch (error: any) {
-      if (
-        error?.code === ApiErrorCode.BAD_REQUEST ||
-        error?.code === ApiErrorCode.NON_ZERO_BALANCE ||
-        error?.code === ApiErrorCode.NOT_FOUND
-      ) {
-        return errorResponse(error.message, error.code);
-      }
-
-      return errorResponse(error?.message || "Failed to delete bank account", ApiErrorCode.INTERNAL_ERROR);
-    }
+    return toServiceResponse(this.deleteBankAccountResult(bankAccount, userId), "Bank account deleted successfully");
   },
 
   async getBankAccountByNumber(bankNumber: string): Promise<SuccessResponse<BankAccount> | ErrorResponse> {
-    try {
-      const bankAccount = await repository.getBankAccountByNumber(bankNumber);
-      if (!bankAccount) {
-        return errorResponse("Bank account not found", ApiErrorCode.NOT_FOUND);
-      }
-      return successResponse("Bank account retrieved successfully", bankAccount);
-    } catch (error: any) {
-      if (
-        error?.code === ApiErrorCode.BAD_REQUEST ||
-        error?.code === ApiErrorCode.INSUFFICIENT_BALANCE ||
-        error?.code === ApiErrorCode.NOT_FOUND
-      ) {
-        return errorResponse(error.message, error.code);
-      }
-      return errorResponse(error?.message || "Bank account not found", ApiErrorCode.NOT_FOUND);
-    }
+    return toServiceResponse(this.getBankAccountByNumberResult(bankNumber), "Bank account retrieved successfully");
   },
+
   async renameBankAccount(
     id: string,
     userId: string,
     newName: string,
   ): Promise<SuccessResponse<BankAccount> | ErrorResponse> {
-    try {
-      // Generate a unique name for this user
-      const finalName = await getUniqueBankAccountName(newName, userId, id);
-
-      // Update the account name in the repository
-      const updatedBankAccount = await repository.updateBankAccountName(id, finalName);
-
-      return successResponse("Bank account renamed successfully", updatedBankAccount);
-    } catch (error: any) {
-      return errorResponse(error?.message || "Failed to rename bank account", ApiErrorCode.INTERNAL_ERROR);
-    }
+    return toServiceResponse(this.renameBankAccountResult(id, userId, newName), "Bank account renamed successfully");
   },
 };
 

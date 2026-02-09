@@ -1,6 +1,8 @@
-import env from "@/lib/env";
-import { ApiErrorCode, errorResponse, successResponse } from "@/lib/response";
+import { type AppError, forbidden, fromUnknown, insufficientBalance, notFound, validationError } from "@/lib/errors";
+import { ApiErrorCode, type ErrorResponse, type SuccessResponse } from "@/lib/response";
+import { toServiceResponse, validateWithResult } from "@/lib/result-helpers";
 import { Currency } from "@prisma/client";
+import { errAsync, okAsync, ResultAsync } from "neverthrow";
 import bankAccountService from "../bankAccount-domain/ba-service";
 import { increaseTimeInSendingTransactionsFeature } from "../features-domain/features-application-service";
 import featuresService from "../features-domain/features-service";
@@ -8,38 +10,10 @@ import { sendDiscordMessage } from "../social-reporting-domain/discord-action";
 import * as repository from "./transaction-repository";
 import { CreateTransactionNumberToNumberSchema } from "./transation-schema";
 
-function parseTransactionData(
-  userId: string,
-  fromBankNumber: string,
-  toBankNumber: string,
-  amount: number,
-  currency: Currency,
-) {
-  const parsedTransaction = CreateTransactionNumberToNumberSchema.safeParse({
-    userId,
-    fromBankNumber,
-    toBankNumber,
-    amount,
-    currency,
-  });
-
-  if (!parsedTransaction.success) {
-    return errorResponse(
-      "Invalid transaction data",
-      ApiErrorCode.VALIDATION_ERROR,
-      parsedTransaction.error.errors.map((error) => ({
-        code: ApiErrorCode.VALIDATION_ERROR,
-        field: error.path.join("."),
-        message: error.message,
-      })),
-    );
-  }
-
-  return parsedTransaction.data;
-}
-
 const transactionService = {
-  async sendMoneyToBankNumber({
+  // --- Result-based methods (used by API routes) ---
+
+  sendMoneyToBankNumberResult({
     userId,
     fromBankNumber,
     toBankNumber,
@@ -53,64 +27,119 @@ const transactionService = {
     amount: number;
     currency: Currency;
     applicationType: "api" | "web";
-  }) {
-    try {
-      const allFeatures = await featuresService.server.getAllFeatures();
-
-      if (allFeatures.success) {
-        if (increaseTimeInSendingTransactionsFeature(allFeatures.data)) {
-          await new Promise((resolve) => setTimeout(resolve, 5000));
+  }): ResultAsync<any, AppError> {
+    // Feature flag check (non-blocking — if it fails, we just skip the delay)
+    return featuresService.server
+      .getAllFeaturesResult()
+      .andThen((features) => {
+        if (increaseTimeInSendingTransactionsFeature(features)) {
+          return ResultAsync.fromSafePromise<void, AppError>(new Promise((resolve) => setTimeout(resolve, 5000)));
         }
+        return okAsync<void, AppError>(undefined);
+      })
+      .orElse(() => okAsync<void, AppError>(undefined))
+      .andThen(() =>
+        validateWithResult(CreateTransactionNumberToNumberSchema, {
+          userId,
+          fromBankNumber,
+          toBankNumber,
+          amount,
+          currency,
+        }),
+      )
+      .andThen((parsed) =>
+        bankAccountService.getBankAccountByNumberResult(parsed.fromBankNumber).andThen((fromAcct) => {
+          if (parsed.userId !== fromAcct.userId) {
+            return errAsync(forbidden("You are not allowed to send money from this bank account"));
+          }
+          if (fromAcct.balance < amount) {
+            return errAsync(insufficientBalance());
+          }
+          return bankAccountService.getBankAccountByNumberResult(parsed.toBankNumber).andThen((toAcct) =>
+            ResultAsync.fromPromise(
+              repository.sendMoney({
+                fromBankId: fromAcct.id,
+                toBankId: toAcct.id,
+                amount,
+                currency,
+              }),
+              (e) => fromUnknown(e, "Failed to send money"),
+            ).map((transaction) => {
+              // Fire-and-forget Discord notification for donation account
+              if ((transaction as any).to?.number === "555555555555/5555") {
+                sendDiscordMessage({
+                  text: `Money sent from account \`${(transaction as any).from?.number}\` - **${(transaction as any).amount} ${(transaction as any).currency}** :tada:`,
+                  message: "Money sent successfully!",
+                  sender: `${(transaction as any).from?.user?.name}`,
+                  applicationType,
+                  city: "prague",
+                }).catch(() => {});
+              }
+              return transaction;
+            }),
+          );
+        }),
+      );
+  },
+
+  getAllTransactionsByUserIdForAPIResult(
+    userId: string,
+    orderBy: string,
+    order: "asc" | "desc",
+    page: string,
+    limit: string,
+  ): ResultAsync<any, AppError> {
+    const pageNum = parseInt(page, 10);
+    const limitNum = parseInt(limit, 10);
+
+    if (pageNum < 1 || limitNum < 1) {
+      return errAsync(
+        validationError("Invalid pagination parameters", [
+          { code: ApiErrorCode.VALIDATION_ERROR, message: "Page and limit must be positive numbers" },
+        ]),
+      );
+    }
+
+    return ResultAsync.fromPromise(
+      repository.getAllTransactionsByUserIdForAPI(userId, orderBy, order, pageNum, limitNum),
+      (e) => fromUnknown(e, "Failed to retrieve transactions"),
+    ).andThen((result) => {
+      if (!result) {
+        return errAsync(fromUnknown(null, "Failed to retrieve transactions"));
       }
 
-      const parsedTransaction = parseTransactionData(userId, fromBankNumber, toBankNumber, amount, currency);
-
-      if ("error" in parsedTransaction) {
-        return parsedTransaction;
-      }
-
-      const fromBankAccount = await bankAccountService.getBankAccountByNumber(parsedTransaction.fromBankNumber);
-      if (!fromBankAccount.success) {
-        return fromBankAccount;
-      }
-      if (parsedTransaction.userId !== fromBankAccount.data.userId) {
-        return errorResponse("You are not allowed to send money from this bank account", ApiErrorCode.FORBIDDEN);
-      }
-      const toBankAccount = await bankAccountService.getBankAccountByNumber(parsedTransaction.toBankNumber);
-
-      if ("error" in fromBankAccount || "error" in toBankAccount) {
-        return "error" in fromBankAccount ? fromBankAccount : toBankAccount;
-      }
-
-      if (fromBankAccount.data.balance < amount) {
-        return errorResponse("Insufficient balance", ApiErrorCode.INSUFFICIENT_BALANCE);
-      }
-
-      const result = await repository.sendMoney({
-        fromBankId: fromBankAccount.data.id,
-        toBankId: toBankAccount.data.id,
-        amount,
-        currency,
-      });
-
-      // HARD-CODED DONATION NUMBER, who cares
-      if (result.data.message.to.number == "555555555555/5555") {
-        console.log(env.DISCORD_WEBHOOK_URL);
-        await sendDiscordMessage({
-          text: `Money sent from account \`${result.data.message.from.number}\` - **${result.data.message.amount} ${result.data.message.currency}** :tada:`,
-          message: "Money sent successfully!",
-          sender: `${result.data.message.from.user.name}`,
-          applicationType: applicationType,
-          city: "prague",
+      // If requested page is beyond total pages, return empty
+      if (pageNum > result.pagination.totalPages) {
+        return okAsync({
+          transactions: [],
+          pagination: { ...result.pagination, page: pageNum },
         });
       }
-      // if (applicationType === "web") {
-      //   revalidatePath("/bankAccount");
-      // }
-      return successResponse("Transaction successful", result.data);
-    } catch (error: any) {
-      return errorResponse(error?.message || "Failed to send money to bank number", ApiErrorCode.INTERNAL_ERROR);
-    }
+
+      return okAsync({
+        transactions: result.transactions,
+        pagination: result.pagination,
+      });
+    });
+  },
+
+  getTransactionDetailResult(transactionId: string, userId: string): ResultAsync<any, AppError> {
+    return ResultAsync.fromPromise(repository.getTransactionDetailByTransactionId(transactionId, userId), (e) =>
+      fromUnknown(e),
+    ).andThen((transaction) => (transaction ? okAsync(transaction) : errAsync(notFound("Transaction not found"))));
+  },
+
+  // --- Legacy wrapper methods (used by web components) ---
+
+  async sendMoneyToBankNumber(params: {
+    userId: string;
+    fromBankNumber: string;
+    toBankNumber: string;
+    amount: number;
+    currency: Currency;
+    applicationType: "api" | "web";
+  }): Promise<SuccessResponse<any> | ErrorResponse> {
+    return toServiceResponse(this.sendMoneyToBankNumberResult(params), "Transaction successful");
   },
 
   async getAllTransactionsByUserId(userId: string) {
@@ -124,59 +153,17 @@ const transactionService = {
     page: string,
     limit: string,
   ) {
-    const pageNum = parseInt(page, 10);
-    const limitNum = parseInt(limit, 10);
-
-    if (pageNum < 1 || limitNum < 1) {
-      return errorResponse("Invalid pagination parameters", ApiErrorCode.VALIDATION_ERROR, [
-        {
-          code: ApiErrorCode.VALIDATION_ERROR,
-          message: "Page and limit must be positive numbers",
-        },
-      ]);
-    }
-
-    const result = await repository.getAllTransactionsByUserIdForAPI(userId, orderBy, order, pageNum, limitNum);
-
-    if (!result) {
-      return errorResponse("Failed to retrieve transactions", ApiErrorCode.INTERNAL_ERROR, [
-        {
-          code: ApiErrorCode.INTERNAL_ERROR,
-          message: "Failed to retrieve transactions",
-        },
-      ]);
-    }
-
-    // If the requested page is beyond total pages, return empty array
-    if (pageNum > result.pagination.totalPages) {
-      return successResponse("Transactions retrieved successfully", {
-        transactions: [],
-        pagination: {
-          ...result.pagination,
-          page: pageNum,
-        },
-      });
-    }
-
-    return successResponse("Transactions retrieved successfully", {
-      transactions: result.transactions,
-      pagination: result.pagination,
-    });
+    return toServiceResponse(
+      this.getAllTransactionsByUserIdForAPIResult(userId, orderBy, order, page, limit),
+      "Transactions retrieved successfully",
+    );
   },
 
   async getTransactionDetailByTransactionId(transactionId: string, userId: string) {
-    const transaction = await repository.getTransactionDetailByTransactionId(transactionId, userId);
-
-    if (!transaction) {
-      return errorResponse("Transaction not found", ApiErrorCode.NOT_FOUND, [
-        {
-          code: ApiErrorCode.NOT_FOUND,
-          message: "Transaction not found",
-        },
-      ]);
-    }
-
-    return successResponse("Transaction details retrieved successfully", transaction);
+    return toServiceResponse(
+      this.getTransactionDetailResult(transactionId, userId),
+      "Transaction details retrieved successfully",
+    );
   },
 
   async getAllTransactionsByUserAndBankAccountId(bankAccountId: string, limit: number) {

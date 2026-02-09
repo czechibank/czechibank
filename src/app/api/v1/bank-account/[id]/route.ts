@@ -1,13 +1,12 @@
-import { checkUserAuthOrThrowError } from "@/app/api/v1/server-actions";
+import { authenticateRequest } from "@/app/api/v1/auth";
 import { RenameBankAccountSchema } from "@/domain/bankAccount-domain/ba-schema";
 import bankAccountService from "@/domain/bankAccount-domain/ba-service";
 import { canSeeYourBankAccountDetailFeature as anyOneCanSeeYourBankAccountFeature } from "@/domain/features-domain/features-application-service";
 import featuresService from "@/domain/features-domain/features-service";
-import { mapErrorCodeToStatus } from "@/lib/api-error-status-map";
-import { ApiErrorCode, ErrorResponse, SuccessResponse, successResponse, validateEventHandler } from "@/lib/response";
-import type { BankAccount } from "@prisma/client";
+import { badRequest, conflict } from "@/lib/errors";
+import { toApiResponse, validateWithResult } from "@/lib/result-helpers";
+import { errAsync, okAsync, ResultAsync } from "neverthrow";
 import { z } from "zod";
-import { ApiError, handleErrors } from "../../routes";
 
 /**
  * @swagger
@@ -197,118 +196,62 @@ import { ApiError, handleErrors } from "../../routes";
  *
  */
 
+const idSchema = z.object({ id: z.string().cuid() });
+
 export async function GET(request: Request, context: { params: Promise<{ id: string }> }) {
-  try {
-    console.log("GET /bank-account/[id]/route.ts");
-    let bankAccountResponse: SuccessResponse<BankAccount> | ErrorResponse;
-    const { id } = await context.params;
-    const schema = z.object({
-      id: z.string().cuid(),
-    });
-    const parsedId = await validateEventHandler(schema, { id });
-    if ("error" in parsedId) {
-      const status = mapErrorCodeToStatus(parsedId.error.code); // VALIDATION_ERROR(422)
-      return Response.json(parsedId, { status });
-    }
+  const { id } = await context.params;
 
-    const user = await checkUserAuthOrThrowError(request);
-    if ("error" in user) return Response.json(user, { status: mapErrorCodeToStatus(user.error.code) }); // UNAUTHORIZED(401)
+  const result = validateWithResult(idSchema, { id })
+    .andThen((parsed) =>
+      authenticateRequest(request).andThen((user) => {
+        // Check feature flag: if enabled, anyone can see any bank account
+        return featuresService.server
+          .getAllFeaturesResult()
+          .map((features) => anyOneCanSeeYourBankAccountFeature(features))
+          .orElse(() => okAsync(false))
+          .andThen((anyoneCanSee) =>
+            anyoneCanSee
+              ? bankAccountService.getBankAccountByIdResult(parsed.id)
+              : bankAccountService.getBankAccountByIdAndUserIdResult(parsed.id, user.id),
+          );
+      }),
+    )
+    .map((bankAccount) => ({ bankAccount }));
 
-    // If the feature is enabled, dont check who is owner of the bank account
-    const allFeatures = await featuresService.server.getAllFeatures();
-    if (allFeatures.success && anyOneCanSeeYourBankAccountFeature(allFeatures.data)) {
-      bankAccountResponse = await bankAccountService.getBankAccountById(parsedId.id);
-    } else {
-      // If the feature is disabled, also check who is owner of the bank account
-      bankAccountResponse = await bankAccountService.getBankAccountByIdAndUserId(parsedId.id, user.id);
-    }
-    if ("error" in bankAccountResponse)
-      return Response.json(bankAccountResponse, { status: mapErrorCodeToStatus(bankAccountResponse.error.code) }); // NOT_FOUND(404)
-
-    return Response.json(bankAccountResponse, { status: 200 });
-  } catch (error) {
-    if (error instanceof ApiError) {
-      return handleErrors(error);
-    } else {
-      throw new ApiError("Internal Server Error", 500, ApiErrorCode.INTERNAL_ERROR, [
-        { code: ApiErrorCode.INTERNAL_ERROR, message: error instanceof Error ? error.message : "Unknown error" },
-      ]);
-    }
-  }
+  return toApiResponse(result, "Bank account details retrieved successfully");
 }
 
 export async function DELETE(request: Request, context: { params: Promise<{ id: string }> }) {
-  try {
-    const { id } = await context.params;
+  const { id } = await context.params;
 
-    const user = await checkUserAuthOrThrowError(request);
-    if ("error" in user) return Response.json(user, { status: mapErrorCodeToStatus(user.error.code) }); // UNAUTHORIZED(401)
+  const result = authenticateRequest(request).andThen((user) =>
+    bankAccountService.getBankAccountByIdAndUserIdResult(id, user.id).andThen((bankAccount) =>
+      bankAccountService.deleteBankAccountResult(bankAccount, user.id).andThen((deleted) => {
+        if (deleted.isActive !== false) {
+          return errAsync<{ message: string }, import("@/lib/errors").AppError>(
+            conflict("Bank account deletion failed, account still active"),
+          );
+        }
+        return okAsync({ message: "Bank account deleted successfully" });
+      }),
+    ),
+  );
 
-    // First verify the user owns this account
-    const bankAccountResponse = await bankAccountService.getBankAccountByIdAndUserId(id, user.id);
-    if ("error" in bankAccountResponse)
-      return Response.json(bankAccountResponse, { status: mapErrorCodeToStatus(bankAccountResponse.error.code) }); // NOT_FOUND(404)
-
-    const bankAccount = bankAccountResponse.data;
-    const result = await bankAccountService.deleteBankAccount(bankAccount, user.id);
-
-    if ("error" in result) return Response.json(result, { status: mapErrorCodeToStatus(result.error.code) }); // BAD_REQUEST(400), NON_ZERO_BALANCE(409), NOT_FOUND(404)
-
-    // Verify that isActive is actually false
-    if (result.data.isActive !== false) {
-      return Response.json(
-        { success: false, message: "Bank account deletion failed, account still active", error: { code: "CONFLICT" } },
-        { status: 409 },
-      );
-    }
-
-    return Response.json(
-      successResponse("Bank account deleted successfully", { message: "Bank account deleted successfully" }),
-      { status: 200 },
-    );
-  } catch (error) {
-    if (error instanceof ApiError) {
-      return handleErrors(error);
-    } else {
-      throw new ApiError("Internal Server Error", 500, ApiErrorCode.INTERNAL_ERROR, [
-        { code: ApiErrorCode.INTERNAL_ERROR, message: error instanceof Error ? error.message : "Unknown error" },
-      ]);
-    }
-  }
+  return toApiResponse(result, "Bank account deleted successfully");
 }
 
 export async function PATCH(request: Request, context: { params: Promise<{ id: string }> }) {
-  try {
-    const { id } = await context.params;
+  const { id } = await context.params;
 
-    const body = await request.json();
-    const parsedBody = await validateEventHandler(RenameBankAccountSchema, body);
-    if ("error" in parsedBody) {
-      const status = mapErrorCodeToStatus(parsedBody.error.code); // VALIDATION_ERROR(422)
-      return Response.json(parsedBody, { status });
-    }
-    const { name: newName } = parsedBody;
+  const result = authenticateRequest(request).andThen((user) =>
+    ResultAsync.fromPromise(request.json(), () => badRequest("Invalid JSON body"))
+      .andThen((body) => validateWithResult(RenameBankAccountSchema, body))
+      .andThen(({ name: newName }) =>
+        bankAccountService
+          .getBankAccountByIdAndUserIdResult(id, user.id)
+          .andThen(() => bankAccountService.renameBankAccountResult(id, user.id, newName)),
+      ),
+  );
 
-    const user = await checkUserAuthOrThrowError(request);
-    if ("error" in user) return Response.json(user, { status: mapErrorCodeToStatus(user.error.code) });
-    // UNAUTHORIZED(401)
-
-    const bankAccountResponse = await bankAccountService.getBankAccountByIdAndUserId(id, user.id);
-    if ("error" in bankAccountResponse)
-      return Response.json(bankAccountResponse, { status: mapErrorCodeToStatus(bankAccountResponse.error.code) }); // NOT_FOUND(404)
-
-    // Rename the account
-    const renameResult = await bankAccountService.renameBankAccount(id, user.id, newName);
-    if ("error" in renameResult) {
-      const status = mapErrorCodeToStatus(renameResult.error.code); // INTERNAL_ERROR → 500
-      return Response.json(renameResult, { status });
-    }
-
-    return Response.json(successResponse("Bank account renamed successfully", renameResult.data), { status: 200 });
-  } catch (error) {
-    if (error instanceof ApiError) return handleErrors(error);
-    throw new ApiError("Internal Server Error", 500, ApiErrorCode.INTERNAL_ERROR, [
-      { code: ApiErrorCode.INTERNAL_ERROR, message: error instanceof Error ? error.message : "Unknown error" },
-    ]);
-  }
+  return toApiResponse(result, "Bank account renamed successfully");
 }
