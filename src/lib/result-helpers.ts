@@ -2,6 +2,7 @@ import { mapErrorCodeToStatus } from "@/lib/api-error-status-map";
 import { type AppError } from "@/lib/errors";
 import {
   type ErrorResponse,
+  type PaginationMeta,
   type ResponseMeta,
   type SuccessResponse,
   ApiErrorCode,
@@ -29,6 +30,33 @@ export function toApiResponse<T>(
       Response.json(successResponse(successMessage, data, { timestamp: new Date().toISOString(), ...meta }), {
         status: successStatus,
       }),
+    (error) =>
+      Response.json(errorResponse(error.message, error.code, error.details), {
+        status: mapErrorCodeToStatus(error.code),
+      }),
+  );
+}
+
+/**
+ * Like toApiResponse but for paginated endpoints where pagination meta
+ * lives inside the Result value. The `transform` function extracts the
+ * response body and pagination from the result data.
+ */
+export function toPaginatedApiResponse<T, D>(
+  result: ResultAsync<T, AppError>,
+  successMessage: string,
+  transform: (data: T) => { body: D; pagination: PaginationMeta },
+): Promise<Response> {
+  return result.match(
+    (data) => {
+      const { body, pagination } = transform(data);
+      return Response.json(
+        successResponse(successMessage, body, {
+          timestamp: new Date().toISOString(),
+          pagination,
+        }),
+      );
+    },
     (error) =>
       Response.json(errorResponse(error.message, error.code, error.details), {
         status: mapErrorCodeToStatus(error.code),

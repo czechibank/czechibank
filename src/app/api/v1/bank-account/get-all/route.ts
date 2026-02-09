@@ -1,9 +1,7 @@
 import { authenticateRequest } from "@/app/api/v1/auth";
 import bankAccountService from "@/domain/bankAccount-domain/ba-service";
-import { mapErrorCodeToStatus } from "@/lib/api-error-status-map";
-import { validationError } from "@/lib/errors";
-import { ApiErrorCode, createPaginationMeta, errorResponse, successResponse } from "@/lib/response";
-import { errAsync } from "neverthrow";
+import { createPaginationMeta } from "@/lib/response";
+import { toPaginatedApiResponse } from "@/lib/result-helpers";
 import { DELETE, HEAD, OPTIONS, PATCH, POST, PUT } from "../../routes";
 /**
  * @swagger
@@ -94,36 +92,14 @@ export async function GET(request: Request) {
   const page = parseInt(searchParams.get("page") || "1");
   const limit = parseInt(searchParams.get("limit") || "10");
 
-  const result = authenticateRequest(request).andThen(() => {
-    if (isNaN(page) || isNaN(limit) || page < 1 || limit < 1) {
-      return errAsync(
-        validationError("Invalid pagination parameters", [
-          { code: ApiErrorCode.VALIDATION_ERROR, message: "Page and limit must be positive numbers" },
-        ]),
-      );
-    }
-    return bankAccountService.getAllBankAccountsResult({ page, limit });
-  });
-
-  return result.match(
-    (data) =>
-      Response.json(
-        successResponse(
-          "Bank accounts retrieved successfully",
-          { bankAccounts: data.items },
-          {
-            timestamp: new Date().toISOString(),
-            requestId: request.headers.get("x-request-id") || undefined,
-            pagination: createPaginationMeta(data.page, data.limit, data.total),
-          },
-        ),
-        { status: 200 },
-      ),
-    (error) =>
-      Response.json(errorResponse(error.message, error.code, error.details), {
-        status: mapErrorCodeToStatus(error.code),
-      }),
+  const result = authenticateRequest(request).andThen(() =>
+    bankAccountService.getAllBankAccountsResult({ page, limit }),
   );
+
+  return toPaginatedApiResponse(result, "Bank accounts retrieved successfully", (data) => ({
+    body: { bankAccounts: data.items },
+    pagination: createPaginationMeta(data.page, data.limit, data.total),
+  }));
 }
 
 export { DELETE, HEAD, OPTIONS, PATCH, POST, PUT };

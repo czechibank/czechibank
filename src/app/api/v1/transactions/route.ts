@@ -1,9 +1,6 @@
 import { authenticateRequest } from "@/app/api/v1/auth";
 import transactionService from "@/domain/transaction-domain/transaction-service";
-import { mapErrorCodeToStatus } from "@/lib/api-error-status-map";
-import { validationError } from "@/lib/errors";
-import { ApiErrorCode, errorResponse, successResponse } from "@/lib/response";
-import { errAsync } from "neverthrow";
+import { toPaginatedApiResponse } from "@/lib/result-helpers";
 import { NextRequest } from "next/server";
 export { DELETE, HEAD, OPTIONS, PATCH, PUT } from "../routes";
 
@@ -83,34 +80,12 @@ export async function GET(request: NextRequest) {
   const sortBy = searchParams.get("sortBy") || "createdAt";
   const sortOrder = (searchParams.get("sortOrder") || "desc") as "asc" | "desc";
 
-  const pageNum = parseInt(page, 10);
-  const limitNum = parseInt(limit, 10);
-
-  const result = authenticateRequest(request).andThen((user) => {
-    if (isNaN(pageNum) || isNaN(limitNum) || pageNum < 1 || limitNum < 1) {
-      return errAsync(
-        validationError("Invalid pagination parameters", [
-          { code: ApiErrorCode.VALIDATION_ERROR, message: "Page and limit must be positive numbers" },
-        ]),
-      );
-    }
-    return transactionService.getAllTransactionsByUserIdForAPIResult(user.id, sortBy, sortOrder, page, limit);
-  });
-
-  return result.match(
-    (data) =>
-      Response.json(
-        successResponse(
-          "Transactions retrieved successfully",
-          { transactions: data.transactions },
-          {
-            pagination: data.pagination,
-          },
-        ),
-      ),
-    (error) =>
-      Response.json(errorResponse(error.message, error.code, error.details), {
-        status: mapErrorCodeToStatus(error.code),
-      }),
+  const result = authenticateRequest(request).andThen((user) =>
+    transactionService.getAllTransactionsByUserIdForAPIResult(user.id, sortBy, sortOrder, page, limit),
   );
+
+  return toPaginatedApiResponse(result, "Transactions retrieved successfully", (data) => ({
+    body: { transactions: data.transactions },
+    pagination: data.pagination,
+  }));
 }

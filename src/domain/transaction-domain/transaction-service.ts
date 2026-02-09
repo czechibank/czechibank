@@ -27,7 +27,7 @@ const transactionService = {
     amount: number;
     currency: Currency;
     applicationType: "api" | "web";
-  }): ResultAsync<any, AppError> {
+  }): ResultAsync<repository.SendMoneyResult, AppError> {
     // Feature flag check (non-blocking — if it fails, we just skip the delay)
     return featuresService.server
       .getAllFeaturesResult()
@@ -66,14 +66,14 @@ const transactionService = {
               (e) => fromUnknown(e, "Failed to send money"),
             ).map((transaction) => {
               // Fire-and-forget Discord notification for donation account
-              if ((transaction as any).to?.number === "555555555555/5555") {
+              if (transaction.to.number === "555555555555/5555") {
                 sendDiscordMessage({
-                  text: `Money sent from account \`${(transaction as any).from?.number}\` - **${(transaction as any).amount} ${(transaction as any).currency}** :tada:`,
+                  text: `Money sent from account \`${transaction.from.number}\` - **${transaction.amount} ${transaction.currency}** :tada:`,
                   message: "Money sent successfully!",
-                  sender: `${(transaction as any).from?.user?.name}`,
+                  sender: `${transaction.from.user.name}`,
                   applicationType,
                   city: "prague",
-                }).catch(() => {});
+                }).catch((e) => console.error("[Discord]", e));
               }
               return transaction;
             }),
@@ -92,7 +92,7 @@ const transactionService = {
     const pageNum = parseInt(page, 10);
     const limitNum = parseInt(limit, 10);
 
-    if (pageNum < 1 || limitNum < 1) {
+    if (isNaN(pageNum) || isNaN(limitNum) || pageNum < 1 || limitNum < 1) {
       return errAsync(
         validationError("Invalid pagination parameters", [
           { code: ApiErrorCode.VALIDATION_ERROR, message: "Page and limit must be positive numbers" },

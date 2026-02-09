@@ -1,5 +1,5 @@
 import { type AppError, fromUnknown, notFound, validationError } from "@/lib/errors";
-import { type ErrorResponse, type SuccessResponse } from "@/lib/response";
+import { type ErrorResponse, type SuccessResponse, ApiErrorCode } from "@/lib/response";
 import { toServiceResponse } from "@/lib/result-helpers";
 import { BankAccount } from "@prisma/client";
 import { errAsync, okAsync, ResultAsync } from "neverthrow";
@@ -55,8 +55,12 @@ const bankAccountService = {
     userId: string,
     pagination: Pagination,
   ): ResultAsync<repository.PaginatedResult<any>, AppError> {
-    if (pagination.page < 1 || pagination.limit < 1) {
-      return errAsync(validationError("Invalid pagination parameters"));
+    if (isNaN(pagination.page) || isNaN(pagination.limit) || pagination.page < 1 || pagination.limit < 1) {
+      return errAsync(
+        validationError("Invalid pagination parameters", [
+          { code: ApiErrorCode.VALIDATION_ERROR, message: "Page and limit must be positive numbers" },
+        ]),
+      );
     }
     return ResultAsync.fromPromise(repository.getBankAccountsByUserId(userId, pagination), (e) =>
       fromUnknown(e, "Failed to retrieve bank accounts"),
@@ -64,8 +68,12 @@ const bankAccountService = {
   },
 
   getAllBankAccountsResult(pagination: Pagination): ResultAsync<repository.PaginatedResult<any>, AppError> {
-    if (pagination.page < 1 || pagination.limit < 1) {
-      return errAsync(validationError("Invalid pagination parameters"));
+    if (isNaN(pagination.page) || isNaN(pagination.limit) || pagination.page < 1 || pagination.limit < 1) {
+      return errAsync(
+        validationError("Invalid pagination parameters", [
+          { code: ApiErrorCode.VALIDATION_ERROR, message: "Page and limit must be positive numbers" },
+        ]),
+      );
     }
     return ResultAsync.fromPromise(repository.getAllBankAccounts(pagination), (e) => fromUnknown(e));
   },

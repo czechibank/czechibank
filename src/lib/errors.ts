@@ -52,6 +52,10 @@ export function conflict(message: string): AppError {
   return { code: ApiErrorCode.CONFLICT, message };
 }
 
+function isValidApiErrorCode(code: string): code is ApiErrorCode {
+  return (Object.values(ApiErrorCode) as string[]).includes(code);
+}
+
 /**
  * Converts an unknown caught error into an AppError.
  * Handles: Error instances, thrown { code, message } objects (from ba-helpers),
@@ -63,7 +67,7 @@ export function fromUnknown(error: unknown, fallbackMessage = "An unexpected err
   }
   if (typeof error === "object" && error !== null && "code" in error && "message" in error) {
     const e = error as { code: string; message: string };
-    return { code: e.code as ApiErrorCode, message: e.message };
+    return { code: isValidApiErrorCode(e.code) ? e.code : ApiErrorCode.INTERNAL_ERROR, message: e.message };
   }
   return internalError(fallbackMessage);
 }

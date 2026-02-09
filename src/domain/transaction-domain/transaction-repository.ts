@@ -3,6 +3,22 @@ import prisma from "@/lib/db";
 import { Currency } from "@prisma/client";
 import { revalidatePath } from "next/cache";
 
+export type SendMoneyResult = {
+  amount: number;
+  createdAt: Date;
+  id: string;
+  currency: Currency;
+  from: {
+    number: string;
+    user: {
+      name: string;
+    };
+  };
+  to: {
+    number: string;
+  };
+};
+
 export async function sendMoney({
   fromBankId,
   toBankId,
@@ -13,7 +29,7 @@ export async function sendMoney({
   fromBankId: string;
   amount: number;
   currency: Currency;
-}) {
+}): Promise<SendMoneyResult> {
   const response = await prisma.$transaction([
     prisma.transaction.create({
       data: {

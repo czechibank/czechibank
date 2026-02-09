@@ -98,28 +98,12 @@
 
 import { authenticateRequest } from "@/app/api/v1/auth";
 import featuresService from "@/domain/features-domain/features-service";
-import { mapErrorCodeToStatus } from "@/lib/api-error-status-map";
-import { errorResponse, successResponse } from "@/lib/response";
+import { toApiResponse } from "@/lib/result-helpers";
 
 export async function GET(request: Request): Promise<Response> {
   const result = authenticateRequest(request)
     .andThen(() => featuresService.server.getAllFeaturesResult())
     .map((features) => ({ features }));
 
-  return result.match(
-    (data) =>
-      Response.json(
-        successResponse(
-          "Features retrieved successfully",
-          { features: data.features },
-          {
-            requestId: request.headers.get("x-request-id") || undefined,
-          },
-        ),
-      ),
-    (error) =>
-      Response.json(errorResponse(error.message, error.code, error.details), {
-        status: mapErrorCodeToStatus(error.code),
-      }),
-  );
+  return toApiResponse(result, "Features retrieved successfully");
 }
