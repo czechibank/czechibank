@@ -81,4 +81,38 @@ describe("Bank Account API", () => {
       expect(data.error.details[0].message).toBe("Page and limit must be positive numbers");
     });
   });
+
+  describe("Method Not Allowed (405)", () => {
+    it("should return 405 for POST /api/v1/bank-account", async () => {
+      const response = await fetch(`${config.BASE_URL}/api/v1/bank-account`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "X-API-Key": apiKey.standardUser,
+        },
+        body: JSON.stringify({}),
+      });
+      expect(response.status).toBe(405);
+    });
+
+    it("should return 405 for DELETE /api/v1/bank-account", async () => {
+      const response = await fetch(`${config.BASE_URL}/api/v1/bank-account`, {
+        method: "DELETE",
+        headers: { "X-API-Key": apiKey.standardUser },
+      });
+      expect(response.status).toBe(405);
+    });
+
+    it("should return 405 for PUT /api/v1/bank-account", async () => {
+      const response = await fetch(`${config.BASE_URL}/api/v1/bank-account`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          "X-API-Key": apiKey.standardUser,
+        },
+        body: JSON.stringify({}),
+      });
+      expect(response.status).toBe(405);
+    });
+  });
 });

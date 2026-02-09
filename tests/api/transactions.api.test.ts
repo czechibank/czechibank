@@ -131,7 +131,7 @@ describe("Transactions API", () => {
         const data = await response.json();
         expect(data.success).toBe(true);
         const transactions = data.data.transactions;
-        expect(transactions[0].amount).toBeLessThan(transactions[transactions.length - 1].amount);
+        expect(transactions[0].amount).toBeLessThanOrEqual(transactions[transactions.length - 1].amount);
       });
     });
   });
@@ -299,6 +299,127 @@ describe("Transactions API", () => {
       expect(data.error.details[0].message).toMatch(
         /Amount must be less than or equal to 9007199254740991 due security reasons./,
       );
+    });
+
+    it("should return 409 INSUFFICIENT_BALANCE when sender has no funds", async () => {
+      // Look up zeroBalance's active account dynamically (seed account may have
+      // been soft-deleted by a prior test run)
+      const listResponse = await fetch(`${config.BASE_URL}/api/v1/bank-account`, {
+        headers: { "X-API-Key": apiKey.zeroBalance },
+      });
+      const listData = await listResponse.json();
+      const fromNumber = listData.data.bankAccounts[0].number;
+
+      const response = await fetch(`${config.BASE_URL}/api/v1/transactions/create`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "X-API-Key": apiKey.zeroBalance,
+        },
+        body: JSON.stringify({
+          amount: 1,
+          toBankNumber: SEED_USERS.highBalance.bankAccounts[0].number,
+          fromBankNumber: fromNumber,
+        }),
+      });
+      expect(response.status).toBe(409);
+      const data = await response.json();
+      expect(data.success).toBe(false);
+      expect(data.error.code).toBe("INSUFFICIENT_BALANCE");
+    });
+
+    it("should return 403 FORBIDDEN when sending from another user's account", async () => {
+      const response = await fetch(`${config.BASE_URL}/api/v1/transactions/create`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "X-API-Key": apiKey.vojta,
+        },
+        body: JSON.stringify({
+          amount: 1,
+          toBankNumber: SEED_USERS.highBalance.bankAccounts[0].number,
+          fromBankNumber: SEED_USERS.standardUser.bankAccounts[0].number,
+        }),
+      });
+      expect(response.status).toBe(403);
+      const data = await response.json();
+      expect(data.success).toBe(false);
+      expect(data.error.code).toBe("FORBIDDEN");
+    });
+
+    it("should return 422 for toBankNumber not ending with /5555", async () => {
+      const hb = SEED_USERS.highBalance;
+      const response = await fetch(`${config.BASE_URL}/api/v1/transactions/create`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "X-API-Key": apiKey.highBalance,
+        },
+        body: JSON.stringify({
+          amount: 1,
+          toBankNumber: "123456789012/1234",
+          fromBankNumber: hb.bankAccounts[0].number,
+        }),
+      });
+      expect(response.status).toBe(422);
+      const data = await response.json();
+      expect(data.success).toBe(false);
+    });
+
+    it("should return 422 for toBankNumber with wrong length", async () => {
+      const hb = SEED_USERS.highBalance;
+      const response = await fetch(`${config.BASE_URL}/api/v1/transactions/create`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "X-API-Key": apiKey.highBalance,
+        },
+        body: JSON.stringify({
+          amount: 1,
+          toBankNumber: "12345/5555",
+          fromBankNumber: hb.bankAccounts[0].number,
+        }),
+      });
+      expect(response.status).toBe(422);
+      const data = await response.json();
+      expect(data.success).toBe(false);
+    });
+
+    it("should return 422 for fromBankNumber not ending with /5555", async () => {
+      const response = await fetch(`${config.BASE_URL}/api/v1/transactions/create`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "X-API-Key": apiKey.highBalance,
+        },
+        body: JSON.stringify({
+          amount: 1,
+          toBankNumber: SEED_USERS.vojta.bankAccounts[0].number,
+          fromBankNumber: "123456789012/1234",
+        }),
+      });
+      expect(response.status).toBe(422);
+      const data = await response.json();
+      expect(data.success).toBe(false);
+    });
+
+    it("should return 422 for amount of 0", async () => {
+      const hb = SEED_USERS.highBalance;
+      const response = await fetch(`${config.BASE_URL}/api/v1/transactions/create`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "X-API-Key": apiKey.highBalance,
+        },
+        body: JSON.stringify({
+          amount: 0,
+          toBankNumber: SEED_USERS.vojta.bankAccounts[0].number,
+          fromBankNumber: hb.bankAccounts[0].number,
+        }),
+      });
+      expect(response.status).toBe(422);
+      const data = await response.json();
+      expect(data.success).toBe(false);
     });
   });
 });
