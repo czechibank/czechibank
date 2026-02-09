@@ -114,5 +114,17 @@ describe("Bank Account API", () => {
       });
       expect(response.status).toBe(405);
     });
+
+    it("should return 405 for PATCH /api/v1/bank-account", async () => {
+      const response = await fetch(`${config.BASE_URL}/api/v1/bank-account`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          "X-API-Key": apiKey.standardUser,
+        },
+        body: JSON.stringify({}),
+      });
+      expect(response.status).toBe(405);
+    });
   });
 });

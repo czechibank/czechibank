@@ -279,6 +279,46 @@ All responses follow a consistent format:
           },
           required: ["id", "key", "userId", "createdAt", "updatedAt"],
         },
+        Feature: {
+          type: "object",
+          properties: {
+            id: { type: "string", example: "feat_123", description: "Unique feature identifier" },
+            key: {
+              type: "string",
+              example: "SEND_MONEY_WITHOUT_ACCOUNT_BALANCE",
+              description: "Feature flag key",
+            },
+            name: { type: "string", example: "Allow sending with insufficient balance", description: "Feature name" },
+            description: { type: "string", description: "Feature description" },
+            toggle: { type: "boolean", example: false, description: "Current toggle state" },
+            defaultToggle: { type: "boolean", example: false, description: "Default toggle state" },
+            category: {
+              type: "array",
+              items: { type: "string" },
+              example: ["BUG", "BANK_ACCOUNT"],
+              description: "Feature categories",
+            },
+            lastChangedBy: { type: "string", nullable: true, description: "Who last changed this feature" },
+            lastChangedAt: {
+              type: "string",
+              format: "date-time",
+              nullable: true,
+              description: "When this feature was last changed",
+            },
+          },
+          required: ["id", "key", "name", "toggle", "category"],
+        },
+        AllFeatures: {
+          type: "object",
+          properties: {
+            features: {
+              type: "array",
+              items: { $ref: "#/components/schemas/Feature" },
+              description: "Array of features to update",
+            },
+          },
+          required: ["features"],
+        },
         SuccessResponse: {
           type: "object",
           properties: {
@@ -302,6 +342,9 @@ All responses follow a consistent format:
               },
             },
           },
+        },
+        ErrorResponse: {
+          $ref: "#/components/schemas/Error",
         },
         Error: {
           type: "object",

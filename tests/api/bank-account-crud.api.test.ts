@@ -173,6 +173,29 @@ describe("Bank Account CRUD API", () => {
       expect(data.success).toBe(true);
     });
 
+    it("should return 404 when renaming another user's account", async () => {
+      // Get standardUser's account ID
+      const listResponse = await fetch(`${config.BASE_URL}/api/v1/bank-account`, {
+        headers: { "X-API-Key": apiKey.standardUser },
+      });
+      const listData = await listResponse.json();
+      const otherAccountId = listData.data.bankAccounts[0].id;
+
+      // Try to rename it with vojta's key
+      const response = await fetch(`${config.BASE_URL}/api/v1/bank-account/${otherAccountId}`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          "X-API-Key": apiKey.vojta,
+        },
+        body: JSON.stringify({ name: "Hijacked Name" }),
+      });
+      expect(response.status).toBe(404);
+      const data = await response.json();
+      expect(data.success).toBe(false);
+      expect(data.error.message).toBe("Bank account not found");
+    });
+
     it("should return 422 for empty name", async () => {
       const listResponse = await fetch(`${config.BASE_URL}/api/v1/bank-account`, {
         headers: { "X-API-Key": apiKey.vojta },
