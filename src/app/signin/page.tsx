@@ -1,5 +1,6 @@
 "use client";
 
+import { AnimationLine } from "@/components/text-decorations";
 import { Button } from "@/components/ui/button";
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
@@ -12,8 +13,10 @@ import {
   useRedirectToHomeWhenSignedIn,
   useSessionWithRefresh,
 } from "@/lib/useSessionWithRefresh";
+import { nbColors } from "@/lib/neo-brutalism";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { ErrorContext } from "better-auth/react";
+import { LogIn } from "lucide-react";
 import Link from "next/link";
 import { useForm } from "react-hook-form";
 
@@ -57,59 +60,95 @@ export default function SignInPage() {
   });
 
   return (
-    <div>
-      <h1 className="my-8 scroll-m-20 text-4xl font-extrabold tracking-tight lg:text-5xl">Sign in</h1>
+    <div className="mx-auto max-w-md py-12">
+      {/* Header */}
+      <div className="mb-8">
+        <div className="mb-4 inline-flex items-center gap-2 rounded-full border-3 border-black bg-[#ff4c91] px-4 py-2 font-bold shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]">
+          <LogIn className="h-4 w-4" />
+          Welcome Back
+        </div>
+        <h1 className="text-4xl font-black tracking-tight">
+          <span className="relative inline-block">
+            <span className="relative z-10">Sign in</span>
+            <AnimationLine color={nbColors.pink} height={3} />
+          </span>
+        </h1>
+      </div>
 
-      <Form {...form}>
-        <form action={action} className="my-4 space-y-4">
-          <FormField
-            control={form.control}
-            name="email"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>
-                  Email <span className="text-red-500">*</span>
-                </FormLabel>
-                <FormControl>
-                  <Input placeholder="" {...field} aria-required="true" aria-invalid={!!form.formState.errors.email} />
-                </FormControl>
-                <FormDescription>Email for sign in</FormDescription>
-                <FormMessage id="email-message" />
-              </FormItem>
-            )}
-          />
-          <FormField
-            control={form.control}
-            name="password"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>
-                  Password <span className="text-red-500">*</span>
-                </FormLabel>
-                <FormControl>
-                  <Input
-                    placeholder=""
-                    {...field}
-                    aria-required="true"
-                    aria-invalid={!!form.formState.errors.password}
-                    type="password"
-                  />
-                </FormControl>
-                <FormDescription>Your password must be at least {MIN_PASSWORD_LENGTH} characters long.</FormDescription>
-                <FormMessage id="password-message" />
-              </FormItem>
-            )}
-          />
-          <div className="flex gap-2">
-            <Button type="submit">Sign in</Button>
-            <Link href={"/register"}>
-              <Button type="button" variant={"link"}>
-                Register
-              </Button>
-            </Link>
-          </div>
-        </form>
-      </Form>
+      {/* Form card */}
+      <div className="rounded-2xl border-3 border-black bg-white shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] dark:bg-zinc-900">
+        <div className="h-3 rounded-t-xl border-b-3 border-black bg-[#ff4c91]" />
+        <div className="p-6">
+          <Form {...form}>
+            <form action={action} className="space-y-5">
+              <FormField
+                control={form.control}
+                name="email"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="font-bold">
+                      Email <span className="text-red-500">*</span>
+                    </FormLabel>
+                    <FormControl>
+                      <Input
+                        placeholder=""
+                        {...field}
+                        aria-required="true"
+                        aria-invalid={!!form.formState.errors.email}
+                        className="rounded-lg border-2 border-black"
+                      />
+                    </FormControl>
+                    <FormDescription>Email for sign in</FormDescription>
+                    <FormMessage id="email-message" />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="password"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="font-bold">
+                      Password <span className="text-red-500">*</span>
+                    </FormLabel>
+                    <FormControl>
+                      <Input
+                        placeholder=""
+                        {...field}
+                        aria-required="true"
+                        aria-invalid={!!form.formState.errors.password}
+                        type="password"
+                        className="rounded-lg border-2 border-black"
+                      />
+                    </FormControl>
+                    <FormDescription>
+                      Your password must be at least {MIN_PASSWORD_LENGTH} characters long.
+                    </FormDescription>
+                    <FormMessage id="password-message" />
+                  </FormItem>
+                )}
+              />
+              <div className="flex items-center gap-3 pt-2">
+                <Button
+                  type="submit"
+                  className="border-3 border-black bg-[#ff4c91] font-bold text-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] transition-all hover:bg-[#e6447f] hover:shadow-[5px_5px_0px_0px_rgba(0,0,0,1)]"
+                >
+                  Sign in
+                </Button>
+                <Link href="/register">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="border-3 border-black font-bold shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] transition-all hover:shadow-[5px_5px_0px_0px_rgba(0,0,0,1)]"
+                  >
+                    Register
+                  </Button>
+                </Link>
+              </div>
+            </form>
+          </Form>
+        </div>
+      </div>
     </div>
   );
 }

@@ -13,15 +13,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 
-// Neobrutalist colors
-const colors = {
-  pink: "#ff4c91",
-  yellow: "#FFE566",
-  blue: "#6EC1E4",
-  orange: "#FF6B35",
-  green: "#7ED957",
-  purple: "#B794F6",
-};
+import { nbColors as colors } from "@/lib/neo-brutalism";
 
 export default async function BankAccountPage(props: { params: Promise<{ id: string }> }) {
   const params = await props.params;
@@ -77,8 +69,8 @@ export default async function BankAccountPage(props: { params: Promise<{ id: str
           style={{ backgroundColor: colors.pink }}
         >
           {/* Decorative elements */}
-          <div className="absolute -right-8 -top-8 h-32 w-32 rounded-full border-4 border-black bg-white/20" />
-          <div className="absolute -bottom-4 -left-4 h-20 w-20 rounded-full border-4 border-black bg-white/20" />
+          <div className="absolute -right-8 -top-8 h-32 w-32 rounded-full border-4 border-black/20 bg-white/20" />
+          <div className="absolute -bottom-4 -left-4 h-20 w-20 rounded-full border-4 border-black/30 bg-white/20" />
 
           <div className="relative">
             <div className="mb-2 flex items-center gap-2">
@@ -87,7 +79,9 @@ export default async function BankAccountPage(props: { params: Promise<{ id: str
             </div>
             <div className="flex items-center gap-4">
               <Image src="/czechitoken-black.svg" alt="Czechitoken" width={48} height={48} />
-              <span className="text-6xl font-black">{getBankBalance(bankAccount.data.balance, allFeatures.data)}</span>
+              <span className="text-2xl font-black md:text-6xl">
+                {getBankBalance(bankAccount.data.balance, allFeatures.data)}
+              </span>
             </div>
             <p className="mt-2 text-sm font-bold">{bankAccount.data.currency}</p>
           </div>

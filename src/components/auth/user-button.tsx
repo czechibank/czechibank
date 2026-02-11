@@ -32,28 +32,36 @@ export default function UserButton() {
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <div
-          className="rounded-full border-2 border-solid border-slate-500 hover:border-slate-200"
+          className="rounded-full border-3 border-black transition-shadow hover:shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]"
           data-testid="avatarCtxMenu"
         >
           <UserAvatar image={displaySession.user.image ?? null} size={8} />
         </div>
       </DropdownMenuTrigger>
-      <DropdownMenuContent className="w-56" align="end" forceMount>
+      <DropdownMenuContent
+        className="w-56 rounded-xl border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]"
+        align="end"
+        forceMount
+      >
         <DropdownMenuLabel className="font-normal">
           <div className="flex flex-col space-y-1">
-            <p className="leading-none">{displaySession.user.name}</p>
+            <p className="font-bold leading-none">{displaySession.user.name}</p>
             <p className="text-xs leading-none text-muted-foreground">{displaySession.user.email}</p>
           </div>
         </DropdownMenuLabel>
         <DropdownMenuItem asChild>
           <Link href="/profile" className="w-full">
-            <Button className="w-full">Profile</Button>
+            <Button className="w-full border-2 border-black font-bold shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]">
+              Profile
+            </Button>
           </Link>
         </DropdownMenuItem>
         {displaySession.user.role === "admin" ? (
           <DropdownMenuItem asChild>
             <Link href="/administration" className="w-full">
-              <Button className="w-full">Administration</Button>
+              <Button className="w-full border-2 border-black font-bold shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]">
+                Administration
+              </Button>
             </Link>
           </DropdownMenuItem>
         ) : null}

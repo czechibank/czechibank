@@ -64,7 +64,7 @@ export function DeleteBankAccountButton({ bankAccount, session, onDeleted }: Del
         handleDelete();
       }}
       disabled={isLoading}
-      className="ml-2"
+      className="ml-2 border-2 border-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]"
     >
       {isLoading ? <Spinner /> : <TrashIcon className="h-4 w-4" />}
     </Button>

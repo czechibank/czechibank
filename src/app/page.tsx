@@ -1,13 +1,9 @@
 "use client";
 
-import {
-  heroColors as colors,
-  HeartDoodle,
-  HeroIllustration,
-  SparkDoodle,
-  StarDoodle,
-} from "@/components/hero-illustration";
+import { HeartDoodle, HeroIllustration, SparkDoodle, StarDoodle } from "@/components/hero-illustration";
+import { AnimationLine } from "@/components/text-decorations";
 import { Button } from "@/components/ui/button";
+import { nbColors as colors } from "@/lib/neo-brutalism";
 import { motion } from "framer-motion";
 import {
   ArrowRight,
@@ -23,8 +19,10 @@ import {
   Sparkles,
   Terminal,
   TestTube,
+  Users,
   Zap,
 } from "lucide-react";
+import Image from "next/image";
 import Link from "next/link";
 
 const fadeInUp = {
@@ -72,8 +70,8 @@ function FeatureCard({
 }) {
   return (
     <motion.div
-      variants={fadeInUp}
-      whileHover={{ y: -6, rotate: 0, scale: 1.02 }}
+      // variants={fadeInUp}
+      whileHover={{ y: -6, rotate: 0, scale: 1.0 }}
       style={{ rotate }}
       className="group relative overflow-hidden rounded-2xl border-3 border-black bg-white p-5 shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] transition-all hover:shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] dark:bg-zinc-900"
     >
@@ -104,14 +102,14 @@ function StepCard({
   color: string;
 }) {
   return (
-    <motion.div variants={fadeInUp} className="relative">
+    <motion.div variants={fadeInUp} className="relative h-full">
       <div
         className="absolute -left-3 -top-3 flex h-10 w-10 items-center justify-center rounded-full border-3 border-black text-lg font-black"
         style={{ backgroundColor: color }}
       >
         {number}
       </div>
-      <div className="rounded-2xl border-3 border-black bg-white p-5 pl-8 pt-8 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] dark:bg-zinc-900">
+      <div className="h-full rounded-2xl border-3 border-black bg-white p-5 pl-8 pt-8 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] dark:bg-zinc-900">
         <h3 className="mb-2 font-bold">{title}</h3>
         <p className="text-sm text-muted-foreground">{description}</p>
       </div>
@@ -176,9 +174,9 @@ export default function LandingPage() {
           <Link href="/" className="flex items-center gap-2">
             <div
               className="flex h-10 w-10 items-center justify-center rounded-xl border-3 border-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]"
-              style={{ backgroundColor: colors.pink }}
+              style={{ backgroundColor: colors.white }}
             >
-              <span className="text-xl font-black">C</span>
+              <Image src="/logo.svg" alt="CzechiBank" width={40} height={40} />
             </div>
             <span className="text-xl font-black">CzechiBank</span>
           </Link>
@@ -229,7 +227,8 @@ export default function LandingPage() {
             >
               <motion.div
                 variants={fadeInUp}
-                className="mb-4 inline-flex items-center gap-2 rounded-full border-3 border-black px-4 py-2 font-bold shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]"
+                animate={{ rotate: -6 }}
+                className=" mb-4 inline-flex items-center gap-2 rounded-full border-3 border-black px-4 py-2 font-bold"
                 style={{ backgroundColor: colors.yellow }}
               >
                 <Gamepad2 className="h-4 w-4" />
@@ -244,13 +243,7 @@ export default function LandingPage() {
                 <br />
                 <span className="relative inline-block">
                   <span className="relative z-10">the fun way!</span>
-                  <motion.span
-                    initial={{ scaleX: 0 }}
-                    animate={{ scaleX: 1 }}
-                    transition={{ delay: 0.5, duration: 0.4 }}
-                    className="absolute -bottom-1 left-0 h-4 w-full origin-left md:h-5"
-                    style={{ backgroundColor: colors.pink }}
-                  />
+                  <AnimationLine color={colors.pink} height={5} />
                 </span>
               </motion.h1>
 
@@ -336,7 +329,7 @@ export default function LandingPage() {
           >
             <motion.div variants={fadeInUp}>
               <div
-                className="mb-4 inline-flex items-center gap-2 rounded-full border-3 border-black px-3 py-1.5 text-sm font-bold"
+                className="mb-4 inline-flex -rotate-3 items-center gap-2 rounded-full border-3 border-black px-3 py-1.5 text-sm font-bold"
                 style={{ backgroundColor: colors.purple }}
               >
                 <GraduationCap className="h-4 w-4" />
@@ -346,7 +339,7 @@ export default function LandingPage() {
                 A real bank?{" "}
                 <span className="relative inline-block">
                   <span className="relative z-10">Nope!</span>
-                  <span className="absolute -bottom-1 left-0 h-3 w-full" style={{ backgroundColor: colors.orange }} />
+                  <AnimationLine color={colors.orange} height={3} />
                 </span>
               </h2>
               <p className="mb-6 text-muted-foreground">
@@ -412,7 +405,7 @@ export default function LandingPage() {
               Everything you need to{" "}
               <span className="relative inline-block">
                 <span className="relative z-10">learn</span>
-                <span className="absolute -bottom-1 left-0 h-3 w-full" style={{ backgroundColor: colors.green }} />
+                <AnimationLine color={colors.green} height={3} />
               </span>
             </motion.h2>
             <motion.p variants={fadeInUp} className="mx-auto max-w-2xl text-muted-foreground">
@@ -425,6 +418,7 @@ export default function LandingPage() {
             whileInView="animate"
             viewport={{ once: true, margin: "-100px" }}
             variants={staggerContainer}
+            transition={{ delay: 1.2 }}
             className="grid gap-6 md:grid-cols-2 lg:grid-cols-3"
           >
             <FeatureCard
@@ -495,7 +489,7 @@ export default function LandingPage() {
               3 steps to{" "}
               <span className="relative inline-block">
                 <span className="relative z-10">start</span>
-                <span className="absolute -bottom-1 left-0 h-3 w-full" style={{ backgroundColor: colors.yellow }} />
+                <AnimationLine color={colors.yellow} height={3} />
               </span>
             </motion.h2>
           </motion.div>
@@ -525,6 +519,70 @@ export default function LandingPage() {
               description="Make your first API call. The docs will guide you!"
               color={colors.green}
             />
+          </motion.div>
+        </div>
+      </section>
+
+      {/* Team Section */}
+      <section className="relative py-16 md:py-24">
+        <div className="mx-auto max-w-6xl px-4 md:px-6">
+          <motion.div
+            initial="initial"
+            whileInView="animate"
+            viewport={{ once: true, margin: "-100px" }}
+            variants={staggerContainer}
+            className="mb-12 text-center md:mb-16"
+          >
+            <motion.div
+              variants={fadeInUp}
+              className="mb-4 inline-flex items-center gap-2 rounded-full border-3 border-black px-4 py-2 font-bold"
+              style={{ backgroundColor: colors.purple }}
+            >
+              <Users className="h-4 w-4" />
+              Team
+            </motion.div>
+            <motion.h2 variants={fadeInUp} className="mb-4 text-3xl font-black md:text-4xl">
+              Built by{" "}
+              <span className="relative inline-block">
+                <span className="relative z-10">real people</span>
+                <AnimationLine color={colors.blue} height={3} />
+              </span>
+            </motion.h2>
+            <motion.p variants={fadeInUp} className="mx-auto max-w-2xl text-muted-foreground">
+              CzechiBank is crafted by the team of developers, QA engineers and students working together.
+            </motion.p>
+          </motion.div>
+
+          <motion.div
+            initial="initial"
+            whileInView="animate"
+            viewport={{ once: true, margin: "-100px" }}
+            variants={staggerContainer}
+            className="flex flex-wrap justify-center gap-4"
+          >
+            {[
+              { name: "[PO/DEV] Vojtěch Červený", color: colors.pink },
+              { name: "[DEV] Michaela Poštulka", color: colors.green },
+              { name: "[DEV] Silvia Strazovcova", color: colors.orange },
+              { name: "[QA] Dita Pochová Dřímalová", color: colors.blue },
+              { name: "[QA] Iveta Kuklová", color: colors.purple },
+              { name: "and many others!", color: colors.yellow },
+            ].map((member) => (
+              <motion.div
+                key={member.name}
+                variants={fadeInUp}
+                whileHover={{ y: -4, rotate: 0 }}
+                className="rounded-xl border-3 border-black bg-white px-5 py-3 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] transition-shadow hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] dark:bg-zinc-900"
+              >
+                <div className="flex items-center gap-3">
+                  <div
+                    className="h-3 w-3 rounded-full border-2 border-black"
+                    style={{ backgroundColor: member.color }}
+                  />
+                  <span className="text-sm font-black">{member.name}</span>
+                </div>
+              </motion.div>
+            ))}
           </motion.div>
         </div>
       </section>
@@ -570,7 +628,7 @@ export default function LandingPage() {
               starts{" "}
               <span className="relative inline-block">
                 <span className="relative z-10">here!</span>
-                <span className="absolute -bottom-1 left-0 h-4 w-full bg-white md:h-5" />
+                <AnimationLine color={colors.white} height={5} />
               </span>
             </motion.h2>
             <motion.p variants={fadeInUp} className="mb-8 text-lg text-black/70">
@@ -589,7 +647,7 @@ export default function LandingPage() {
               <Link href="/api/v1/docs/page">
                 <Button
                   size="lg"
-                  className="w-full border-3 border-black bg-white text-black shadow-[4px_4px_0px_0px_rgba(0,0,0,0.3)] transition-all hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,0.3)] sm:w-auto"
+                  className="w-full border-3 border-black bg-white text-black shadow-[4px_4px_0px_0px_rgba(0,0,0,0.3)] transition-all hover:bg-green-500 hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,0.3)] sm:w-auto"
                 >
                   Explore API Docs
                 </Button>
@@ -606,9 +664,9 @@ export default function LandingPage() {
             <div className="flex items-center gap-3">
               <div
                 className="flex h-10 w-10 items-center justify-center rounded-xl border-3 border-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]"
-                style={{ backgroundColor: colors.pink }}
+                style={{ backgroundColor: colors.white }}
               >
-                <span className="text-xl font-black">C</span>
+                <Image src="/logo.svg" alt="CzechiBank" width={40} height={40} />
               </div>
               <div>
                 <span className="text-lg font-black">CzechiBank</span>

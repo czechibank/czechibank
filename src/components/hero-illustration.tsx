@@ -1,5 +1,6 @@
 "use client";
 
+import { nbColors } from "@/lib/neo-brutalism";
 import { motion } from "framer-motion";
 import { BadgeCheck, Code2, FileJson, Gift, LucideIcon, Terminal, TestTube, Wallet } from "lucide-react";
 
@@ -7,17 +8,9 @@ import { BadgeCheck, Code2, FileJson, Gift, LucideIcon, Terminal, TestTube, Wall
 // CONFIGURATION - Edit these to customize!
 // ============================================
 
-// Color palette
-export const heroColors = {
-  pink: "#ff4c91",
-  yellow: "#FFE566",
-  blue: "#6EC1E4",
-  orange: "#FF6B35",
-  green: "#7ED957",
-  purple: "#B794F6",
-  white: "#FFFFFF",
-  red: "#f87171",
-} as const;
+// Color palette (re-exported from shared constants)
+export { nbColors as heroColors } from "@/lib/neo-brutalism";
+const heroColors = nbColors;
 
 type ColorKey = keyof typeof heroColors;
 
@@ -123,7 +116,7 @@ export const heroElements: HeroElement[] = [
     icon: Terminal,
     label: "API Ready!",
     color: "yellow",
-    position: { left: "0", top: "0" },
+    position: { left: "10px", top: "20px" },
     rotate: 8,
     delay: 0.3,
   },
@@ -133,7 +126,7 @@ export const heroElements: HeroElement[] = [
     icon: Gift,
     label: "100% Free",
     color: "pink",
-    position: { left: "22%", top: "2" },
+    position: { left: "22%", top: "15px" },
     rotate: -4,
     delay: 0.35,
   },
@@ -143,7 +136,7 @@ export const heroElements: HeroElement[] = [
     icon: TestTube,
     label: "Test Mode",
     color: "green",
-    position: { right: "0", top: "4" },
+    position: { right: "14px", top: "15px" },
     rotate: -6,
     delay: 0.45,
   },
@@ -153,7 +146,7 @@ export const heroElements: HeroElement[] = [
     icon: FileJson,
     label: "Swagger",
     color: "purple",
-    position: { right: "2%", top: "22%" },
+    position: { right: "15%", top: "22%" },
     rotate: 5,
     delay: 0.6,
   },
@@ -219,7 +212,7 @@ export const heroElements: HeroElement[] = [
     type: "badge",
     label: "{JSON}",
     color: "yellow",
-    position: { left: "38%", bottom: "50%" },
+    position: { left: "60%", top: "40%" },
     rotate: 4,
     delay: 0.9,
   },
@@ -227,7 +220,7 @@ export const heroElements: HeroElement[] = [
     id: "http",
     type: "badge",
     label: "HTTP",
-    position: { left: "52%", top: "12%" },
+    position: { left: "52%", top: "20%" },
     rotate: -6,
     delay: 0.52,
     size: "xs",
@@ -329,7 +322,7 @@ export const heroElements: HeroElement[] = [
     label: "Fun!",
     emoji: "🚀",
     color: "pink",
-    position: { left: "42%", top: "0" },
+    position: { left: "42%", top: "20px" },
     delay: 0.4,
   },
   {
@@ -346,7 +339,7 @@ export const heroElements: HeroElement[] = [
     label: "Learn",
     emoji: "📚",
     color: "blue",
-    position: { left: "0", top: "32%" },
+    position: { left: "10px", top: "32%" },
     delay: 0.65,
   },
   {
@@ -366,6 +359,7 @@ export const heroElements: HeroElement[] = [
     color: "white",
     position: { left: "38%", bottom: "2%" },
     delay: 1.05,
+    rotate: 10,
   },
   {
     id: "safe",
@@ -381,9 +375,10 @@ export const heroElements: HeroElement[] = [
     type: "pill",
     label: "Token",
     emoji: "🔑",
-    color: "yellow",
-    position: { left: "55%", bottom: "42%" },
+    color: "blue",
+    position: { left: "22%", bottom: "29%" },
     delay: 0.92,
+    rotate: 10,
   },
   {
     id: "sandbox",
@@ -406,9 +401,10 @@ export const heroElements: HeroElement[] = [
     type: "pill",
     label: "Fast!",
     emoji: "⚡",
-    color: "white",
-    position: { left: "38%", bottom: "28%" },
+    color: "orange",
+    position: { left: "10%", bottom: "28%" },
     delay: 0.88,
+    rotate: 10,
   },
   {
     id: "api",
@@ -448,9 +444,9 @@ export const heroElements: HeroElement[] = [
     id: "emoji-bolt",
     type: "emoji",
     emoji: "⚡",
-    position: { left: "30%", bottom: "30%" },
+    position: { left: "35%", bottom: "30%" },
     delay: 1.16,
-    size: "xs",
+    size: "lg",
   },
   {
     id: "emoji-fire",
@@ -736,11 +732,31 @@ function getPositionStyle(position: Position): React.CSSProperties {
 
 function RenderCard({ element }: { element: CardElement }) {
   const Icon = element.icon;
+  const floatDuration = 3 + (element.delay || 0) * 2;
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 15, rotate: element.rotate || 0 }}
-      animate={{ opacity: 1, y: 0, rotate: element.rotate || 0 }}
-      transition={{ duration: 0.4, delay: element.delay || 0 }}
+      animate={{
+        opacity: 1,
+        y: [0, -8, 0],
+        rotate: [(element.rotate || 0) - 1, (element.rotate || 0) + 1, (element.rotate || 0) - 1],
+      }}
+      transition={{
+        opacity: { duration: 0.4, delay: element.delay || 0 },
+        y: {
+          duration: floatDuration,
+          delay: element.delay || 0,
+          repeat: Infinity,
+          ease: "easeInOut",
+        },
+        rotate: {
+          duration: floatDuration,
+          delay: element.delay || 0,
+          repeat: Infinity,
+          ease: "easeInOut",
+        },
+      }}
       className="absolute"
       style={{ ...getPositionStyle(element.position), zIndex: element.zIndex }}
     >
@@ -758,12 +774,31 @@ function RenderCard({ element }: { element: CardElement }) {
 function RenderBadge({ element }: { element: BadgeElement }) {
   const size = element.size || "sm";
   const bgColor = element.color ? heroColors[element.color] : "#FFFFFF";
+  const floatDuration = 3.5 + (element.delay || 0) * 1.8;
 
   return (
     <motion.div
       initial={{ opacity: 0, rotate: element.rotate || 0 }}
-      animate={{ opacity: 1, rotate: element.rotate || 0 }}
-      transition={{ duration: 0.3, delay: element.delay || 0 }}
+      animate={{
+        opacity: 1,
+        y: [0, -6, 0],
+        rotate: [(element.rotate || 0) - 0.5, (element.rotate || 0) + 0.5, (element.rotate || 0) - 0.5],
+      }}
+      transition={{
+        opacity: { duration: 0.3, delay: element.delay || 0 },
+        y: {
+          duration: floatDuration,
+          delay: element.delay || 0,
+          repeat: Infinity,
+          ease: "easeInOut",
+        },
+        rotate: {
+          duration: floatDuration,
+          delay: element.delay || 0,
+          repeat: Infinity,
+          ease: "easeInOut",
+        },
+      }}
       className="absolute"
       style={{ ...getPositionStyle(element.position), zIndex: element.zIndex }}
     >
@@ -780,12 +815,33 @@ function RenderBadge({ element }: { element: BadgeElement }) {
 function RenderPill({ element }: { element: PillElement }) {
   const bgColor = element.color ? heroColors[element.color] : "#FFFFFF";
   const hasCzechitasIcon = element.id === "czechitas";
+  const floatDuration = 4 + (element.delay || 0) * 1.5;
 
   return (
     <motion.div
-      initial={{ opacity: 0, scale: 0 }}
-      animate={{ opacity: 1, scale: 1 }}
-      transition={{ duration: 0.3, delay: element.delay || 0 }}
+      initial={{ opacity: 0, scale: 0, rotate: element.rotate || 0 }}
+      animate={{
+        opacity: 1,
+        scale: 1,
+        y: [0, -7, 0],
+        rotate: [(element.rotate || 0) - 1, (element.rotate || 0) + 1, (element.rotate || 0) - 1],
+      }}
+      transition={{
+        opacity: { duration: 0.3, delay: element.delay || 0 },
+        scale: { duration: 0.3, delay: element.delay || 0 },
+        y: {
+          duration: floatDuration,
+          delay: element.delay || 0,
+          repeat: Infinity,
+          ease: "easeInOut",
+        },
+        rotate: {
+          duration: floatDuration,
+          delay: element.delay || 0,
+          repeat: Infinity,
+          ease: "easeInOut",
+        },
+      }}
       className="absolute"
       style={{ ...getPositionStyle(element.position), zIndex: element.zIndex }}
     >
@@ -803,12 +859,33 @@ function RenderPill({ element }: { element: PillElement }) {
 
 function RenderEmoji({ element }: { element: EmojiElement }) {
   const size = element.size || "sm";
+  const floatDuration = 4.5 + (element.delay || 0) * 1.3;
 
   return (
     <motion.div
       initial={{ opacity: 0, scale: 0 }}
-      animate={{ opacity: 1, scale: 1 }}
-      transition={{ duration: 0.3, delay: element.delay || 0 }}
+      animate={{
+        opacity: 1,
+        scale: 1,
+        y: [0, -5, 0],
+        rotate: [-3, 3, -3],
+      }}
+      transition={{
+        opacity: { duration: 0.3, delay: element.delay || 0 },
+        scale: { duration: 0.3, delay: element.delay || 0 },
+        y: {
+          duration: floatDuration,
+          delay: element.delay || 0,
+          repeat: Infinity,
+          ease: "easeInOut",
+        },
+        rotate: {
+          duration: floatDuration,
+          delay: element.delay || 0,
+          repeat: Infinity,
+          ease: "easeInOut",
+        },
+      }}
       className="absolute"
       style={{ ...getPositionStyle(element.position), zIndex: element.zIndex }}
     >
@@ -819,12 +896,31 @@ function RenderEmoji({ element }: { element: EmojiElement }) {
 
 function RenderStarDoodle({ element }: { element: StarDoodleElement }) {
   const size = element.size || "sm";
+  const floatDuration = 5 + (element.delay || 0) * 1.2;
 
   return (
     <motion.div
       initial={{ scale: 0 }}
-      animate={{ scale: 1 }}
-      transition={{ duration: 0.3, delay: element.delay || 0 }}
+      animate={{
+        scale: 1,
+        y: [0, -4, 0],
+        rotate: [0, 360],
+      }}
+      transition={{
+        scale: { duration: 0.3, delay: element.delay || 0 },
+        y: {
+          duration: floatDuration,
+          delay: element.delay || 0,
+          repeat: Infinity,
+          ease: "easeInOut",
+        },
+        rotate: {
+          duration: floatDuration * 2,
+          delay: element.delay || 0,
+          repeat: Infinity,
+          ease: "linear",
+        },
+      }}
       className="absolute"
       style={{ ...getPositionStyle(element.position), zIndex: element.zIndex }}
     >
@@ -835,12 +931,31 @@ function RenderStarDoodle({ element }: { element: StarDoodleElement }) {
 
 function RenderHeartDoodle({ element }: { element: HeartDoodleElement }) {
   const size = element.size || "sm";
+  const floatDuration = 4.2 + (element.delay || 0) * 1.4;
 
   return (
     <motion.div
       initial={{ scale: 0 }}
-      animate={{ scale: 1 }}
-      transition={{ duration: 0.3, delay: element.delay || 0 }}
+      animate={{
+        scale: [1, 1.1, 1],
+        y: [0, -6, 0],
+        rotate: [-5, 5, -5],
+      }}
+      transition={{
+        scale: { duration: 0.3, delay: element.delay || 0 },
+        y: {
+          duration: floatDuration,
+          delay: element.delay || 0,
+          repeat: Infinity,
+          ease: "easeInOut",
+        },
+        rotate: {
+          duration: floatDuration,
+          delay: element.delay || 0,
+          repeat: Infinity,
+          ease: "easeInOut",
+        },
+      }}
       className="absolute"
       style={{ ...getPositionStyle(element.position), zIndex: element.zIndex }}
     >
@@ -851,12 +966,34 @@ function RenderHeartDoodle({ element }: { element: HeartDoodleElement }) {
 
 function RenderSparkDoodle({ element }: { element: SparkDoodleElement }) {
   const size = element.size || "sm";
+  const floatDuration = 3.8 + (element.delay || 0) * 1.6;
 
   return (
     <motion.div
       initial={{ scale: 0 }}
-      animate={{ scale: 1 }}
-      transition={{ duration: 0.3, delay: element.delay || 0 }}
+      animate={{
+        scale: [1, 1.15, 1],
+        y: [0, -5, 0],
+        rotate: [0, 180, 360],
+      }}
+      transition={{
+        scale: {
+          duration: 0.3,
+          delay: element.delay || 0,
+        },
+        y: {
+          duration: floatDuration,
+          delay: element.delay || 0,
+          repeat: Infinity,
+          ease: "easeInOut",
+        },
+        rotate: {
+          duration: floatDuration * 1.5,
+          delay: element.delay || 0,
+          repeat: Infinity,
+          ease: "linear",
+        },
+      }}
       className="absolute"
       style={{ ...getPositionStyle(element.position), zIndex: element.zIndex }}
     >
@@ -867,12 +1004,27 @@ function RenderSparkDoodle({ element }: { element: SparkDoodleElement }) {
 
 function RenderDot({ element }: { element: DotElement }) {
   const size = element.size || "sm";
+  const floatDuration = 4.5 + (element.delay || 0) * 1.1;
 
   return (
     <motion.div
       initial={{ scale: 0 }}
-      animate={{ scale: 1 }}
-      transition={{ duration: 0.2, delay: element.delay || 0 }}
+      animate={{
+        scale: [1, 1.2, 1],
+        y: [0, -4, 0],
+      }}
+      transition={{
+        scale: {
+          duration: 0.2,
+          delay: element.delay || 0,
+        },
+        y: {
+          duration: floatDuration,
+          delay: element.delay || 0,
+          repeat: Infinity,
+          ease: "easeInOut",
+        },
+      }}
       className={`absolute rounded-full border-2 border-black ${element.color} ${sizeMap[size].dot}`}
       style={{ ...getPositionStyle(element.position), zIndex: element.zIndex }}
     />
@@ -914,8 +1066,26 @@ function LaptopCodeEditor() {
   return (
     <motion.div
       initial={{ opacity: 0, y: 20, rotate: -2 }}
-      animate={{ opacity: 1, y: 0, rotate: -2 }}
-      transition={{ duration: 0.6, delay: 0.2 }}
+      animate={{
+        opacity: 1,
+        y: [0, -10, 0],
+        rotate: [-2, -1, -2],
+      }}
+      transition={{
+        opacity: { duration: 0.6, delay: 0.2 },
+        y: {
+          duration: 5,
+          delay: 0.2,
+          repeat: Infinity,
+          ease: "easeInOut",
+        },
+        rotate: {
+          duration: 5,
+          delay: 0.2,
+          repeat: Infinity,
+          ease: "easeInOut",
+        },
+      }}
       style={{ zIndex: 10 }}
       className="absolute bottom-[15%] right-[5%] md:bottom-[12%] md:right-[8%]"
     >

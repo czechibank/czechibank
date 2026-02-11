@@ -82,29 +82,42 @@ export function RenameDialog({ bankAccountId, currentName, session, onRenamed }:
           </Button>
         </DialogTrigger>
       </div>
-      <DialogContent>
+      <DialogContent className="rounded-2xl border-3 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]">
         <DialogHeader>
-          <DialogTitle>Rename Bank Account</DialogTitle>
+          <DialogTitle className="text-xl font-black">Rename Bank Account</DialogTitle>
           <DialogDescription>Enter a new name for your bank account.</DialogDescription>
         </DialogHeader>
 
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 py-4">
           <div className="space-y-2" onClick={(e) => e.preventDefault()}>
-            <Label htmlFor="name">Account Name</Label>
+            <Label htmlFor="name" className="font-bold">
+              Account Name
+            </Label>
             <Input
               id="name"
               {...form.register("name")}
               placeholder="Enter new account name"
               aria-invalid={!!form.formState.errors.name}
+              className="rounded-lg border-2 border-black"
             />
             {form.formState.errors.name && <p className="text-sm text-red-600">{form.formState.errors.name.message}</p>}
           </div>
 
           <DialogFooter className="flex justify-end gap-2">
-            <Button type="button" variant="ghost" onClick={() => setOpen(false)}>
+            <Button
+              type="button"
+              variant="ghost"
+              onClick={() => setOpen(false)}
+              className="border-2 border-black font-bold"
+            >
               Cancel
             </Button>
-            <Button type="submit" disabled={!nameValue?.trim()} onClick={(e) => e.stopPropagation()}>
+            <Button
+              type="submit"
+              disabled={!nameValue?.trim()}
+              onClick={(e) => e.stopPropagation()}
+              className="border-3 border-black bg-[#ff4c91] font-bold text-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] transition-all hover:bg-[#e6447f] hover:shadow-[5px_5px_0px_0px_rgba(0,0,0,1)]"
+            >
               Save
             </Button>
           </DialogFooter>

@@ -21,6 +21,8 @@ export const AppFooter = () => {
   }, []);
 
   return (
-    <footer className="my-8 border-t border-gray-300 pt-4 text-center text-sm text-gray-600">Version: {version}</footer>
+    <footer className="relative z-10 border-t-3 border-black bg-white py-4 text-center text-sm font-bold text-muted-foreground dark:bg-zinc-950">
+      Version: {version}
+    </footer>
   );
 };
