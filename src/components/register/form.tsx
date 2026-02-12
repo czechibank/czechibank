@@ -16,14 +16,21 @@ import { generateRandomAvatarConfig } from "@/lib/utils";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { ErrorContext } from "better-auth/react";
 import { useRouter } from "next/navigation";
+import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { toast, Toast } from "../ui/use-toast";
 
+/**
+ * Registration form (name, email, password, confirm password). Redirects to home when the user already has a session,
+ * except during sign-up so that `router.push("/register/success")` is not overridden. On success, broadcasts session
+ * change and navigates to `/register/success`.
+ */
 export function RegisterForm() {
   const router = useRouter();
+  const [isSigningUp, setIsSigningUp] = useState(false);
   const { data: session } = useSessionWithRefresh();
-  useRedirectToHomeWhenSignedIn(session);
+  useRedirectToHomeWhenSignedIn(session, { skipRedirect: isSigningUp });
 
   const ExtendedUserSchema = UserSchema.extend({
     confirmPassword: z.string(),
@@ -44,6 +51,7 @@ export function RegisterForm() {
   });
 
   const action: () => void = form.handleSubmit(async (data: ExtendedUserSchemaType): Promise<void> => {
+    setIsSigningUp(true);
     await userServiceClient.signUp(
       {
         email: data.email,
@@ -59,6 +67,7 @@ export function RegisterForm() {
           router.push("/register/success");
         },
         onError: (error: ErrorContext): void => {
+          setIsSigningUp(false);
           // Reset password fields if user already exists, because of the security reasons
           form.resetField("password");
           form.resetField("confirmPassword");

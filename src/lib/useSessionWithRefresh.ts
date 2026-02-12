@@ -3,7 +3,7 @@
 import { SESSION } from "@/constants";
 import { useSession as useBetterAuthSession } from "@/lib/auth-client";
 import { useRouter } from "next/navigation";
-import { useEffect, useRef } from "react";
+import { useCallback, useEffect, useRef } from "react";
 
 /**
  * Wraps better-auth useSession with cross-tab sync and safe redirects.
@@ -21,14 +21,12 @@ export function useSessionWithRefresh() {
   const refetchRef = useRef<(() => void) | undefined>(undefined);
   if (typeof sessionResult.refetch === "function") refetchRef.current = sessionResult.refetch;
 
-  const triggerRefresh = () => {
+  const triggerRefresh = useCallback(() => {
     refetchRef.current?.();
     router.refresh();
-  };
+  }, [router]);
 
   useEffect(() => {
-    if (typeof window === "undefined") return;
-
     channelRef.current = new BroadcastChannel(SESSION.CHANNEL_NAME);
 
     const handleMessage = (event: MessageEvent) => {
@@ -42,24 +40,22 @@ export function useSessionWithRefresh() {
     return () => {
       channelRef.current?.close();
     };
-  }, [router]);
+  }, [triggerRefresh]);
 
   // Poll periodically so we stay in sync with server (e.g. cookie changed in another tab)
   useEffect(() => {
-    if (typeof window === "undefined") return;
     pollIntervalRef.current = setInterval(triggerRefresh, SESSION.POLL_INTERVAL_MS);
     return () => {
       if (pollIntervalRef.current) clearInterval(pollIntervalRef.current);
     };
-  }, [router]);
+  }, [triggerRefresh]);
 
   // Refresh when tab gains focus (user switched back to this tab)
   useEffect(() => {
-    if (typeof window === "undefined") return;
     const onFocus = () => triggerRefresh();
     window.addEventListener("focus", onFocus);
     return () => window.removeEventListener("focus", onFocus);
-  }, [router]);
+  }, [triggerRefresh]);
 
   // When session user changes to a different user (e.g. another tab signed in as User B), redirect so we never show wrong user
   useEffect(() => {
@@ -82,16 +78,40 @@ export function useSessionWithRefresh() {
   return sessionResult;
 }
 
-/** Redirect to home when user has a session. Use on sign-in and register pages so signed-in users don't see the form. */
-export function useRedirectToHomeWhenSignedIn(session: { user?: unknown } | null | undefined) {
-  useEffect(() => {
-    if (session?.user) {
-      window.location.replace("/");
-    }
-  }, [session?.user]);
+/**
+ * Options for {@link useRedirectToHomeWhenSignedIn}.
+ */
+export interface UseRedirectToHomeWhenSignedInOptions {
+  /** When true, do not redirect (e.g. during sign-up so router.push("/register/success") is not overridden). */
+  skipRedirect?: boolean;
 }
 
-/** Call after sign-in, sign-out, or register so other tabs refetch session and refresh. */
+/**
+ * Redirects to home when the user has a session. Use on sign-in and register pages so signed-in users don't see the form.
+ * Depends on a stable user id so it does not re-run on every session refetch.
+ *
+ * @param session - Session from useSessionWithRefresh (or useSession). Redirect runs when session has a user with an id.
+ * @param options - Optional. Pass `{ skipRedirect: true }` during sign-up so the success redirect is not overridden.
+ */
+export function useRedirectToHomeWhenSignedIn(
+  session: { user?: { id?: string } } | null | undefined,
+  options?: UseRedirectToHomeWhenSignedInOptions,
+) {
+  const userId =
+    session?.user != null && typeof session.user === "object" && "id" in session.user
+      ? (session.user as { id: string }).id
+      : null;
+
+  useEffect(() => {
+    if (options?.skipRedirect || userId == null) return;
+    window.location.replace("/");
+  }, [userId, options?.skipRedirect]);
+}
+
+/**
+ * Notifies other tabs that the session changed. Call after sign-in, sign-out, or register so other tabs refetch
+ * session and refresh (via BroadcastChannel). No-operation when run on the server.
+ */
 export function broadcastSessionChanged() {
   if (typeof window === "undefined") return;
   try {
