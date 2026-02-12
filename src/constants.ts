@@ -8,4 +8,8 @@ export const RATE_LIMIT = {
 export const SESSION = {
   EXPIRES_IN: 60 * 30, // 30 minutes
   UPDATE_AGE: 60 * 5, // 5 minutes (every 5 minutes the session expiration is updated)
+  /** BroadcastChannel name for cross-tab session sync (so all tabs show the same user after sign-in/sign-out) */
+  CHANNEL_NAME: "czechibank-session-sync",
+  /** Poll interval in ms for useSessionWithRefresh (keep client session in sync with server across tabs) */
+  POLL_INTERVAL_MS: 10_000,
 };

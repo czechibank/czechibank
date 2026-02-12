@@ -7,6 +7,11 @@ import { Toast, useToast } from "@/components/ui/use-toast";
 import { MIN_PASSWORD_LENGTH } from "@/constants";
 import { LoginSchema, LoginSchemaType, UserBaseSchemaType } from "@/domain/user-domain/user-schema";
 import userServiceClient from "@/domain/user-domain/user-service-client";
+import {
+  broadcastSessionChanged,
+  useRedirectToHomeWhenSignedIn,
+  useSessionWithRefresh,
+} from "@/lib/useSessionWithRefresh";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { ErrorContext } from "better-auth/react";
 import Link from "next/link";
@@ -15,6 +20,8 @@ import { useForm } from "react-hook-form";
 
 export default function SignInPage() {
   const { toast } = useToast();
+  const { data: session } = useSessionWithRefresh();
+  useRedirectToHomeWhenSignedIn(session);
 
   const form = useForm<LoginSchemaType>({
     resolver: zodResolver(LoginSchema),
@@ -33,6 +40,7 @@ export default function SignInPage() {
           title: "Success",
           description: "You are signed in",
         } satisfies Toast);
+        broadcastSessionChanged();
         router.push("/");
       },
       onError: (error: ErrorContext) => {

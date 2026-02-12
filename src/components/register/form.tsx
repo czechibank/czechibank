@@ -7,6 +7,11 @@ import { ToastAction } from "@/components/ui/toast";
 import { MIN_PASSWORD_LENGTH } from "@/constants";
 import { CreateUserSchemaType, UserSchema } from "@/domain/user-domain/user-schema";
 import userServiceClient from "@/domain/user-domain/user-service-client";
+import {
+  broadcastSessionChanged,
+  useRedirectToHomeWhenSignedIn,
+  useSessionWithRefresh,
+} from "@/lib/useSessionWithRefresh";
 import { generateRandomAvatarConfig } from "@/lib/utils";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { ErrorContext } from "better-auth/react";
@@ -17,6 +22,9 @@ import { toast, Toast } from "../ui/use-toast";
 
 export function RegisterForm() {
   const router = useRouter();
+  const { data: session } = useSessionWithRefresh();
+  useRedirectToHomeWhenSignedIn(session);
+
   const ExtendedUserSchema = UserSchema.extend({
     confirmPassword: z.string(),
   }).refine((data) => data.password === data.confirmPassword, {
@@ -34,7 +42,6 @@ export function RegisterForm() {
       confirmPassword: "",
     },
   });
-  console.log(form.formState.errors);
 
   const action: () => void = form.handleSubmit(async (data: ExtendedUserSchemaType): Promise<void> => {
     await userServiceClient.signUp(
@@ -47,9 +54,8 @@ export function RegisterForm() {
       {
         onSuccess: () => {
           form.reset();
-          // Refresh router to ensure useSession hook updates after signup
+          broadcastSessionChanged();
           router.refresh();
-          // Navigate to success page
           router.push("/register/success");
         },
         onError: (error: ErrorContext): void => {
