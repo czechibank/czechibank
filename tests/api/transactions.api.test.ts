@@ -266,5 +266,62 @@ describe("Transactions API", () => {
         /Amount must be less than or equal to 9007199254740991 due security reasons./,
       );
     });
+
+    it("should return 400 for scientific notation 1e3", async () => {
+      const response = await fetch("http://localhost:3000/api/v1/transactions/create", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "X-API-Key": "55",
+        },
+        body: JSON.stringify({
+          amount: 1e3,
+          toBankNumber: "000000000002/5555",
+          fromBankNumber: "000000000055/5555",
+        }),
+      });
+      expect(response.status).toBe(400);
+      const data = await response.json();
+      expect(data.success).toBe(false);
+      expect(data.error.message).toBe("Amount must be a standard decimal number, scientific notation is not allowed");
+    });
+
+    it("should return 400 for scientific notation 1.5E-2", async () => {
+      const response = await fetch("http://localhost:3000/api/v1/transactions/create", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "X-API-Key": "55",
+        },
+        body: JSON.stringify({
+          amount: 1.5e-2,
+          toBankNumber: "000000000002/5555",
+          fromBankNumber: "000000000055/5555",
+        }),
+      });
+      expect(response.status).toBe(400);
+      const data = await response.json();
+      expect(data.success).toBe(false);
+      expect(data.error.message).toBe("Amount must be a standard decimal number, scientific notation is not allowed");
+    });
+
+    it("should return 400 for scientific notation 5e2", async () => {
+      const response = await fetch("http://localhost:3000/api/v1/transactions/create", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "X-API-Key": "55",
+        },
+        body: JSON.stringify({
+          amount: 5e2,
+          toBankNumber: "000000000002/5555",
+          fromBankNumber: "000000000055/5555",
+        }),
+      });
+      expect(response.status).toBe(400);
+      const data = await response.json();
+      expect(data.success).toBe(false);
+      expect(data.error.message).toBe("Amount must be a standard decimal number, scientific notation is not allowed");
+    });
   });
 });

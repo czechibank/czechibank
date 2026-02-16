@@ -67,7 +67,18 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(errorResponse(user.error.message, user.error.code), { status: 401 });
     }
 
-    const body = await request.json();
+    // Read raw body text to check for scientific notation
+    const bodyText = await request.text();
+
+    // Check if the body contains scientific notation (e.g., 1e3, 1E3, 1.5e-2)
+    if (/"\s*amount\s*"\s*:\s*[-+]?\d+\.?\d*[eE][-+]?\d+/.test(bodyText)) {
+      return NextResponse.json(
+        errorResponse("Amount must be a standard decimal number, scientific notation is not allowed", "400"),
+        { status: 400 },
+      );
+    }
+
+    const body = JSON.parse(bodyText);
 
     const validatedBody = await validateEventHandler(ApiTransactionCreateSchema, body);
 
