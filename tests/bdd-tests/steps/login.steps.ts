@@ -1,10 +1,11 @@
 import { expect } from "@playwright/test";
 import { createBdd } from "playwright-bdd";
+import { pageMap } from "../constants/pageMap";
 
 const { Given, When, Then } = createBdd();
 
 Given("I am on the login page", async ({ page }) => {
-  await page.goto("https://develop.czechibank.ostrava.digital/signin");
+  await page.goto("/signin");
 });
 
 When("I fill username {string}", async ({ page }, username: string) => {
@@ -19,11 +20,9 @@ When("I click sign in button", async ({ page }) => {
   await page.locator("form").getByRole("button", { name: "Sign in" }).click();
 });
 
-Then("URL has changed", async ({ page }) => {
-  // Wait for navigation after login
-  await page.waitForURL("https://develop.czechibank.ostrava.digital");
-  // Verify URL is different from signin page
-  await expect(page).not.toHaveURL("https://develop.czechibank.ostrava.digital/signin");
+Then("I am redirected to {string}", async ({ page }, pageName: string) => {
+  const pagePath = pageMap[pageName];
+  await page.waitForURL(pagePath);
 });
 
 Then("I should see title {string}", async ({ page }, headingText: string) => {
