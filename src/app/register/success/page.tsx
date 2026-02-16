@@ -10,7 +10,7 @@ export default function RegisterSuccessPage() {
         <div className="h-3 rounded-t-xl border-b-3 border-black bg-[#7ED957]" />
         <div className="p-8 text-center">
           {/* Checkmark icon */}
-          <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-full border-3 border-black bg-[#7ED957] shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]">
+          <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-full border-3 border-black bg-[#7ED957] text-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]">
             <CheckCircle className="h-8 w-8" />
           </div>
 

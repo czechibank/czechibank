@@ -182,7 +182,7 @@ export default function CreateApiKey() {
                 </Button>
               </div>
             </div>
-            <div className="flex items-start gap-3 rounded-xl border-3 border-black bg-[#FFE566] p-4">
+            <div className="flex items-start gap-3 rounded-xl border-3 border-black bg-[#FFE566] p-4 text-black">
               <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0" />
               <p className="text-sm font-bold">
                 Make sure to copy this API key now. You won&apos;t be able to see it again!

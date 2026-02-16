@@ -53,7 +53,7 @@ export default async function BankAccountPage(props: { params: Promise<{ id: str
 
         {/* Header */}
         <div className="mb-8">
-          <div className="mb-4 inline-flex items-center gap-2 rounded-full border-3 border-black bg-[#6EC1E4] px-4 py-2 font-bold shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]">
+          <div className="mb-4 inline-flex items-center gap-2 rounded-full border-3 border-black bg-[#6EC1E4] px-4 py-2 font-bold text-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]">
             <CreditCard className="h-4 w-4" />
             Account Details
           </div>
@@ -65,7 +65,7 @@ export default async function BankAccountPage(props: { params: Promise<{ id: str
 
         {/* Balance Card */}
         <div
-          className="relative mb-8 overflow-hidden rounded-2xl border-3 border-black p-8 shadow-[6px_6px_0px_0px_rgba(0,0,0,1)]"
+          className="relative mb-8 overflow-hidden rounded-2xl border-3 border-black p-8 text-black shadow-[6px_6px_0px_0px_rgba(0,0,0,1)]"
           style={{ backgroundColor: colors.pink }}
         >
           {/* Decorative elements */}
@@ -92,7 +92,7 @@ export default async function BankAccountPage(props: { params: Promise<{ id: str
           <div className="border-b-3 border-black p-5">
             <div className="flex items-center gap-3">
               <div
-                className="flex h-10 w-10 items-center justify-center rounded-xl border-2 border-black"
+                className="flex h-10 w-10 items-center justify-center rounded-xl border-2 border-black text-black"
                 style={{ backgroundColor: colors.green }}
               >
                 <Send className="h-5 w-5" />
@@ -121,7 +121,7 @@ export default async function BankAccountPage(props: { params: Promise<{ id: str
           <div className="border-b-3 border-black p-5">
             <div className="flex items-center gap-3">
               <div
-                className="flex h-10 w-10 items-center justify-center rounded-xl border-2 border-black"
+                className="flex h-10 w-10 items-center justify-center rounded-xl border-2 border-black text-black"
                 style={{ backgroundColor: colors.yellow }}
               >
                 <History className="h-5 w-5" />

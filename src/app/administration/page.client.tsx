@@ -169,7 +169,7 @@ export default function AdministrationClientPage({ features }: { features: Featu
     <div className="pb-12">
       {/* Page header */}
       <div className="mb-8">
-        <div className="mb-4 inline-flex items-center gap-2 rounded-full border-3 border-black bg-[#FF6B35] px-4 py-2 font-bold shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]">
+        <div className="mb-4 inline-flex items-center gap-2 rounded-full border-3 border-black bg-[#FF6B35] px-4 py-2 font-bold text-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]">
           <Settings className="h-4 w-4" />
           Admin Panel
         </div>
@@ -186,7 +186,7 @@ export default function AdministrationClientPage({ features }: { features: Featu
         <div className="h-3 rounded-t-xl border-b-3 border-black bg-[#FF6B35]" />
         <div className="p-6">
           <div className="mb-5 flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl border-2 border-black bg-[#FF6B35]">
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl border-2 border-black bg-[#FF6B35] text-black">
               <Settings className="h-5 w-5" />
             </div>
             <h2 className="text-lg font-black">Features</h2>
@@ -203,7 +203,7 @@ export default function AdministrationClientPage({ features }: { features: Featu
                     key={category}
                     className={`rounded-full border-2 border-black px-3 py-1.5 text-xs font-bold transition-all ${
                       selectedCategories.has(category)
-                        ? "bg-[#FF6B35] shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]"
+                        ? "bg-[#FF6B35] text-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]"
                         : "bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800"
                     }`}
                   >

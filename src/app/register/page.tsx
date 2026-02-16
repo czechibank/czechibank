@@ -10,7 +10,7 @@ export default async function RegisterPage() {
   if (session) {
     return (
       <div className="mx-auto max-w-md py-12">
-        <div className="rounded-2xl border-3 border-black bg-[#FFE566] p-6 shadow-[6px_6px_0px_0px_rgba(0,0,0,1)]">
+        <div className="rounded-2xl border-3 border-black bg-[#FFE566] p-6 text-black shadow-[6px_6px_0px_0px_rgba(0,0,0,1)]">
           <div className="flex items-start gap-3">
             <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border-2 border-black bg-white">
               <AlertCircle className="h-5 w-5" />
@@ -30,7 +30,7 @@ export default async function RegisterPage() {
     <div className="mx-auto max-w-md py-12">
       {/* Header */}
       <div className="mb-8">
-        <div className="mb-4 inline-flex items-center gap-2 rounded-full border-3 border-black bg-[#7ED957] px-4 py-2 font-bold shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]">
+        <div className="mb-4 inline-flex items-center gap-2 rounded-full border-3 border-black bg-[#7ED957] px-4 py-2 font-bold text-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]">
           <UserPlus className="h-4 w-4" />
           Join Us
         </div>

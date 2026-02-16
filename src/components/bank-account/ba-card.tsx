@@ -64,7 +64,7 @@ export default function BankAccountCard({ bankAccount, session, onDelete, onRena
         {/* Header: icon + name + rename */}
         <div className="mb-4 flex items-center gap-3">
           <div
-            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border-2 border-black"
+            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border-2 border-black text-black"
             style={{ backgroundColor: accentColor }}
           >
             <Wallet className="h-5 w-5" />
@@ -87,7 +87,7 @@ export default function BankAccountCard({ bankAccount, session, onDelete, onRena
         <button
           type="button"
           onClick={handleCopy}
-          className="mb-4 flex w-full items-center justify-between gap-2 rounded-lg border-2 border-black/30 bg-orange-200 px-3 py-2 transition-all hover:border-solid hover:border-black hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] dark:bg-zinc-800 dark:hover:bg-zinc-700"
+          className="mb-4 flex w-full items-center justify-between gap-2 rounded-lg border-2 border-black/30 bg-orange-100 px-3 py-2 transition-all hover:border-solid hover:border-black hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] dark:bg-zinc-800 dark:hover:bg-zinc-700"
           title="Click to copy account number"
         >
           <span className="truncate font-mono text-xs tracking-wide text-muted-foreground">{bankAccount.number}</span>

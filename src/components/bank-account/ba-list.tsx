@@ -54,7 +54,7 @@ export default function BankAccountsList({ initialBankAccounts, session }: BankA
       {/* Section header with create button */}
       <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-3">
-          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border-3 border-black bg-[#6EC1E4] shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]">
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border-3 border-black bg-[#6EC1E4] text-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]">
             <CreditCard className="h-5 w-5" />
           </div>
           <div>
@@ -73,7 +73,7 @@ export default function BankAccountsList({ initialBankAccounts, session }: BankA
       {/* Portfolio summary */}
       {accounts.length > 0 && (
         <div className="mb-6 flex items-center gap-4 rounded-xl border-2 border-black bg-zinc-50 p-4 dark:bg-zinc-800">
-          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border-2 border-black bg-[#FFE566]">
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border-2 border-black bg-[#FFE566] text-black">
             <TrendingUp className="h-5 w-5" />
           </div>
           <div className="min-w-0 flex-1">
@@ -97,7 +97,7 @@ export default function BankAccountsList({ initialBankAccounts, session }: BankA
       {/* Accounts grid */}
       {accounts.length === 0 ? (
         <div className="rounded-2xl border-3 border-dashed border-black bg-zinc-50 p-12 text-center dark:bg-zinc-900">
-          <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full border-3 border-black bg-[#FFE566]">
+          <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full border-3 border-black bg-[#FFE566] text-black">
             <CreditCard className="h-8 w-8" />
           </div>
           <h3 className="mb-2 text-lg font-black">No accounts yet</h3>

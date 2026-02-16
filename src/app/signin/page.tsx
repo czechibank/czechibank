@@ -63,7 +63,7 @@ export default function SignInPage() {
     <div className="mx-auto max-w-md py-12">
       {/* Header */}
       <div className="mb-8">
-        <div className="mb-4 inline-flex items-center gap-2 rounded-full border-3 border-black bg-[#ff4c91] px-4 py-2 font-bold shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]">
+        <div className="mb-4 inline-flex items-center gap-2 rounded-full border-3 border-black bg-[#ff4c91] px-4 py-2 font-bold text-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]">
           <LogIn className="h-4 w-4" />
           Welcome Back
         </div>

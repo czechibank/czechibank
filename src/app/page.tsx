@@ -42,15 +42,26 @@ const staggerContainer = {
 // Zigzag decorative line
 function ZigzagLine({ className }: { className?: string }) {
   return (
-    <div
-      className={className}
-      style={{
-        height: "12px",
-        backgroundImage: `url("data:image/svg+xml,%3Csvg width='40' height='12' viewBox='0 0 40 12' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M0 6 L10 0 L20 6 L30 0 L40 6 L30 12 L20 6 L10 12 Z' fill='%23000'/%3E%3C/svg%3E")`,
-        backgroundRepeat: "repeat-x",
-        backgroundSize: "40px 12px",
-      }}
-    />
+    <>
+      <div
+        className={`${className} dark:hidden`}
+        style={{
+          height: "12px",
+          backgroundImage: `url("data:image/svg+xml,%3Csvg width='40' height='12' viewBox='0 0 40 12' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M0 6 L10 0 L20 6 L30 0 L40 6 L30 12 L20 6 L10 12 Z' fill='%23000'/%3E%3C/svg%3E")`,
+          backgroundRepeat: "repeat-x",
+          backgroundSize: "40px 12px",
+        }}
+      />
+      <div
+        className={`${className} hidden dark:block`}
+        style={{
+          height: "12px",
+          backgroundImage: `url("data:image/svg+xml,%3Csvg width='40' height='12' viewBox='0 0 40 12' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M0 6 L10 0 L20 6 L30 0 L40 6 L30 12 L20 6 L10 12 Z' fill='%2352525b'/%3E%3C/svg%3E")`,
+          backgroundRepeat: "repeat-x",
+          backgroundSize: "40px 12px",
+        }}
+      />
+    </>
   );
 }
 
@@ -75,7 +86,10 @@ function FeatureCard({
       style={{ rotate }}
       className="group relative overflow-hidden rounded-2xl border-3 border-black bg-white p-5 shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] transition-all hover:shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] dark:bg-zinc-900"
     >
-      <div className="mb-3 inline-flex rounded-xl border-3 border-black p-2.5" style={{ backgroundColor: color }}>
+      <div
+        className="mb-3 inline-flex rounded-xl border-3 border-black p-2.5 text-black"
+        style={{ backgroundColor: color }}
+      >
         <Icon className="h-5 w-5" />
       </div>
       <h3 className="mb-1.5 text-lg font-black">{title}</h3>
@@ -104,7 +118,7 @@ function StepCard({
   return (
     <motion.div variants={fadeInUp} className="relative h-full">
       <div
-        className="absolute -left-3 -top-3 flex h-10 w-10 items-center justify-center rounded-full border-3 border-black text-lg font-black"
+        className="absolute -left-3 -top-3 flex h-10 w-10 items-center justify-center rounded-full border-3 border-black text-lg font-black text-black"
         style={{ backgroundColor: color }}
       >
         {number}
@@ -163,19 +177,16 @@ export default function LandingPage() {
     <div className="min-h-screen overflow-x-hidden bg-[#FFFBF5] dark:bg-zinc-950">
       {/* Decorative background elements */}
       <div className="pointer-events-none fixed inset-0 overflow-hidden">
-        <div className="absolute -left-20 top-40 h-40 w-40 rounded-full bg-pink-200/40 blur-3xl" />
-        <div className="absolute -right-20 top-80 h-60 w-60 rounded-full bg-yellow-200/40 blur-3xl" />
-        <div className="absolute bottom-40 left-1/3 h-40 w-40 rounded-full bg-blue-200/30 blur-3xl" />
+        <div className="absolute -left-20 top-40 h-40 w-40 rounded-full bg-pink-200/40 blur-3xl dark:bg-pink-900/20" />
+        <div className="absolute -right-20 top-80 h-60 w-60 rounded-full bg-yellow-200/40 blur-3xl dark:bg-yellow-900/20" />
+        <div className="absolute bottom-40 left-1/3 h-40 w-40 rounded-full bg-blue-200/30 blur-3xl dark:bg-blue-900/20" />
       </div>
 
       {/* Navigation */}
       <nav className="relative z-10 border-b-3 border-black bg-white/80 backdrop-blur-sm dark:bg-zinc-900/80">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-4 md:px-6">
           <Link href="/" className="flex items-center gap-2">
-            <div
-              className="flex h-10 w-10 items-center justify-center rounded-xl border-3 border-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]"
-              style={{ backgroundColor: colors.white }}
-            >
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl border-3 border-black bg-[#FFFBF5] shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] dark:bg-zinc-800">
               <Image src="/logo.svg" alt="CzechiBank" width={40} height={40} />
             </div>
             <span className="text-xl font-black">CzechiBank</span>
@@ -228,7 +239,7 @@ export default function LandingPage() {
               <motion.div
                 variants={fadeInUp}
                 animate={{ rotate: -6 }}
-                className=" mb-4 inline-flex items-center gap-2 rounded-full border-3 border-black px-4 py-2 font-bold"
+                className=" mb-4 inline-flex items-center gap-2 rounded-full border-3 border-black px-4 py-2 font-bold text-black"
                 style={{ backgroundColor: colors.yellow }}
               >
                 <Gamepad2 className="h-4 w-4" />
@@ -329,7 +340,7 @@ export default function LandingPage() {
           >
             <motion.div variants={fadeInUp}>
               <div
-                className="mb-4 inline-flex -rotate-3 items-center gap-2 rounded-full border-3 border-black px-3 py-1.5 text-sm font-bold"
+                className="mb-4 inline-flex -rotate-3 items-center gap-2 rounded-full border-3 border-black px-3 py-1.5 text-sm font-bold text-black"
                 style={{ backgroundColor: colors.purple }}
               >
                 <GraduationCap className="h-4 w-4" />
@@ -356,7 +367,7 @@ export default function LandingPage() {
                 ].map((item) => (
                   <li key={item.text} className="flex items-center gap-3">
                     <div
-                      className="flex h-8 w-8 items-center justify-center rounded-lg border-2 border-black"
+                      className="flex h-8 w-8 items-center justify-center rounded-lg border-2 border-black text-black"
                       style={{ backgroundColor: item.color }}
                     >
                       <item.icon className="h-4 w-4" />
@@ -395,7 +406,7 @@ export default function LandingPage() {
           >
             <motion.div
               variants={fadeInUp}
-              className="mb-4 inline-flex items-center gap-2 rounded-full border-3 border-black px-4 py-2 font-bold"
+              className="mb-4 inline-flex items-center gap-2 rounded-full border-3 border-black px-4 py-2 font-bold text-black"
               style={{ backgroundColor: colors.orange }}
             >
               <Sparkles className="h-4 w-4" />
@@ -479,7 +490,7 @@ export default function LandingPage() {
           >
             <motion.div
               variants={fadeInUp}
-              className="mb-4 inline-flex items-center gap-2 rounded-full border-3 border-black px-4 py-2 font-bold"
+              className="mb-4 inline-flex items-center gap-2 rounded-full border-3 border-black px-4 py-2 font-bold text-black"
               style={{ backgroundColor: colors.blue }}
             >
               <Play className="h-4 w-4" />
@@ -535,7 +546,7 @@ export default function LandingPage() {
           >
             <motion.div
               variants={fadeInUp}
-              className="mb-4 inline-flex items-center gap-2 rounded-full border-3 border-black px-4 py-2 font-bold"
+              className="mb-4 inline-flex items-center gap-2 rounded-full border-3 border-black px-4 py-2 font-bold text-black"
               style={{ backgroundColor: colors.purple }}
             >
               <Users className="h-4 w-4" />
@@ -658,14 +669,11 @@ export default function LandingPage() {
       </section>
 
       {/* Footer */}
-      <footer className="border-t-3 border-black bg-white dark:bg-zinc-950">
+      <footer className="border-t-3 border-black bg-white dark:bg-zinc-900">
         <div className="mx-auto max-w-6xl px-4 py-12 md:px-6">
           <div className="flex flex-col items-center justify-between gap-6 md:flex-row">
             <div className="flex items-center gap-3">
-              <div
-                className="flex h-10 w-10 items-center justify-center rounded-xl border-3 border-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]"
-                style={{ backgroundColor: colors.white }}
-              >
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl border-3 border-black bg-[#FFFBF5] shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] dark:bg-zinc-800">
                 <Image src="/logo.svg" alt="CzechiBank" width={40} height={40} />
               </div>
               <div>

@@ -18,7 +18,7 @@ export default async function Dashboard() {
     <main className="pb-12">
       {/* Fun greeting header */}
       <div className="mb-8 mt-6">
-        <div className="mb-4 inline-flex items-center gap-2 rounded-full border-3 border-black bg-[#FFE566] px-4 py-2 font-bold shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]">
+        <div className="mb-4 inline-flex items-center gap-2 rounded-full border-3 border-black bg-[#FFE566] px-4 py-2 font-bold text-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]">
           <Sparkles className="h-4 w-4" />
           Dashboard
         </div>

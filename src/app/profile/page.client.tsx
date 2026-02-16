@@ -71,7 +71,7 @@ export default function ProfileClientPage({
     <div className="space-y-8 pb-12">
       {/* Page header */}
       <div>
-        <div className="mb-4 inline-flex items-center gap-2 rounded-full border-3 border-black bg-[#B794F6] px-4 py-2 font-bold shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]">
+        <div className="mb-4 inline-flex items-center gap-2 rounded-full border-3 border-black bg-[#B794F6] px-4 py-2 font-bold text-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]">
           <UserIcon className="h-4 w-4" />
           Profile
         </div>
@@ -89,7 +89,7 @@ export default function ProfileClientPage({
         <div className="h-3 rounded-t-xl border-b-3 border-black bg-[#ff4c91]" />
         <div className="p-6">
           <div className="mb-5 flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl border-2 border-black bg-[#ff4c91]">
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl border-2 border-black bg-[#ff4c91] text-black">
               <UserIcon className="h-5 w-5" />
             </div>
             <h2 className="text-lg font-black">Personal Information</h2>
@@ -128,7 +128,7 @@ export default function ProfileClientPage({
         <div className="h-3 rounded-t-xl border-b-3 border-black bg-[#FFE566]" />
         <div className="p-6">
           <div className="mb-5 flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl border-2 border-black bg-[#FFE566]">
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl border-2 border-black bg-[#FFE566] text-black">
               <KeyIcon className="h-5 w-5" />
             </div>
             <h2 className="text-lg font-black">API Keys</h2>
@@ -163,7 +163,7 @@ export default function ProfileClientPage({
         <div className="h-3 rounded-t-xl border-b-3 border-black bg-[#B794F6]" />
         <div className="p-6">
           <div className="mb-5 flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl border-2 border-black bg-[#B794F6]">
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl border-2 border-black bg-[#B794F6] text-black">
               <SettingsIcon className="h-5 w-5" />
             </div>
             <h2 className="text-lg font-black">Account Settings</h2>

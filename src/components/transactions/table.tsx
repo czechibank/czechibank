@@ -1,15 +1,15 @@
 "use server";
 import { Table, TableBody, TableCell, TableFooter, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import transactionService from "@/domain/transaction-domain/transaction-service";
-import { Transaction, User } from "@prisma/client";
+import { BankAccount, Transaction, User } from "@prisma/client";
 import { AlertTriangle, ArrowDownLeft, ArrowUpRight, Inbox } from "lucide-react";
 import { UserAvatar } from "../user/avatar";
 
 const LIMIT = 50;
 
-type TransactionWithUsers = Transaction & {
-  to: { user: User };
-  from: { user: User };
+type TransactionWithDetails = Transaction & {
+  to: BankAccount & { user: User };
+  from: BankAccount & { user: User };
 };
 
 function formatDate(date: Date): { day: string; month: string } {
@@ -29,15 +29,15 @@ function formatAmount(amount: number): string {
 export async function TransactionTable({ bankAccountId }: { bankAccountId: string }) {
   const transactions = await transactionService.getAllTransactionsByUserAndBankAccountId(bankAccountId, LIMIT);
 
-  function isIncoming(transaction: TransactionWithUsers) {
+  function isIncoming(transaction: TransactionWithDetails) {
     return transaction.toBankId === bankAccountId;
   }
 
-  function getCounterparty(transaction: TransactionWithUsers) {
-    return isIncoming(transaction) ? transaction.from.user : transaction.to.user;
+  function getCounterparty(transaction: TransactionWithDetails) {
+    return isIncoming(transaction) ? transaction.from : transaction.to;
   }
 
-  function calculateTotal(transactions: TransactionWithUsers[]) {
+  function calculateTotal(transactions: TransactionWithDetails[]) {
     return transactions.reduce((total, t) => {
       return total + (isIncoming(t) ? t.amount : -t.amount);
     }, 0);
@@ -60,7 +60,7 @@ export async function TransactionTable({ bankAccountId }: { bankAccountId: strin
   return (
     <div className="w-full">
       {/* Warning bar */}
-      <div className="mb-4 flex items-center gap-3 rounded-xl border-2 border-black bg-[#FFE566] p-3 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]">
+      <div className="mb-4 flex items-center gap-3 rounded-xl border-2 border-black bg-[#FFE566] p-3 text-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]">
         <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg border-2 border-black bg-white">
           <AlertTriangle className="h-4 w-4" />
         </div>
@@ -96,7 +96,7 @@ export async function TransactionTable({ bankAccountId }: { bankAccountId: strin
                   <div className="flex items-center gap-3">
                     {/* Direction arrow badge */}
                     <div
-                      className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border-2 border-black ${
+                      className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border-2 border-black text-black ${
                         incoming ? "bg-[#7ED957]" : "bg-[#ff4c91]"
                       }`}
                     >
@@ -107,9 +107,10 @@ export async function TransactionTable({ bankAccountId }: { bankAccountId: strin
                     <div className="min-w-0 flex-1">
                       <p className="text-sm font-bold">{incoming ? "Received from" : "Sent to"}</p>
                       <div className="flex items-center gap-1.5">
-                        <UserAvatar size={5} image={counterparty.image ?? null} />
-                        <span className="truncate text-sm text-muted-foreground">{counterparty.name}</span>
+                        <UserAvatar size={5} image={counterparty.user.image ?? null} />
+                        <span className="truncate text-sm text-muted-foreground">{counterparty.user.name}</span>
                       </div>
+                      <p className="mt-0.5 font-mono text-xs text-muted-foreground">{counterparty.number}</p>
                     </div>
                   </div>
                 </TableCell>
@@ -141,7 +142,7 @@ export async function TransactionTable({ bankAccountId }: { bankAccountId: strin
             </TableCell>
             <TableCell className="py-3 text-right">
               <span
-                className={`inline-block rounded-xl border-3 border-black px-4 py-1.5 text-sm font-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] ${
+                className={`inline-block rounded-xl border-3 border-black px-4 py-1.5 text-sm font-black text-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] ${
                   totalAmount >= 0 ? "bg-[#7ED957]" : "bg-[#ff4c91]"
                 }`}
               >
