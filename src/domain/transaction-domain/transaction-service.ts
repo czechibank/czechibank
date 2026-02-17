@@ -10,6 +10,8 @@ import { sendDiscordMessage } from "../social-reporting-domain/discord-action";
 import * as repository from "./transaction-repository";
 import { CreateTransactionNumberToNumberSchema } from "./transation-schema";
 
+const DONATION_ACCOUNT_NUMBER = "555555555555/5555";
+
 const transactionService = {
   // --- Result-based methods (used by API routes) ---
 
@@ -52,9 +54,6 @@ const transactionService = {
           if (parsed.userId !== fromAcct.userId) {
             return errAsync(forbidden("You are not allowed to send money from this bank account"));
           }
-          if (fromAcct.balance < parsed.amount) {
-            return errAsync(insufficientBalance());
-          }
           return bankAccountService.getBankAccountByNumberResult(parsed.toBankNumber).andThen((toAcct) =>
             ResultAsync.fromPromise(
               repository.sendMoney({
@@ -63,10 +62,16 @@ const transactionService = {
                 amount: parsed.amount,
                 currency: parsed.currency,
               }),
-              (e) => fromUnknown(e, "Failed to send money"),
+              (e) => {
+                // Handle insufficient balance error from repository
+                if (e instanceof Error && e.message === "INSUFFICIENT_BALANCE") {
+                  return insufficientBalance();
+                }
+                return fromUnknown(e, "Failed to send money");
+              },
             ).map((transaction) => {
               // Fire-and-forget Discord notification for donation account
-              if (transaction.to.number === "555555555555/5555") {
+              if (transaction.to.number === DONATION_ACCOUNT_NUMBER) {
                 sendDiscordMessage({
                   text: `Money sent from account \`${transaction.from.number}\` - **${transaction.amount} ${transaction.currency}** :tada:`,
                   message: "Money sent successfully!",

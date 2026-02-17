@@ -128,6 +128,12 @@ import { z } from "zod";
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/Error'
+ *       422:
+ *         description: Validation error (e.g., invalid ID format)
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
  *       500:
  *         description: Internal server error
  *         content:
@@ -225,15 +231,17 @@ export async function DELETE(request: Request, context: { params: Promise<{ id: 
   const { id } = await context.params;
 
   const result = authenticateRequest(request).andThen((user) =>
-    bankAccountService.getBankAccountByIdAndUserIdResult(id, user.id).andThen((bankAccount) =>
-      bankAccountService.deleteBankAccountResult(bankAccount, user.id).andThen((deleted) => {
-        if (deleted.isActive !== false) {
-          return errAsync<{ message: string }, import("@/lib/errors").AppError>(
-            conflict("Bank account deletion failed, account still active"),
-          );
-        }
-        return okAsync({ message: "Bank account deleted successfully" });
-      }),
+    validateWithResult(idSchema, { id }).andThen((parsed) =>
+      bankAccountService.getBankAccountByIdAndUserIdResult(parsed.id, user.id).andThen((bankAccount) =>
+        bankAccountService.deleteBankAccountResult(bankAccount, user.id).andThen((deleted) => {
+          if (deleted.isActive !== false) {
+            return errAsync<{ message: string }, import("@/lib/errors").AppError>(
+              conflict("Bank account deletion failed, account still active"),
+            );
+          }
+          return okAsync({ message: "Bank account deleted successfully" });
+        }),
+      ),
     ),
   );
 
@@ -244,13 +252,15 @@ export async function PATCH(request: Request, context: { params: Promise<{ id: s
   const { id } = await context.params;
 
   const result = authenticateRequest(request).andThen((user) =>
-    ResultAsync.fromPromise(request.json(), () => badRequest("Invalid JSON body"))
-      .andThen((body) => validateWithResult(RenameBankAccountSchema, body))
-      .andThen(({ name: newName }) =>
-        bankAccountService
-          .getBankAccountByIdAndUserIdResult(id, user.id)
-          .andThen(() => bankAccountService.renameBankAccountResult(id, user.id, newName)),
-      ),
+    validateWithResult(idSchema, { id }).andThen((parsed) =>
+      ResultAsync.fromPromise(request.json(), () => badRequest("Invalid JSON body"))
+        .andThen((body) => validateWithResult(RenameBankAccountSchema, body))
+        .andThen(({ name: newName }) =>
+          bankAccountService
+            .getBankAccountByIdAndUserIdResult(parsed.id, user.id)
+            .andThen(() => bankAccountService.renameBankAccountResult(parsed.id, user.id, newName)),
+        ),
+    ),
   );
 
   return toApiResponse(result, "Bank account renamed successfully");

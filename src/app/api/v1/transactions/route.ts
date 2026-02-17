@@ -1,6 +1,6 @@
 import { authenticateRequest } from "@/app/api/v1/auth";
 import transactionService from "@/domain/transaction-domain/transaction-service";
-import { validationError } from "@/lib/errors";
+import { badRequest, validationError } from "@/lib/errors";
 import { ApiErrorCode } from "@/lib/response";
 import { toApiResponse, toPaginatedApiResponse } from "@/lib/result-helpers";
 import { errAsync } from "neverthrow";
@@ -91,6 +91,21 @@ export async function GET(request: NextRequest) {
   const limit = searchParams.get("limit") || "10";
   const sortByParam = searchParams.get("sortBy") || "createdAt";
   const sortOrderParam = searchParams.get("sortOrder") || "desc";
+
+  // Validate and parse page
+  const pageNum = parseInt(page, 10);
+  if (isNaN(pageNum) || pageNum < 1) {
+    return toApiResponse(errAsync(badRequest("Page must be a positive integer")), "Invalid pagination parameters");
+  }
+
+  // Validate and parse limit
+  const limitNum = parseInt(limit, 10);
+  if (isNaN(limitNum) || limitNum < 1 || limitNum > 100) {
+    return toApiResponse(
+      errAsync(badRequest("Limit must be a positive integer between 1 and 100")),
+      "Invalid pagination parameters",
+    );
+  }
 
   // Validate sortBy
   if (!ALLOWED_SORT_BY.includes(sortByParam as any)) {

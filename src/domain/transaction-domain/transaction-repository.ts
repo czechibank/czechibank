@@ -30,8 +30,23 @@ export async function sendMoney({
   amount: number;
   currency: Currency;
 }): Promise<SendMoneyResult> {
-  const response = await prisma.$transaction([
-    prisma.transaction.create({
+  const response = await prisma.$transaction(async (tx) => {
+    // Check and lock the source account balance
+    const fromAccount = await tx.bankAccount.findUnique({
+      where: { id: fromBankId },
+      select: { balance: true },
+    });
+
+    if (!fromAccount) {
+      throw new Error("Source bank account not found");
+    }
+
+    if (fromAccount.balance < amount) {
+      throw new Error("INSUFFICIENT_BALANCE");
+    }
+
+    // Create the transaction record
+    const transaction = await tx.transaction.create({
       data: {
         amount: amount,
         currency: currency,
@@ -59,8 +74,10 @@ export async function sendMoney({
           },
         },
       },
-    }),
-    prisma.bankAccount.update({
+    });
+
+    // Decrement source account balance
+    await tx.bankAccount.update({
       where: {
         id: fromBankId,
       },
@@ -69,8 +86,10 @@ export async function sendMoney({
           decrement: amount,
         },
       },
-    }),
-    prisma.bankAccount.update({
+    });
+
+    // Increment destination account balance
+    await tx.bankAccount.update({
       where: {
         id: toBankId,
       },
@@ -79,12 +98,14 @@ export async function sendMoney({
           increment: amount,
         },
       },
-    }),
-  ]);
+    });
+
+    return transaction;
+  });
 
   revalidatePath("/bankAccount");
 
-  return response[0];
+  return response;
 }
 
 export async function getAllTransactionsByUserId(userId: string) {
