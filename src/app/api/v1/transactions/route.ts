@@ -1,6 +1,6 @@
 import { authenticateRequest } from "@/app/api/v1/auth";
 import transactionService from "@/domain/transaction-domain/transaction-service";
-import { badRequest, validationError } from "@/lib/errors";
+import { validationError } from "@/lib/errors";
 import { ApiErrorCode } from "@/lib/response";
 import { toApiResponse, toPaginatedApiResponse } from "@/lib/result-helpers";
 import { errAsync } from "neverthrow";
@@ -76,7 +76,7 @@ export { DELETE, HEAD, OPTIONS, PATCH, PUT } from "../routes";
  *             schema:
  *               $ref: '#/components/schemas/Error'
  *       422:
- *         description: Validation error (e.g., invalid sortBy or sortOrder)
+ *         description: Validation error (e.g., invalid page, limit, sortBy, or sortOrder)
  *         content:
  *           application/json:
  *             schema:
@@ -95,15 +95,32 @@ export async function GET(request: NextRequest) {
   // Validate and parse page
   const pageNum = parseInt(page, 10);
   if (isNaN(pageNum) || pageNum < 1) {
-    return toApiResponse(errAsync(badRequest("Page must be a positive integer")), "Invalid pagination parameters");
+    return toApiResponse(
+      errAsync(
+        validationError("Invalid pagination parameters", [
+          {
+            code: ApiErrorCode.VALIDATION_ERROR,
+            message: "Page must be a positive integer",
+          },
+        ]),
+      ),
+      "Validation failed",
+    );
   }
 
   // Validate and parse limit
   const limitNum = parseInt(limit, 10);
   if (isNaN(limitNum) || limitNum < 1 || limitNum > 100) {
     return toApiResponse(
-      errAsync(badRequest("Limit must be a positive integer between 1 and 100")),
-      "Invalid pagination parameters",
+      errAsync(
+        validationError("Invalid pagination parameters", [
+          {
+            code: ApiErrorCode.VALIDATION_ERROR,
+            message: "Limit must be a positive integer between 1 and 100",
+          },
+        ]),
+      ),
+      "Validation failed",
     );
   }
 

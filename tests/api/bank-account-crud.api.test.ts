@@ -256,6 +256,8 @@ describe("Bank Account CRUD API", () => {
         headers: { "X-API-Key": apiKey.highBalance },
       });
       const listData = await listResponse.json();
+      expect(listData.data.bankAccounts).toBeDefined();
+      expect(listData.data.bankAccounts.length).toBeGreaterThan(0);
       // Pick the account that actually has balance (API order isn't guaranteed)
       const accountId =
         listData.data.bankAccounts.find((a: any) => a.balance > 0)?.id ?? listData.data.bankAccounts[0].id;

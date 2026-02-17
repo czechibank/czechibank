@@ -95,7 +95,7 @@ describe("Transactions API", () => {
         expect(response.status).toBe(422);
         const data = await response.json();
         expect(data.success).toBe(false);
-        expect(data.error.details[0].message).toBe("Page and limit must be positive numbers");
+        expect(data.error.details[0].message).toBe("Page must be a positive integer");
       });
 
       it("should return empty array for page beyond total pages", async () => {
