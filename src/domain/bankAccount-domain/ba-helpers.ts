@@ -16,7 +16,7 @@ export function enforceZeroBalance(bankAccount: BankAccount): Result<void, AppEr
   if (!bankAccount) {
     return err(notFound("Bank account not found"));
   }
-  if (bankAccount.balance > 0) {
+  if (bankAccount.balance !== 0) {
     return err(nonZeroBalance());
   }
   return ok(undefined);

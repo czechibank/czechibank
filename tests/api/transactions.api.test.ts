@@ -344,6 +344,8 @@ describe("Transactions API", () => {
         headers: { "X-API-Key": apiKey.zeroBalance },
       });
       const listData = await listResponse.json();
+      expect(listData.data.bankAccounts).toBeDefined();
+      expect(listData.data.bankAccounts.length).toBeGreaterThan(0);
       const fromNumber = listData.data.bankAccounts[0].number;
 
       const response = await fetch(`${config.BASE_URL}/api/v1/transactions/create`, {

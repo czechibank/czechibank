@@ -52,7 +52,7 @@ const transactionService = {
           if (parsed.userId !== fromAcct.userId) {
             return errAsync(forbidden("You are not allowed to send money from this bank account"));
           }
-          if (fromAcct.balance < amount) {
+          if (fromAcct.balance < parsed.amount) {
             return errAsync(insufficientBalance());
           }
           return bankAccountService.getBankAccountByNumberResult(parsed.toBankNumber).andThen((toAcct) =>
@@ -60,8 +60,8 @@ const transactionService = {
               repository.sendMoney({
                 fromBankId: fromAcct.id,
                 toBankId: toAcct.id,
-                amount,
-                currency,
+                amount: parsed.amount,
+                currency: parsed.currency,
               }),
               (e) => fromUnknown(e, "Failed to send money"),
             ).map((transaction) => {

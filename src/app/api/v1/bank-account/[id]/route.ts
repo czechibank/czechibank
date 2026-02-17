@@ -201,9 +201,9 @@ const idSchema = z.object({ id: z.string().cuid() });
 export async function GET(request: Request, context: { params: Promise<{ id: string }> }) {
   const { id } = await context.params;
 
-  const result = validateWithResult(idSchema, { id })
-    .andThen((parsed) =>
-      authenticateRequest(request).andThen((user) => {
+  const result = authenticateRequest(request)
+    .andThen((user) =>
+      validateWithResult(idSchema, { id }).andThen((parsed) => {
         // Check feature flag: if enabled, anyone can see any bank account
         return featuresService.server
           .getAllFeaturesResult()

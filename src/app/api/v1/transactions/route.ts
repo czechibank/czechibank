@@ -1,6 +1,9 @@
 import { authenticateRequest } from "@/app/api/v1/auth";
 import transactionService from "@/domain/transaction-domain/transaction-service";
-import { toPaginatedApiResponse } from "@/lib/result-helpers";
+import { validationError } from "@/lib/errors";
+import { ApiErrorCode } from "@/lib/response";
+import { toApiResponse, toPaginatedApiResponse } from "@/lib/result-helpers";
+import { errAsync } from "neverthrow";
 import { NextRequest } from "next/server";
 export { DELETE, HEAD, OPTIONS, PATCH, PUT } from "../routes";
 
@@ -72,13 +75,55 @@ export { DELETE, HEAD, OPTIONS, PATCH, PUT } from "../routes";
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/Error'
+ *       422:
+ *         description: Validation error (e.g., invalid sortBy or sortOrder)
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
  */
+const ALLOWED_SORT_BY = ["createdAt", "amount"] as const;
+const ALLOWED_SORT_ORDER = ["asc", "desc"] as const;
+
 export async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams;
   const page = searchParams.get("page") || "1";
   const limit = searchParams.get("limit") || "10";
-  const sortBy = searchParams.get("sortBy") || "createdAt";
-  const sortOrder = (searchParams.get("sortOrder") || "desc") as "asc" | "desc";
+  const sortByParam = searchParams.get("sortBy") || "createdAt";
+  const sortOrderParam = searchParams.get("sortOrder") || "desc";
+
+  // Validate sortBy
+  if (!ALLOWED_SORT_BY.includes(sortByParam as any)) {
+    return toApiResponse(
+      errAsync(
+        validationError(`Invalid sortBy parameter. Allowed values: ${ALLOWED_SORT_BY.join(", ")}`, [
+          {
+            code: ApiErrorCode.VALIDATION_ERROR,
+            message: `sortBy must be one of: ${ALLOWED_SORT_BY.join(", ")}`,
+          },
+        ]),
+      ),
+      "Validation failed",
+    );
+  }
+
+  // Validate sortOrder
+  if (!ALLOWED_SORT_ORDER.includes(sortOrderParam as any)) {
+    return toApiResponse(
+      errAsync(
+        validationError(`Invalid sortOrder parameter. Allowed values: ${ALLOWED_SORT_ORDER.join(", ")}`, [
+          {
+            code: ApiErrorCode.VALIDATION_ERROR,
+            message: `sortOrder must be one of: ${ALLOWED_SORT_ORDER.join(", ")}`,
+          },
+        ]),
+      ),
+      "Validation failed",
+    );
+  }
+
+  const sortBy = sortByParam as (typeof ALLOWED_SORT_BY)[number];
+  const sortOrder = sortOrderParam as (typeof ALLOWED_SORT_ORDER)[number];
 
   const result = authenticateRequest(request).andThen((user) =>
     transactionService.getAllTransactionsByUserIdForAPIResult(user.id, sortBy, sortOrder, page, limit),
