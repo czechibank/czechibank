@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 
-const URL = "https://czechibank.ostrava.digital/";
+const URL = "https://develop.czechibank.ostrava.digital/";
 // const URL = "http://localhost:3000/";
 
 // Co testuju
