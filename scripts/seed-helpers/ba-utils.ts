@@ -1,7 +1,7 @@
 import bankAccountService from "@/domain/bankAccount-domain/ba-service";
 import { Currency, PrismaClient } from "@prisma/client";
 import { UserWithRole } from "better-auth/plugins";
-import { UserSeedConfig } from "../seed-users";
+import { SeedUserDef } from "../../shared/fixtures/users";
 
 /**
  * Generates a random 12-digit number string for bank account numbers.
@@ -39,15 +39,8 @@ function generateRandomDigits(digitCount: number): string {
  * });
  * ```
  */
-export default async function ensureUserBankAccounts(
-  prisma: PrismaClient,
-  user: UserWithRole,
-  userSeed: UserSeedConfig,
-) {
-  // Update bank account number(s) and balance (support string | string[] in seed)
-  const providedBAs = Array.isArray(userSeed.bankAccountNumber)
-    ? userSeed.bankAccountNumber
-    : [userSeed.bankAccountNumber];
+export default async function ensureUserBankAccounts(prisma: PrismaClient, user: UserWithRole, userSeed: SeedUserDef) {
+  const providedBAs = userSeed.bankAccounts.map((ba) => ba.number);
 
   const existingAccounts = await prisma.bankAccount.findMany({
     where: { userId: user.id },

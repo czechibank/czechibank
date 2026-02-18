@@ -24,10 +24,24 @@ WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
+# Build-time environment variables
+# DATABASE_URL is set to a placeholder for prisma generate (actual URL set at runtime)
+ARG DATABASE_URL="postgresql://placeholder:placeholder@localhost:5432/placeholder"
+ARG SECRET_KEY="build-time-placeholder"
+ARG BETTER_AUTH_SECRET="build-time-placeholder-auth!"
+ARG DISCORD_WEBHOOK_URL=""
+ARG HOST="localhost:3000"
+
+ENV DATABASE_URL=${DATABASE_URL}
+ENV SECRET_KEY=${SECRET_KEY}
+ENV BETTER_AUTH_SECRET=${BETTER_AUTH_SECRET}
+ENV DISCORD_WEBHOOK_URL=${DISCORD_WEBHOOK_URL}
+ENV HOST=${HOST}
+
 # Next.js collects completely anonymous telemetry data about general usage.
 # Learn more here: https://nextjs.org/telemetry
 # Uncomment the following line in case you want to disable telemetry during the build.
-# ENV NEXT_TELEMETRY_DISABLED=1
+ENV NEXT_TELEMETRY_DISABLED=1
 
 RUN \
   if [ -f yarn.lock ]; then yarn run build; \

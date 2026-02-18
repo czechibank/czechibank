@@ -3,6 +3,7 @@ import { BankAccount, Currency, PrismaClient } from "@prisma/client";
 import { APIError } from "better-auth/api";
 import { UserWithRole } from "better-auth/plugins";
 import { auth } from "../auth";
+import { SEED_USERS_LIST } from "../shared/fixtures/users";
 import ensureUserBankAccounts from "./seed-helpers/ba-utils";
 import { generateTransactionData } from "./seed-helpers/generate-transaction-data";
 import { generateUserTransactionHistory } from "./seed-helpers/generate-user-transaction-history";
@@ -19,220 +20,21 @@ export const PRIMARY_TRANSACTION_INDEX = 1; // Uses second bank account (index 1
 // Global setting: which bank account index to use for balance assignment (0 = first, 1 = second, etc.)
 export const PRIMARY_BALANCE_INDEX = 0; // Default: use 1st bank account
 
-// ============================================================================
-// SEED CONFIGURATION
-// ============================================================================
-// nemazat existujici uzivatele, jen pridavat nove
-// resetovat bankovni ucty - a to jen hodnoty
-
-// endpoint pro admina - /api/v1/admin/wipe-db
-//
-
 /**
- * Generates a fixed-length API key string.
- *
- * Creates an API key by padding the starting value with zeros to reach the desired length.
- * This ensures all API keys have a consistent format for seeding purposes.
- *
- * @param startingValue - Initial value for the API key (will be padded)
- * @param length - Desired length of the final API key (default: 64)
- * @returns A string of the specified length
- *
- * @example
- * ```ts
- * const key = generateApiKey("test_", 64);
- * // Returns "test_" + 59 zeros = 64 characters total
- * ```
- */
-function generateApiKey(startingValue: string = "", length: number = 64): string {
-  return startingValue + "0".repeat(length - startingValue.length);
-}
-
-/**
- * Configuration type for seeding users in the database.
- *
- * Defines all the properties needed to create a user with bank accounts,
- * API keys, and transaction history during the seeding process.
- */
-export type UserSeedConfig = {
-  email: string;
-  name: string;
-  password: string;
-  avatarConfig: string;
-  bankAccountNumber: string | string[];
-  apiKey?: string;
-  role: "admin" | "user";
-  // New fields for special configurations
-  balance?: number; // Custom balance (default: 0)
-  apiKeyActiveCount?: number; // Number of API keys to create (default: 1)
-  hasExpiredApiKey?: boolean; // Create one expired and one active key
-  skipApiKey?: boolean; // Don't create any API keys
-  needsTransactionHistory?: boolean; // Mark user for transaction history generation
-  transactionCount?: number; // Number of transactions for this user
-  primaryBalanceIndex?: number; // Which BA gets the 100k/Seed balance (Default BA index: 0)
-  primaryTransactionIndex?: number; // Which BA gets involved in the 10,000 seed transactions (Default BA index: 0)
-};
-
-export const adminUserToSeed: Omit<
-  UserSeedConfig,
-  "balance" | "apiKeyActiveCount" | "hasExpiredApiKey" | "skipApiKey" | "needsTransactionHistory" | "transactionCount"
-> = {
-  email: "app_admin@email.com",
-  name: "App Admin",
-  password: "app_admin",
-  avatarConfig:
-    '{"backgroundColor":["C4DD68"],"eyebrows":["variant12"],"eyebrowsColor":["000000"],"eyes":["variant01"],"eyesColor":["000000"],"freckles":["variant01"],"frecklesColor":["000000"],"frecklesProbability":[null],"glasses":["variant03"],"glassesColor":["000000"],"glassesProbability":[null],"mouth":["happy05"],"mouthColor":["000000"],"nose":["variant06"],"noseColor":["000000"]}',
-  bankAccountNumber: "000000000000/5555",
-  apiKey: "app_admin_key",
-  role: "admin",
-};
-
-const usersToSeed: UserSeedConfig[] = [
-  // Admin user
-  {
-    ...adminUserToSeed,
-    balance: undefined,
-    apiKeyActiveCount: 1,
-  },
-  // Rescue funds
-  {
-    email: "zachranNas+praha@pejsekAKocicka.cz",
-    name: "[OSTRAVA!!!] Pejsek a Kočicka 🐶&🐱",
-    password: "PejsekAKocicka123",
-    avatarConfig:
-      '{"backgroundColor":["696AC9"],"eyebrows":["variant12"],"eyebrowsColor":["000000"],"eyes":["variant01"],"eyesColor":["000000"],"freckles":["variant01"],"frecklesColor":["000000"],"frecklesProbability":[null],"glasses":["variant03"],"glassesColor":["000000"],"glassesProbability":[null],"mouth":["happy05"],"mouthColor":["000000"],"nose":["variant06"],"noseColor":["000000"]}',
-    bankAccountNumber: "555555555555/5555",
-    apiKey: "11",
-    role: "user",
-    balance: undefined,
-    apiKeyActiveCount: 1,
-  },
-  {
-    email: "zachranNas+brno@pejsekAKocicka.cz",
-    name: "[BRNO] Pejsek a Kočička 🐶&🐱",
-    password: "PejsekAKocicka123",
-    avatarConfig:
-      '{"backgroundColor":["0DC681"],"eyebrows":["variant12"],"eyebrowsColor":["000000"],"eyes":["variant01"],"eyesColor":["000000"],"freckles":["variant01"],"frecklesColor":["000000"],"frecklesProbability":[null],"glasses":["variant03"],"glassesColor":["000000"],"glassesProbability":[null],"mouth":["happy05"],"mouthColor":["000000"],"nose":["variant06"],"noseColor":["000000"]}',
-    bankAccountNumber: "444444444444/5555",
-    apiKey: "22",
-    role: "user",
-    balance: undefined,
-    apiKeyActiveCount: 1,
-  },
-  // Core team
-  {
-    email: "vojta@czechibank.ostrava.digital",
-    name: "Vojta 🦊 🎉 Cerveny",
-    password: "hello123456",
-    avatarConfig:
-      '{"backgroundColor":["ff0000"],"eyebrows":["variant11"],"eyebrowsColor":["ffffff"],"eyes":["variant01"],"eyesColor":["ffffff"],"freckles":["variant01"],"frecklesColor":["ffffff"],"frecklesProbability":[null],"glasses":["variant01"],"glassesColor":["ffffff"],"glassesProbability":[null],"mouth":["happy04"],"mouthColor":["ffffff"],"nose":["variant04"],"noseColor":["ffffff"]}',
-    bankAccountNumber: ["000000000001/5555", "100000001001/5555", "100000001021/5555"],
-    apiKey: "33",
-    role: "admin",
-    balance: undefined,
-    apiKeyActiveCount: 1,
-  },
-  // New users based on requirements
-  // 1. Standard user - new account, new API key, standard balance
-  {
-    email: "standard.user@example.com",
-    name: "Standard User",
-    password: "password123",
-    avatarConfig:
-      '{"backgroundColor":["4A90E2"],"eyebrows":["variant12"],"eyebrowsColor":["000000"],"eyes":["variant01"],"eyesColor":["000000"],"freckles":["variant01"],"frecklesColor":["000000"],"frecklesProbability":[null],"glasses":["variant01"],"glassesColor":["000000"],"glassesProbability":[null],"mouth":["happy01"],"mouthColor":["000000"],"nose":["variant01"],"noseColor":["000000"]}',
-    bankAccountNumber: "100000000001/5555",
-    apiKey: "standard_user_key_1",
-    role: "user",
-    balance: 100_000, // Standard balance
-    apiKeyActiveCount: 1,
-  },
-  // 2. Standard user - regular account with 0 balance
-  {
-    email: "zero.balance@example.com",
-    name: "Zero Balance User",
-    password: "password123",
-    avatarConfig:
-      '{"backgroundColor":["E24A4A"],"eyebrows":["variant12"],"eyebrowsColor":["000000"],"eyes":["variant01"],"eyesColor":["000000"],"freckles":["variant01"],"frecklesColor":["000000"],"frecklesProbability":[null],"glasses":["variant01"],"glassesColor":["000000"],"glassesProbability":[null],"mouth":["sad01"],"mouthColor":["000000"],"nose":["variant01"],"noseColor":["000000"]}',
-    bankAccountNumber: ["100000000002/5555", "100000010011/5555"],
-    apiKey: "zero_balance_key",
-    role: "user",
-    balance: 0,
-    apiKeyActiveCount: 1,
-  },
-  // 3. Standard user with high balance and history of 100+ transactions
-  {
-    email: "high.balance@example.com",
-    name: "High Balance User",
-    password: "password123",
-    avatarConfig:
-      '{"backgroundColor":["4AE24A"],"eyebrows":["variant12"],"eyebrowsColor":["000000"],"eyes":["variant01"],"eyesColor":["000000"],"freckles":["variant01"],"frecklesColor":["000000"],"frecklesProbability":[null],"glasses":["variant02"],"glassesColor":["000000"],"glassesProbability":[null],"mouth":["happy03"],"mouthColor":["000000"],"nose":["variant01"],"noseColor":["000000"]}',
-    bankAccountNumber: ["100000000003/5555", "100009000003/5555"],
-    apiKey: "high_balance_key",
-    role: "user",
-    balance: 1_000_000, // High balance
-    apiKeyActiveCount: 1,
-    needsTransactionHistory: true,
-    transactionCount: 150, // 100+ transactions
-  },
-  // 4. Standard user with multiple API keys (e.g., 5)
-  {
-    email: "multiple.keys@example.com",
-    name: "Multiple Keys User",
-    password: "password123",
-    avatarConfig:
-      '{"backgroundColor":["E24AE2"],"eyebrows":["variant12"],"eyebrowsColor":["000000"],"eyes":["variant01"],"eyesColor":["000000"],"freckles":["variant01"],"frecklesColor":["000000"],"frecklesProbability":[null],"glasses":["variant03"],"glassesColor":["000000"],"glassesProbability":[null],"mouth":["happy02"],"mouthColor":["000000"],"nose":["variant01"],"noseColor":["000000"]}',
-    bankAccountNumber: "100000000004/5555",
-    apiKey: "multiple_keys_key_1",
-    role: "user",
-    balance: 50000,
-    apiKeyActiveCount: 5,
-  },
-  // 5. Standard user with expired API key - 1 expired key, 1 active key
-  {
-    email: "expired.key@example.com",
-    name: "Expired Key User",
-    password: "password123",
-    avatarConfig:
-      '{"backgroundColor":["E2E24A"],"eyebrows":["variant12"],"eyebrowsColor":["000000"],"eyes":["variant01"],"eyesColor":["000000"],"freckles":["variant01"],"frecklesColor":["000000"],"frecklesProbability":[null],"glasses":["variant01"],"glassesColor":["000000"],"glassesProbability":[null],"mouth":["neutral01"],"mouthColor":["000000"],"nose":["variant01"],"noseColor":["000000"]}',
-    bankAccountNumber: "100000000005/5555",
-    apiKey: "expired_key_active",
-    role: "user",
-    balance: 75000,
-    apiKeyActiveCount: 2,
-    hasExpiredApiKey: true,
-  },
-  // 6. Standard user without API key
-  {
-    email: "no.apikey@example.com",
-    name: "No API Key User",
-    password: "password123",
-    avatarConfig:
-      '{"backgroundColor":["4A4AE2"],"eyebrows":["variant12"],"eyebrowsColor":["000000"],"eyes":["variant01"],"eyesColor":["000000"],"freckles":["variant01"],"frecklesColor":["000000"],"frecklesProbability":[null],"glasses":["variant01"],"glassesColor":["000000"],"glassesProbability":[null],"mouth":["neutral02"],"mouthColor":["000000"],"nose":["variant01"],"noseColor":["000000"]}',
-    bankAccountNumber: "100000000006/5555",
-    role: "user",
-    balance: 25000,
-    skipApiKey: true,
-  },
-];
-
-/**
- * Seeds users into the database based on the `usersToSeed` configuration.
+ * Seeds users into the database based on the shared fixtures.
  *
  * This function:
  * 1. Validates bank account numbers in the seed configuration
  * 2. Creates or updates users using Better Auth
  * 3. Ensures bank accounts exist for each user
- * 4. Creates API keys based on user configuration (multiple, expired, or none)
+ * 4. Creates API keys based on user configuration
  *
  * Handles existing users gracefully by finding and reusing them instead of failing.
- *
- * @throws {Error} If validation fails or critical errors occur during user creation
  */
 async function seedUsers() {
-  // Validate seed BA numbers before modifying DB
-  await validateSeedBankAccounts(prisma, usersToSeed);
+  await validateSeedBankAccounts(prisma, SEED_USERS_LIST);
 
-  for (const userSeed of usersToSeed) {
+  for (const userSeed of SEED_USERS_LIST) {
     try {
       console.log(`[users seed] Creating user: ${userSeed.email}`);
 
@@ -253,7 +55,6 @@ async function seedUsers() {
           error instanceof APIError &&
           (error.body?.code === "USER_ALREADY_EXISTS_USE_ANOTHER_EMAIL" || error.body?.code === "USER_ALREADY_EXISTS")
         ) {
-          // zachranNas+praha@pejsekAKocicka.cz
           const existing = (await prisma.user.findFirst({
             where: { email: userSeed.email.toLowerCase() },
           })) as UserWithRole | null;
@@ -263,7 +64,6 @@ async function seedUsers() {
             console.log(`[users seed] User already exists: ${userSeed.email}`);
           } else {
             console.warn(`[users seed] Auth reports user exists, but Prisma cannot find it: ${userSeed.email}`);
-            console.log("💚💚💚 user", user);
           }
         } else {
           console.error(`[users seed] Unexpected error from auth.api.createUser for ${userSeed.email}:`, error);
@@ -277,46 +77,29 @@ async function seedUsers() {
         continue;
       }
 
-      // Ensure user's bank accounts (supports array in seed)
+      // Ensure user's bank accounts
       await ensureUserBankAccounts(prisma, user, userSeed);
 
-      // Handle API keys based on configuration
-      if (userSeed.skipApiKey) {
-        console.log(`[users seed] Skipping API key creation for user: ${user.email}`);
-      } else {
-        const apiKeyActiveCount = userSeed.apiKeyActiveCount || 1;
-        const hasExpiredKey = userSeed.hasExpiredApiKey || false;
+      // Create API keys from fixture data
+      for (let i = 0; i < userSeed.apiKeys.length; i++) {
+        const keyDef = userSeed.apiKeys[i];
+        console.log(`[users seed] Creating API key ${i + 1}/${userSeed.apiKeys.length} for user: ${user.email}`);
+        const createdKey = await auth.api.createApiKey({ body: { userId: user.id } });
 
-        if (hasExpiredKey) {
-          // Create one expired key and one active key
-          console.log(`[users seed] Creating expired API key for user: ${user.email}`);
-          const expiredApiKey = await auth.api.createApiKey({ body: { userId: user.id } });
+        const updateData: { key: string; expiresAt?: Date } = { key: keyDef.key };
+        if (!keyDef.active) {
           const expiredDate = new Date();
           expiredDate.setDate(expiredDate.getDate() - 1);
-          await prisma.apikey.update({
-            where: { id: expiredApiKey.id },
-            data: {
-              key: generateApiKey("expired_" + user.email),
-              expiresAt: expiredDate,
-            },
-          });
-          console.log(`[users seed] Created expired API key (64 chars) for user: ${user.email}`);
-        } else {
-          // Create active API keys (always, unless hasExpiredKey consumed one slot)
-          const activeKeysToCreate = hasExpiredKey ? apiKeyActiveCount - 1 : apiKeyActiveCount;
-          for (let i = 0; i < activeKeysToCreate; i++) {
-            console.log(`[users seed] Creating API key ${i + 1}/${apiKeyActiveCount} for user: ${user.email}`);
-            const apiKey = await auth.api.createApiKey({ body: { userId: user.id } });
-            const keyValue = generateApiKey("key_" + "_" + i + "_" + user.email);
-            await prisma.apikey.update({
-              where: { id: apiKey.id },
-              data: { key: keyValue },
-            });
-            console.log(
-              `[users seed] Created API key ${i + 1}/${apiKeyActiveCount} (64 chars) for user: ${user.email}`,
-            );
-          }
+          updateData.expiresAt = expiredDate;
         }
+
+        await prisma.apikey.update({
+          where: { id: createdKey.id },
+          data: updateData,
+        });
+        console.log(
+          `[users seed] Created ${keyDef.active ? "active" : "expired"} API key ${i + 1}/${userSeed.apiKeys.length} for user: ${user.email}`,
+        );
       }
     } catch (error) {
       console.error(`[users seed] Error seeding user ${userSeed.email}:`, error);
@@ -328,18 +111,8 @@ async function seedUsers() {
  * Generates a large number of deterministic transactions between regular users.
  *
  * Creates 10,000 transactions between users (excluding rescue funds and zero balance users).
- * Transactions are:
- * - Deterministic (same seed produces same transactions)
- * - Processed in batches of 100 for performance
- * - Atomic (all-or-nothing per transaction)
- * - Only created if sender has sufficient balance
- *
  * Uses the global `PRIMARY_TRANSACTION_INDEX` constant to determine which bank account
  * index from each user's account array should be used for transactions.
- *
- * @param prisma - Prisma client instance for database operations
- *
- * @throws {Error} If fatal errors occur during transaction generation
  */
 async function generateDeterministicTransactions(prisma: PrismaClient) {
   console.log(`[${new Date().toISOString()}] Starting generateDeterministicTransactions...`);
@@ -351,11 +124,6 @@ async function generateDeterministicTransactions(prisma: PrismaClient) {
   });
   console.log(`[${new Date().toISOString()}] Found ${allUsers.length} total users`);
 
-  // Filter out rescue fund accounts and users without active bank accounts
-  // Note: The length > 0 check is critical to prevent crashes when accessing bankAccounts[0].number below.
-  // While users normally always have at least one active BA (enforced by enforceMinActiveBankAccount
-  // and auto-created on user creation), this filter handles edge cases where a user might not have
-  // been properly set up during seeding (e.g., if bank account creation failed silently).
   const regularUsers = allUsers.filter(
     (user) =>
       user.bankAccounts.length > 0 &&
@@ -365,37 +133,28 @@ async function generateDeterministicTransactions(prisma: PrismaClient) {
   );
   console.log(`[${new Date().toISOString()}] Found ${regularUsers.length} regular users (excluding rescue funds)`);
 
-  const TOTAL_TRANSACTIONS = 10000; // Increased from 1000 to 10000
+  const TOTAL_TRANSACTIONS = 10000;
   console.log(`[${new Date().toISOString()}] Generating ${TOTAL_TRANSACTIONS} transaction records...`);
 
   // Build map of users to their transaction account based on seed config index
   const userToTransactionAccount = new Map<string, { id: string; number: string }>();
-  for (const userSeed of usersToSeed) {
+  for (const userSeed of SEED_USERS_LIST) {
+    const bankAccountNumbers = userSeed.bankAccounts.map((ba) => ba.number);
+
     // Check if user is intentionally filtered out (rescue funds, zero balance)
     const isIntentionallyFiltered =
-      userSeed.bankAccountNumber.toString().includes("555555555555") ||
-      userSeed.bankAccountNumber.toString().includes("444444444444") ||
+      bankAccountNumbers.some((n) => n.includes("555555555555") || n.includes("444444444444")) ||
       userSeed.email === "zero.balance@example.com";
 
-    // Check if user is in regularUsers (eligible for transactions)
     const user = regularUsers.find((u) => u.email.toLowerCase() === userSeed.email.toLowerCase());
 
     if (!user) {
-      // If intentionally filtered, silently skip (rescue funds, zero balance user)
-      if (isIntentionallyFiltered) {
-        continue;
-      }
-
-      // User not found in regularUsers - skipping transaction account mapping
-      // This should rarely happen if seedUsers() ran successfully
+      if (isIntentionallyFiltered) continue;
       console.warn(
-        `[users seed] Seeded user ${userSeed.email} not found in regularUsers (user may not exist in DB or has no active bank accounts), skipping transaction account mapping`,
+        `[users seed] Seeded user ${userSeed.email} not found in regularUsers, skipping transaction account mapping`,
       );
       continue;
     }
-    const bankAccountNumbers = Array.isArray(userSeed.bankAccountNumber)
-      ? userSeed.bankAccountNumber
-      : [userSeed.bankAccountNumber];
 
     // Use PRIMARY_TRANSACTION_INDEX constant, but clamp to available accounts if out of bounds
     const targetIndex = Math.min(PRIMARY_TRANSACTION_INDEX, bankAccountNumbers.length - 1);
@@ -403,7 +162,7 @@ async function generateDeterministicTransactions(prisma: PrismaClient) {
     const account = user.bankAccounts.find((ba: BankAccount) => ba.number === targetNumber && ba.isActive);
     if (!account) {
       console.warn(
-        `[users seed] Transaction account ${targetNumber} (index ${targetIndex}) not found or inactive for user ${userSeed.email}, skipping transaction account mapping. Available accounts: ${user.bankAccounts.map((ba) => ba.number).join(", ")}`,
+        `[users seed] Transaction account ${targetNumber} (index ${targetIndex}) not found or inactive for user ${userSeed.email}, skipping. Available: ${user.bankAccounts.map((ba) => ba.number).join(", ")}`,
       );
       continue;
     }
@@ -413,46 +172,34 @@ async function generateDeterministicTransactions(prisma: PrismaClient) {
     `[${new Date().toISOString()}] Mapped ${userToTransactionAccount.size} seeded users to transaction accounts`,
   );
 
-  // Filter regularUsers to only include seeded users that have a transaction account mapped
-  // (userToTransactionAccount map created above). This ensures logs only show users that
-  // actually participate in transactions, excluding manually created users.
   const seededUsersOnly = regularUsers.filter((user) => userToTransactionAccount.has(user.id));
   console.log(
     `[${new Date().toISOString()}] Filtered to ${seededUsersOnly.length} seeded users for transaction generation`,
   );
 
   try {
-    // Generate all transaction data first (only for seeded users)
     const transactions = generateTransactionData(seededUsersOnly, TOTAL_TRANSACTIONS, userToTransactionAccount);
     console.log(`[${new Date().toISOString()}] Generated ${transactions.length} transaction records`);
 
-    // Process transactions in batches
-    const BATCH_SIZE = 100; // Increased from 50 to 100 for better performance
+    const BATCH_SIZE = 100;
     for (let i = 0; i < transactions.length; i += BATCH_SIZE) {
       const batch = transactions.slice(i, i + BATCH_SIZE);
       console.log(
         `[${new Date().toISOString()}] Processing batch ${Math.floor(i / BATCH_SIZE) + 1} of ${Math.ceil(transactions.length / BATCH_SIZE)} (${batch.length} transactions)...`,
       );
 
-      // Process transactions sequentially within each batch
       for (const [j, transaction] of batch.entries()) {
         const transactionNumber = i + j + 1;
 
         try {
-          // We use a sequential loop so we don't overwhelm the DB connection limit (5)
           await prisma.$transaction(
             async (tx) => {
-              // 1. Get real-time balance to ensure sender has enough money
               const sender = await tx.bankAccount.findUnique({
                 where: { id: transaction.fromBankId },
               });
 
-              if (!sender || sender.balance < transaction.amount) {
-                // Skip if no funds - History record is NOT created here
-                return;
-              }
+              if (!sender || sender.balance < transaction.amount) return;
 
-              // 2. Create history
               await tx.transaction.create({
                 data: {
                   createdAt: transaction.createdAt,
@@ -463,7 +210,6 @@ async function generateDeterministicTransactions(prisma: PrismaClient) {
                 },
               });
 
-              // 3. Update balances using atomic math operations
               await tx.bankAccount.update({
                 where: { id: transaction.fromBankId },
                 data: { balance: { decrement: transaction.amount } },
@@ -474,20 +220,14 @@ async function generateDeterministicTransactions(prisma: PrismaClient) {
                 data: { balance: { increment: transaction.amount } },
               });
 
-              // 4. Progress Logging (Kept from your original logic)
               if (transactionNumber % 1000 === 0) {
                 console.log(`[${new Date().toISOString()}] Successfully processed transaction ${transactionNumber}`);
               }
             },
-            {
-              // Increased timeout specifically for seeding 10k records
-              timeout: 15000,
-            },
+            { timeout: 15000 },
           );
         } catch (error) {
-          // Error logging preserved from your original code
           console.error(`[${new Date().toISOString()}] Error processing transaction ${transactionNumber}:`, error);
-          // No 'throw' here ensures the rest of the batch continues even if one fails
         }
       }
     }
@@ -501,16 +241,6 @@ async function generateDeterministicTransactions(prisma: PrismaClient) {
 
 /**
  * Main seeding function that orchestrates the entire database seeding process.
- *
- * Execution order:
- * 1. Connects to the database
- * 2. Cleans up existing transactions and API keys (preserves users and bank accounts)
- * 3. Seeds all users with their bank accounts and API keys
- * 4. Resets bank account balances according to seed configuration
- * 5. Generates 10,000 deterministic transactions between users
- * 6. Generates additional transaction history for users who need it
- *
- * @throws {Error} If any critical step fails
  */
 async function main() {
   console.log("[users seed] Starting seed script...");
@@ -518,29 +248,18 @@ async function main() {
 
   // Clean up all data first
   console.log("[users seed] Cleaning up database...");
-  await prisma.$transaction([
-    prisma.transaction.deleteMany(),
-    prisma.apikey.deleteMany(),
-    // prisma.bankAccount.deleteMany(),
-    // prisma.user.deleteMany(),
-  ]);
+  await prisma.$transaction([prisma.transaction.deleteMany(), prisma.apikey.deleteMany()]);
   console.log("[users seed] Database cleaned up");
 
   // Seed users
   await seedUsers();
 
-  await resetBankAccountBalances(prisma, usersToSeed);
+  await resetBankAccountBalances(prisma, SEED_USERS_LIST);
 
   // Generate transactions
   await generateDeterministicTransactions(prisma);
 
-  // Generate additional transaction history for specific users who need more transactions
-  // Some users in seed config have needsTransactionHistory: true and transactionCount: N
-  // (e.g., high.balance@example.com needs 150 transactions total).
-  // After generateDeterministicTransactions() creates 10,000 general transactions,
-  // this code checks if those specific users have enough transactions and generates more if needed.
-  // Note: Fresh query needed here because database state changed (transactions created, balances updated).
-  // Query only users with at least one active bank account (optimization - we filter for this anyway)
+  // Generate additional transaction history for specific users
   const allUsers = await prisma.user.findMany({
     where: {
       bankAccounts: {
@@ -552,8 +271,8 @@ async function main() {
     },
   });
 
-  for (const userSeed of usersToSeed) {
-    if (userSeed.needsTransactionHistory && userSeed.transactionCount) {
+  for (const userSeed of SEED_USERS_LIST) {
+    if (userSeed.transactions) {
       const user = allUsers.find((u) => u.email.toLowerCase() === userSeed.email.toLowerCase());
       if (!user) {
         console.warn(
@@ -561,7 +280,6 @@ async function main() {
         );
         continue;
       }
-      // Get current transaction count for this user
       const currentTransactionCount = await prisma.transaction.count({
         where: {
           OR: [
@@ -571,12 +289,10 @@ async function main() {
         },
       });
 
-      const neededTransactions = Math.max(0, userSeed.transactionCount - currentTransactionCount);
+      const neededTransactions = Math.max(0, userSeed.transactions.targetCount - currentTransactionCount);
 
       if (neededTransactions > 0) {
-        // Get other seeded users only (excluding rescue funds and the current user)
-        // Filter to only include users that are in the seed configuration
-        const seededUserEmails = new Set(usersToSeed.map((u) => u.email.toLowerCase()));
+        const seededUserEmails = new Set(SEED_USERS_LIST.map((u) => u.email.toLowerCase()));
         const otherUsers = allUsers.filter(
           (u) =>
             u.id !== user.id &&
@@ -588,7 +304,7 @@ async function main() {
 
         if (otherUsers.length > 0) {
           console.log(
-            `[users seed] User ${userSeed.email} has ${currentTransactionCount} transactions, generating ${neededTransactions} more to reach ${userSeed.transactionCount}`,
+            `[users seed] User ${userSeed.email} has ${currentTransactionCount} transactions, generating ${neededTransactions} more to reach ${userSeed.transactions.targetCount}`,
           );
           await generateUserTransactionHistory(prisma, user.id, neededTransactions, otherUsers);
         } else {
@@ -596,7 +312,7 @@ async function main() {
         }
       } else {
         console.log(
-          `[users seed] User ${userSeed.email} already has ${currentTransactionCount} transactions (needed: ${userSeed.transactionCount})`,
+          `[users seed] User ${userSeed.email} already has ${currentTransactionCount} transactions (needed: ${userSeed.transactions.targetCount})`,
         );
       }
     }

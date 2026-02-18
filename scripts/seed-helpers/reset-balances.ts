@@ -1,5 +1,6 @@
 import { PrismaClient } from "@prisma/client";
-import { PRIMARY_BALANCE_INDEX, UserSeedConfig } from "../seed-users";
+import { SeedUserDef } from "../../shared/fixtures/users";
+import { PRIMARY_BALANCE_INDEX } from "../seed-users";
 
 /**
  * Resets bank account balances for seeded users based on their seed configuration.
@@ -21,7 +22,7 @@ import { PRIMARY_BALANCE_INDEX, UserSeedConfig } from "../seed-users";
  * // Account at PRIMARY_BALANCE_INDEX gets balance from seed config, others set to 0
  * ```
  */
-export default async function resetBankAccountBalances(prisma: PrismaClient, users: UserSeedConfig[]) {
+export default async function resetBankAccountBalances(prisma: PrismaClient, users: SeedUserDef[]) {
   console.log(`[users seed] Resetting bank account balances for ${users.length} users`);
   for (const userSeed of users) {
     const bankAccounts = await prisma.bankAccount.findMany({
@@ -30,9 +31,7 @@ export default async function resetBankAccountBalances(prisma: PrismaClient, use
     });
     if (bankAccounts.length > 0) {
       // Determine which account should get the balance based on PRIMARY_BALANCE_INDEX constant
-      const bankAccountNumbers = Array.isArray(userSeed.bankAccountNumber)
-        ? userSeed.bankAccountNumber
-        : [userSeed.bankAccountNumber];
+      const bankAccountNumbers = userSeed.bankAccounts.map((ba) => ba.number);
 
       // Use PRIMARY_BALANCE_INDEX constant, but clamp to available accounts if out of bounds
       const targetIndex = Math.min(PRIMARY_BALANCE_INDEX, bankAccountNumbers.length - 1);
