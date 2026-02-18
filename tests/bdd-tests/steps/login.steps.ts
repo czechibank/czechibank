@@ -1,5 +1,6 @@
 import { expect } from "@playwright/test";
 import { createBdd } from "playwright-bdd";
+import { pageMap } from "../constants/pageMap";
 
 const { Given, When, Then } = createBdd();
 
@@ -19,11 +20,9 @@ When("I click sign in button", async ({ page }) => {
   await page.locator("form").getByRole("button", { name: "Sign in" }).click();
 });
 
-Then("URL has changed", async ({ page }) => {
-  // Wait for navigation after login - should redirect away from signin
-  await page.waitForURL((url) => !url.pathname.includes("/signin"));
-  // Verify URL is different from signin page
-  await expect(page).not.toHaveURL(/\/signin/);
+Then("I am redirected to {string}", async ({ page }, pageName: string) => {
+  const pagePath = pageMap[pageName];
+  await page.waitForURL(pagePath);
 });
 
 Then("I should see title {string}", async ({ page }, headingText: string) => {
