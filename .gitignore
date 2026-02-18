@@ -47,3 +47,6 @@ next-env.d.ts
 /playwright/.cache/
 
 /prisma/prisma-client
+
+# Playwright BDD generated files
+**/.features-gen/**/*.spec.js
