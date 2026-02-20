@@ -5,7 +5,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { env } from "process";
 
 export async function GET(req: NextRequest) {
-  const origin = env.HOST || req.nextUrl.origin;
+  const host = env.HOST;
+  const origin = host ? `https://${host}` : req.nextUrl.origin;
   const apiDescriptionUrl = `${origin}/api/v1/docs`;
 
   const html = `<!doctype html>
