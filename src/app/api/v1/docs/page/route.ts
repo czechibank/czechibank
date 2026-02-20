@@ -6,7 +6,7 @@ import { NextRequest, NextResponse } from "next/server";
 export async function GET(req: NextRequest) {
   const origin = req.nextUrl.origin;
   const apiDescriptionUrl = `${origin}/api/v1/docs`;
-  console.log(apiDescriptionUrl);
+
   const html = `<!doctype html>
 <html lang="en">
   <head>
