@@ -2,9 +2,10 @@
 // spotlight/elements doesn't work properly with nextjs, so this is a workaround how to server it.
 // it should be fine, we can switch to any other api docs provider if needed.
 import { NextRequest, NextResponse } from "next/server";
+import { env } from "process";
 
 export async function GET(req: NextRequest) {
-  const origin = req.nextUrl.origin;
+  const origin = env.HOST || req.nextUrl.origin;
   const apiDescriptionUrl = `${origin}/api/v1/docs`;
 
   const html = `<!doctype html>
