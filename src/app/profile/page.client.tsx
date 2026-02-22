@@ -6,7 +6,8 @@ import { Label } from "@/components/ui/label";
 import { toast } from "@/components/ui/use-toast";
 import { UserAvatar } from "@/components/user/avatar";
 import userServiceClient from "@/domain/user-domain/user-service-client";
-import { authClient, useSession } from "@/lib/auth-client";
+import { authClient } from "@/lib/auth-client";
+import { useSessionWithRefresh } from "@/lib/useSessionWithRefresh";
 import { generateRandomAvatarConfig } from "@/lib/utils";
 import { Apikey } from "@prisma/client";
 import { KeyIcon, SettingsIcon, UserIcon } from "lucide-react";
@@ -21,7 +22,7 @@ export default function ProfileClientPage({
   user: typeof authClient.$Infer.Session.user;
   apiKeys: Omit<Apikey, "key">[];
 }) {
-  const { data: session, isPending, error } = useSession();
+  const { data: session, isPending, error } = useSessionWithRefresh();
   const router = useRouter();
   const [isUpdatingAvatar, setIsUpdatingAvatar] = useState(false);
 
