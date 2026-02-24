@@ -246,10 +246,16 @@ async function main() {
   console.log("[users seed] Starting seed script...");
   await prisma.$connect();
 
-  // Clean up all data first
-  console.log("[users seed] Cleaning up database...");
-  await prisma.$transaction([prisma.transaction.deleteMany(), prisma.apikey.deleteMany()]);
-  console.log("[users seed] Database cleaned up");
+  // Clean up seed user data only (preserve non-seed users' API keys)
+  const seedEmails = SEED_USERS_LIST.map((u) => u.email.toLowerCase());
+  console.log("[users seed] Cleaning up seed user data...");
+  await prisma.$transaction([
+    prisma.transaction.deleteMany(),
+    prisma.apikey.deleteMany({
+      where: { user: { email: { in: seedEmails } } },
+    }),
+  ]);
+  console.log("[users seed] Seed user data cleaned up");
 
   // Seed users
   await seedUsers();
