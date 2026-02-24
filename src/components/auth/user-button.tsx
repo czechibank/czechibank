@@ -7,17 +7,26 @@ import {
   DropdownMenuLabel,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { useSession } from "@/lib/auth-client";
+import { useSessionWithRefresh } from "@/lib/useSessionWithRefresh";
 import Link from "next/link";
+import { useEffect, useRef, useState } from "react";
 import { Button } from "../ui/button";
 import { UserAvatar } from "../user/avatar";
 import { SignOut } from "./sign-out";
 
+/** Header avatar/menu or Sign in link. Uses last known session during refetch to avoid layout jump; shows Loading only on first load before any session. */
 export default function UserButton() {
-  const { data: session, isPending } = useSession();
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
 
-  if (isPending) return <p className="mt-8 text-center">Loading...</p>;
-  if (!session?.user) return <Link href="/signin">Sign in</Link>;
+  const { data: session, isPending } = useSessionWithRefresh();
+  const lastSessionRef = useRef(session);
+  if (session !== undefined) lastSessionRef.current = session;
+  const displaySession = session ?? lastSessionRef.current;
+
+  if (!mounted) return <Link href="/signin">Sign in</Link>;
+  if (isPending && displaySession === undefined) return <p className="mt-8 text-center">Loading...</p>;
+  if (!displaySession?.user) return <Link href="/signin">Sign in</Link>;
 
   return (
     <DropdownMenu>
@@ -26,14 +35,14 @@ export default function UserButton() {
           className="rounded-full border-2 border-solid border-slate-500 hover:border-slate-200"
           data-testid="avatarCtxMenu"
         >
-          <UserAvatar image={session.user.image ?? null} size={8} />
+          <UserAvatar image={displaySession.user.image ?? null} size={8} />
         </div>
       </DropdownMenuTrigger>
       <DropdownMenuContent className="w-56" align="end" forceMount>
         <DropdownMenuLabel className="font-normal">
           <div className="flex flex-col space-y-1">
-            <p className="leading-none">{session.user.name}</p>
-            <p className="text-xs leading-none text-muted-foreground">{session.user.email}</p>
+            <p className="leading-none">{displaySession.user.name}</p>
+            <p className="text-xs leading-none text-muted-foreground">{displaySession.user.email}</p>
           </div>
         </DropdownMenuLabel>
         <DropdownMenuItem asChild>
@@ -41,7 +50,7 @@ export default function UserButton() {
             <Button className="w-full">Profile</Button>
           </Link>
         </DropdownMenuItem>
-        {session.user.role === "admin" ? (
+        {displaySession.user.role === "admin" ? (
           <DropdownMenuItem asChild>
             <Link href="/administration" className="w-full">
               <Button className="w-full">Administration</Button>

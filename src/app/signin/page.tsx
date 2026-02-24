@@ -7,14 +7,24 @@ import { Toast, useToast } from "@/components/ui/use-toast";
 import { MIN_PASSWORD_LENGTH } from "@/constants";
 import { LoginSchema, LoginSchemaType, UserBaseSchemaType } from "@/domain/user-domain/user-schema";
 import userServiceClient from "@/domain/user-domain/user-service-client";
+import {
+  broadcastSessionChanged,
+  useRedirectToHomeWhenSignedIn,
+  useSessionWithRefresh,
+} from "@/lib/useSessionWithRefresh";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { ErrorContext } from "better-auth/react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 
+/**
+ * Sign-in page. Renders email/password form; redirects to home when the user already has a session.
+ * On successful sign-in, broadcasts session change (so other tabs refresh) and the redirect hook navigates to `/`.
+ */
 export default function SignInPage() {
   const { toast } = useToast();
+  const { data: session } = useSessionWithRefresh();
+  useRedirectToHomeWhenSignedIn(session);
 
   const form = useForm<LoginSchemaType>({
     resolver: zodResolver(LoginSchema),
@@ -24,8 +34,6 @@ export default function SignInPage() {
     } satisfies LoginSchemaType,
   });
 
-  const router = useRouter();
-
   const action: () => void = form.handleSubmit(async (data: UserBaseSchemaType): Promise<void> => {
     await userServiceClient.signIn({ email: data.email, password: data.password } satisfies UserBaseSchemaType, {
       onSuccess: () => {
@@ -33,7 +41,8 @@ export default function SignInPage() {
           title: "Success",
           description: "You are signed in",
         } satisfies Toast);
-        router.push("/");
+        broadcastSessionChanged();
+        // useRedirectToHomeWhenSignedIn will redirect when session refetch completes; avoid double navigation (router.push + hook replace)
       },
       onError: (error: ErrorContext) => {
         form.resetField("password");

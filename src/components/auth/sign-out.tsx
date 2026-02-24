@@ -1,8 +1,10 @@
 "use client";
 
 import userServiceClient from "@/domain/user-domain/user-service-client";
+import { broadcastSessionChanged } from "@/lib/useSessionWithRefresh";
 import { Button } from "../ui/button";
 
+/** Sign-out button. Notifies other tabs via broadcastSessionChanged, then redirects to /signin. */
 export function SignOut(props: React.ComponentPropsWithRef<typeof Button>) {
   return (
     <Button
@@ -13,8 +15,7 @@ export function SignOut(props: React.ComponentPropsWithRef<typeof Button>) {
       onClick={async () => {
         await userServiceClient.signOut({
           onSuccess: () => {
-            // Use window.location.replace() to prevent back-button navigation to protected pages
-            // after logout. This is a standard best practice for logout flows.
+            broadcastSessionChanged();
             window.location.replace("/signin");
           },
           onError: (error) => {

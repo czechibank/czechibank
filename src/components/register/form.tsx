@@ -7,16 +7,31 @@ import { ToastAction } from "@/components/ui/toast";
 import { MIN_PASSWORD_LENGTH } from "@/constants";
 import { CreateUserSchemaType, UserSchema } from "@/domain/user-domain/user-schema";
 import userServiceClient from "@/domain/user-domain/user-service-client";
+import {
+  broadcastSessionChanged,
+  useRedirectToHomeWhenSignedIn,
+  useSessionWithRefresh,
+} from "@/lib/useSessionWithRefresh";
 import { generateRandomAvatarConfig } from "@/lib/utils";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { ErrorContext } from "better-auth/react";
 import { useRouter } from "next/navigation";
+import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { toast, Toast } from "../ui/use-toast";
 
+/**
+ * Registration form (name, email, password, confirm password). Redirects to home when the user already has a session,
+ * except during sign-up so that `router.push("/register/success")` is not overridden. On success, broadcasts session
+ * change and navigates to `/register/success`.
+ */
 export function RegisterForm() {
   const router = useRouter();
+  const [isSigningUp, setIsSigningUp] = useState(false);
+  const { data: session } = useSessionWithRefresh();
+  useRedirectToHomeWhenSignedIn(session, { skipRedirect: isSigningUp });
+
   const ExtendedUserSchema = UserSchema.extend({
     confirmPassword: z.string(),
   }).refine((data) => data.password === data.confirmPassword, {
@@ -34,9 +49,9 @@ export function RegisterForm() {
       confirmPassword: "",
     },
   });
-  console.log(form.formState.errors);
 
   const action: () => void = form.handleSubmit(async (data: ExtendedUserSchemaType): Promise<void> => {
+    setIsSigningUp(true);
     await userServiceClient.signUp(
       {
         email: data.email,
@@ -47,12 +62,12 @@ export function RegisterForm() {
       {
         onSuccess: () => {
           form.reset();
-          // Refresh router to ensure useSession hook updates after signup
+          broadcastSessionChanged();
           router.refresh();
-          // Navigate to success page
           router.push("/register/success");
         },
         onError: (error: ErrorContext): void => {
+          setIsSigningUp(false);
           // Reset password fields if user already exists, because of the security reasons
           form.resetField("password");
           form.resetField("confirmPassword");
