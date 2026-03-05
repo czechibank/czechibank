@@ -1,5 +1,6 @@
 import { defineConfig, devices } from "@playwright/test";
 import { defineBddConfig } from "playwright-bdd";
+require("dotenv").config();
 
 /**
  * Read environment variables from file.
