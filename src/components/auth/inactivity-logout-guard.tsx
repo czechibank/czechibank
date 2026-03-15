@@ -104,13 +104,15 @@ export function InactivityLogoutGuard() {
 
   // Set last-activity when user appears (mount or after "Stay signed in"); avoid resetting on every poll
   const hadUserIdRef = useRef(false);
-  if (userId && !hadUserIdRef.current) {
-    hadUserIdRef.current = true;
-    const t = Date.now();
-    sharedLastActivityRef.current = t;
-    if (typeof window !== "undefined") window.__inactivity_last_activity__ = t;
-  }
-  if (!userId) hadUserIdRef.current = false;
+  useEffect(() => {
+    if (userId && !hadUserIdRef.current) {
+      hadUserIdRef.current = true;
+      const t = Date.now();
+      sharedLastActivityRef.current = t;
+      if (typeof window !== "undefined") window.__inactivity_last_activity__ = t;
+    }
+    if (!userId) hadUserIdRef.current = false;
+  }, [userId]);
 
   // One interval per userId; effect cleanup clears it
   useEffect(() => {
@@ -174,8 +176,14 @@ export function InactivityLogoutGuard() {
     };
 
     const events = ["mousedown", "keydown", "touchstart", "scroll"] as const;
-    events.forEach((e) => window.addEventListener(e, handleActivity));
-    return () => events.forEach((e) => window.removeEventListener(e, handleActivity));
+    events.forEach((e) => {
+      window.addEventListener(e, handleActivity);
+    });
+    return () => {
+      events.forEach((e) => {
+        window.removeEventListener(e, handleActivity);
+      });
+    };
   }, [userId, showDialog]);
 
   /** Writes skip/activity to window and refs, clears pending logout timeout. Called on mousedown and in handleStaySignedIn. */

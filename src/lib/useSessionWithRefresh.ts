@@ -79,7 +79,10 @@ export function useSessionWithRefresh() {
     return () => window.removeEventListener("focus", onFocus);
   }, [triggerRefresh]);
 
-  // Redirect to /logged-out when session is gone or user changed; skip when in skip window or dialog open
+  // Redirect to /logged-out when session is gone or user changed. Coordination with InactivityLogoutGuard:
+  // the guard's scheduleLogoutAfterYield checks getSkipUntil() before performLogout; we check
+  // inactivityDialogOpenRef and skipRedirectUntilRef and hasRedirectedToLoggedOutRef so we don't double-redirect.
+  // Do not remove these checks or sharedRedirectTimeoutId cleanup.
   useEffect(() => {
     const currentUserId = sessionResult.data?.user?.id ?? null;
     const previousUserId = lastUserIdRef.current;
