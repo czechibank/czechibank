@@ -33,6 +33,8 @@ declare global {
 const sharedLastActivityRef = { current: Date.now() };
 const sharedSkipLogoutUntilRef = { current: 0 };
 const sharedPendingMaybeLogoutIdRef = { current: null as ReturnType<typeof setTimeout> | null };
+/** Current interval id so the deferred logout callback can clear it only when logout is confirmed. */
+const sharedInactivityIntervalIdRef = { current: null as ReturnType<typeof setInterval> | null };
 
 /** Returns the timestamp (ms) until which we skip inactivity logout (e.g. after "Stay signed in"). */
 function getSkipUntil(): number {
@@ -100,6 +102,10 @@ export function InactivityLogoutGuard() {
       const elapsed = now - lastActivity;
       if (inSkipWindow || recentStaySignedIn) return;
       if (elapsed < INACTIVITY_LOGOUT_MS) return;
+      if (sharedInactivityIntervalIdRef.current) {
+        clearInterval(sharedInactivityIntervalIdRef.current);
+        sharedInactivityIntervalIdRef.current = null;
+      }
       performLogout();
     }, YIELD_MS);
     sharedPendingMaybeLogoutIdRef.current = id;
@@ -118,7 +124,7 @@ export function InactivityLogoutGuard() {
     if (!userId) hadUserIdRef.current = false;
   }, [userId]);
 
-  // One interval per userId; effect cleanup clears it
+  // One interval per userId; only clear it when logout is confirmed (in deferred callback), so "Stay signed in" keeps monitoring
   useEffect(() => {
     if (!userId) return;
 
@@ -132,30 +138,33 @@ export function InactivityLogoutGuard() {
 
       if (elapsed >= INACTIVITY_LOGOUT_MS) {
         if (now < getSkipUntil()) return;
-        clearInterval(interval);
-        scheduleLogoutAfterYield();
+        if (sharedPendingMaybeLogoutIdRef.current == null) scheduleLogoutAfterYield();
         return;
       }
 
       const warningStart = INACTIVITY_LOGOUT_MS - INACTIVITY_WARNING_BEFORE_MS;
       if (elapsed >= warningStart) {
         const secondsLeft = Math.ceil((INACTIVITY_LOGOUT_MS - elapsed) / 1000);
-        inactivityDialogOpenRef.current = true;
-        setShowDialog(true);
-        setCountdownSec(Math.max(0, secondsLeft));
-        if (secondsLeft <= 0) {
-          if (now < getSkipUntil()) return;
-          clearInterval(interval);
-          scheduleLogoutAfterYield();
-        }
+        const shouldScheduleLogout =
+          secondsLeft <= 0 && now >= getSkipUntil() && sharedPendingMaybeLogoutIdRef.current == null;
+        setTimeout(() => {
+          inactivityDialogOpenRef.current = true;
+          setShowDialog(true);
+          setCountdownSec(Math.max(0, secondsLeft));
+          if (shouldScheduleLogout) scheduleLogoutAfterYield();
+        }, 0);
       } else {
-        inactivityDialogOpenRef.current = false;
-        setShowDialog(false);
+        setTimeout(() => {
+          inactivityDialogOpenRef.current = false;
+          setShowDialog(false);
+        }, 0);
       }
     }, 1000);
 
+    sharedInactivityIntervalIdRef.current = interval;
     return () => {
       clearInterval(interval);
+      sharedInactivityIntervalIdRef.current = null;
       if (typeof window !== "undefined" && window.__inactivity_pending_timeout_id__ != null) {
         clearTimeout(window.__inactivity_pending_timeout_id__);
         window.__inactivity_pending_timeout_id__ = undefined;

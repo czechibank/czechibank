@@ -109,20 +109,27 @@ export function useSessionWithRefresh() {
 
     if (previousUserId != null && !hasRedirectedToLoggedOutRef.current) {
       if (currentUserId == null) {
-        const timeoutId = setTimeout(() => {
-          sharedRedirectTimeoutId = null;
-          redirectTimeoutRef.current = null;
-          const now = Date.now();
-          const skipUntil = skipRedirectUntilRef.current;
-          const inSkipWindow = now < skipUntil;
-          const dialogOpen = inactivityDialogOpenRef.current;
-          if (hasRedirectedToLoggedOutRef.current) return;
-          if (inSkipWindow || dialogOpen) return;
-          hasRedirectedToLoggedOutRef.current = true;
-          window.location.replace("/logged-out?reason=inactivity");
-        }, 5000);
-        sharedRedirectTimeoutId = timeoutId;
-        redirectTimeoutRef.current = timeoutId;
+        const scheduleRedirectCheck = (delayMs: number) => {
+          const timeoutId = setTimeout(() => {
+            sharedRedirectTimeoutId = null;
+            redirectTimeoutRef.current = null;
+            const now = Date.now();
+            const skipUntil = skipRedirectUntilRef.current;
+            const inSkipWindow = now < skipUntil;
+            const dialogOpen = inactivityDialogOpenRef.current;
+            if (hasRedirectedToLoggedOutRef.current) return;
+            if (inSkipWindow || dialogOpen) {
+              const retryMs = inSkipWindow ? Math.max(1000, skipUntil - now) : 1000;
+              scheduleRedirectCheck(retryMs);
+              return;
+            }
+            hasRedirectedToLoggedOutRef.current = true;
+            window.location.replace("/logged-out?reason=inactivity");
+          }, delayMs);
+          sharedRedirectTimeoutId = timeoutId;
+          redirectTimeoutRef.current = timeoutId;
+        };
+        scheduleRedirectCheck(5000);
         return;
       }
       if (currentUserId !== previousUserId) {
