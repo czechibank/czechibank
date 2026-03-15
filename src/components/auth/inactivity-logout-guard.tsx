@@ -249,7 +249,16 @@ export function InactivityLogoutGuard() {
           </DialogDescription>
         </DialogHeader>
         <DialogFooter>
-          <Button onClick={handleStaySignedIn} onMouseDown={commitStaySignedInRefs}>
+          <Button
+            onClick={handleStaySignedIn}
+            onPointerDown={commitStaySignedInRefs}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" || e.key === " ") {
+                e.key === " " && e.preventDefault();
+                commitStaySignedInRefs();
+              }
+            }}
+          >
             Stay signed in
           </Button>
         </DialogFooter>

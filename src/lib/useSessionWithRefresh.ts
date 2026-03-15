@@ -40,22 +40,22 @@ export function useSessionWithRefresh() {
   const refetchRef = useRef<(() => void) | undefined>(undefined);
   if (typeof sessionResult.refetch === "function") refetchRef.current = sessionResult.refetch;
 
-  /** Refetches session and calls router.refresh() when not in the "Stay signed in" skip window. */
+  /** Sync session state only (refetch). Does not call router.refresh() so idle tab poll does not extend server session. */
+  const syncSession = useCallback(() => {
+    refetchRef.current?.();
+  }, []);
+
+  /** Refetches session and calls router.refresh() when not in skip window. Use for focus and broadcast only, not poll. */
   const triggerRefresh = useCallback(() => {
     refetchRef.current?.();
-    // Skip router.refresh() in the "Stay signed in" window so the server does not redirect to /signin
-    if (Date.now() >= skipRedirectUntilRef.current) {
-      router.refresh();
-    }
+    if (Date.now() >= skipRedirectUntilRef.current) router.refresh();
   }, [router]);
 
   useEffect(() => {
     channelRef.current = new BroadcastChannel(SESSION.CHANNEL_NAME);
 
     const handleMessage = (event: MessageEvent) => {
-      if (event.data?.type === "SESSION_CHANGED") {
-        triggerRefresh();
-      }
+      if (event.data?.type === "SESSION_CHANGED") triggerRefresh();
     };
 
     channelRef.current.onmessage = handleMessage;
@@ -65,13 +65,13 @@ export function useSessionWithRefresh() {
     };
   }, [triggerRefresh]);
 
-  // Poll to keep session in sync with server (e.g. cookie changed in another tab)
+  // Poll only syncs session state (refetch); does not router.refresh() so idle tabs do not extend server session
   useEffect(() => {
-    pollIntervalRef.current = setInterval(triggerRefresh, SESSION.POLL_INTERVAL_MS);
+    pollIntervalRef.current = setInterval(syncSession, SESSION.POLL_INTERVAL_MS);
     return () => {
       if (pollIntervalRef.current) clearInterval(pollIntervalRef.current);
     };
-  }, [triggerRefresh]);
+  }, [syncSession]);
 
   // Refetch when tab gains focus
   useEffect(() => {
@@ -88,6 +88,27 @@ export function useSessionWithRefresh() {
     const currentUserId = sessionResult.data?.user?.id ?? null;
     const previousUserId = lastUserIdRef.current;
 
+    const scheduleRedirectCheck = (delayMs: number) => {
+      const timeoutId = setTimeout(() => {
+        sharedRedirectTimeoutId = null;
+        redirectTimeoutRef.current = null;
+        const now = Date.now();
+        const skipUntil = skipRedirectUntilRef.current;
+        const inSkipWindow = now < skipUntil;
+        const dialogOpen = inactivityDialogOpenRef.current;
+        if (hasRedirectedToLoggedOutRef.current) return;
+        if (inSkipWindow || dialogOpen) {
+          const retryMs = inSkipWindow ? Math.max(1000, skipUntil - now) : 1000;
+          scheduleRedirectCheck(retryMs);
+          return;
+        }
+        hasRedirectedToLoggedOutRef.current = true;
+        window.location.replace("/logged-out?reason=inactivity");
+      }, delayMs);
+      sharedRedirectTimeoutId = timeoutId;
+      redirectTimeoutRef.current = timeoutId;
+    };
+
     if (redirectTimeoutRef.current) {
       clearTimeout(redirectTimeoutRef.current);
       redirectTimeoutRef.current = null;
@@ -97,46 +118,32 @@ export function useSessionWithRefresh() {
       sharedRedirectTimeoutId = null;
     }
 
+    // Different user: redirect immediately (do not let skip/dialog swallow it)
+    if (previousUserId != null && currentUserId !== previousUserId) {
+      hasRedirectedToLoggedOutRef.current = true;
+      window.location.replace("/logged-out");
+      return;
+    }
+
+    // Skip window: only suppress inactivity redirect; if session became null, re-arm the deferred redirect
     if (Date.now() < skipRedirectUntilRef.current) {
-      lastUserIdRef.current = currentUserId;
-      return;
-    }
-
-    if (inactivityDialogOpenRef.current) {
-      lastUserIdRef.current = currentUserId;
-      return;
-    }
-
-    if (previousUserId != null && !hasRedirectedToLoggedOutRef.current) {
-      if (currentUserId == null) {
-        const scheduleRedirectCheck = (delayMs: number) => {
-          const timeoutId = setTimeout(() => {
-            sharedRedirectTimeoutId = null;
-            redirectTimeoutRef.current = null;
-            const now = Date.now();
-            const skipUntil = skipRedirectUntilRef.current;
-            const inSkipWindow = now < skipUntil;
-            const dialogOpen = inactivityDialogOpenRef.current;
-            if (hasRedirectedToLoggedOutRef.current) return;
-            if (inSkipWindow || dialogOpen) {
-              const retryMs = inSkipWindow ? Math.max(1000, skipUntil - now) : 1000;
-              scheduleRedirectCheck(retryMs);
-              return;
-            }
-            hasRedirectedToLoggedOutRef.current = true;
-            window.location.replace("/logged-out?reason=inactivity");
-          }, delayMs);
-          sharedRedirectTimeoutId = timeoutId;
-          redirectTimeoutRef.current = timeoutId;
-        };
+      if (previousUserId != null && currentUserId == null && !hasRedirectedToLoggedOutRef.current)
         scheduleRedirectCheck(5000);
-        return;
-      }
-      if (currentUserId !== previousUserId) {
-        hasRedirectedToLoggedOutRef.current = true;
-        window.location.replace("/logged-out");
-        return;
-      }
+      lastUserIdRef.current = currentUserId;
+      return;
+    }
+
+    // Dialog open: same — re-arm if session became null
+    if (inactivityDialogOpenRef.current) {
+      if (previousUserId != null && currentUserId == null && !hasRedirectedToLoggedOutRef.current)
+        scheduleRedirectCheck(5000);
+      lastUserIdRef.current = currentUserId;
+      return;
+    }
+
+    if (previousUserId != null && !hasRedirectedToLoggedOutRef.current && currentUserId == null) {
+      scheduleRedirectCheck(5000);
+      return;
     }
 
     lastUserIdRef.current = currentUserId;
