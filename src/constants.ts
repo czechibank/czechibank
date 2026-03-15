@@ -14,8 +14,3 @@ export const SESSION = {
   /** Poll interval in ms for useSessionWithRefresh (keep client session in sync with server across tabs) */
   POLL_INTERVAL_MS: 10_000,
 };
-
-/** Inactivity auto-logout: time in ms after which user is logged out. Must match server SESSION.EXPIRES_IN. */
-export const INACTIVITY_LOGOUT_MS = 30 * 60 * 1000; // 30 minutes
-/** Inactivity warning: show dialog this many ms before logout (countdown duration, e.g. 5 min). */
-export const INACTIVITY_WARNING_BEFORE_MS = 5 * 60 * 1000; // 5 minutes

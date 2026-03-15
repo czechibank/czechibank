@@ -9,8 +9,8 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { INACTIVITY_LOGOUT_MS, INACTIVITY_WARNING_BEFORE_MS } from "@/constants";
 import { authClient } from "@/lib/auth-client";
+import { getInactivityConfig, INACTIVITY_TESTING_KEY } from "@/lib/inactivity-logout-timing";
 import {
   broadcastSessionChanged,
   inactivityDialogOpenRef,
@@ -26,6 +26,12 @@ declare global {
     __inactivity_last_activity__?: number;
     __inactivity_pending_timeout_id__?: ReturnType<typeof setTimeout>;
     __inactivity_stay_signed_in_at__?: number;
+    /** Enable short inactivity (2 min / 30 sec) for QA testing. See Swagger docs. */
+    enableInactivityTesting?: () => "enabled" | "error";
+    /** Disable short inactivity; use production 30 min / 5 min. */
+    disableInactivityTesting?: () => "disabled" | "error";
+    /** Returns "enabled" or "disabled" for current short-timing state. */
+    getInactivityTestingStatus?: () => "enabled" | "disabled";
   }
 }
 
@@ -46,6 +52,18 @@ function getSkipUntil(): number {
 function getLastActivity(): number {
   if (typeof window === "undefined") return sharedLastActivityRef.current;
   return window.__inactivity_last_activity__ ?? sharedLastActivityRef.current;
+}
+
+/** How long (ms) we still consider "Stay signed in" as recent for re-check in deferred callbacks. */
+const RECENT_STAY_SIGNED_IN_MS = 20000;
+
+/** True if we are in the skip window or user just clicked "Stay signed in"; used to avoid re-opening dialog or logging out in deferred callbacks. */
+function isInSkipOrRecentStaySignedIn(now: number = Date.now()): boolean {
+  const skipUntil = getSkipUntil();
+  const staySignedInAt = typeof window !== "undefined" ? window.__inactivity_stay_signed_in_at__ : undefined;
+  const inSkipWindow = now < skipUntil;
+  const recentStaySignedIn = staySignedInAt != null && now - staySignedInAt < RECENT_STAY_SIGNED_IN_MS;
+  return inSkipWindow || recentStaySignedIn;
 }
 
 /** Format seconds as M:SS (e.g. 5:00, 0:01). */
@@ -94,14 +112,11 @@ export function InactivityLogoutGuard() {
       sharedPendingMaybeLogoutIdRef.current = null;
       if (typeof window !== "undefined") window.__inactivity_pending_timeout_id__ = undefined;
       const now = Date.now();
-      const skipUntil = getSkipUntil();
       const lastActivity = getLastActivity();
-      const staySignedInAt = typeof window !== "undefined" ? window.__inactivity_stay_signed_in_at__ : undefined;
-      const inSkipWindow = now < skipUntil;
-      const recentStaySignedIn = staySignedInAt != null && now - staySignedInAt < 20000;
       const elapsed = now - lastActivity;
-      if (inSkipWindow || recentStaySignedIn) return;
-      if (elapsed < INACTIVITY_LOGOUT_MS) return;
+      const { logoutMs } = getInactivityConfig();
+      if (isInSkipOrRecentStaySignedIn(now)) return;
+      if (elapsed < logoutMs) return;
       if (sharedInactivityIntervalIdRef.current) {
         clearInterval(sharedInactivityIntervalIdRef.current);
         sharedInactivityIntervalIdRef.current = null;
@@ -129,6 +144,7 @@ export function InactivityLogoutGuard() {
     if (!userId) return;
 
     const interval = setInterval(() => {
+      const config = getInactivityConfig();
       const now = Date.now();
       const skipUntil = getSkipUntil();
       const lastActivity = getLastActivity();
@@ -136,18 +152,24 @@ export function InactivityLogoutGuard() {
 
       const elapsed = now - lastActivity;
 
-      if (elapsed >= INACTIVITY_LOGOUT_MS) {
+      if (elapsed >= config.logoutMs) {
         if (now < getSkipUntil()) return;
         if (sharedPendingMaybeLogoutIdRef.current == null) scheduleLogoutAfterYield();
         return;
       }
 
-      const warningStart = INACTIVITY_LOGOUT_MS - INACTIVITY_WARNING_BEFORE_MS;
+      const warningStart = config.logoutMs - config.warningBeforeMs;
       if (elapsed >= warningStart) {
-        const secondsLeft = Math.ceil((INACTIVITY_LOGOUT_MS - elapsed) / 1000);
+        const secondsLeft = Math.ceil((config.logoutMs - elapsed) / 1000);
         const shouldScheduleLogout =
           secondsLeft <= 0 && now >= getSkipUntil() && sharedPendingMaybeLogoutIdRef.current == null;
         setTimeout(() => {
+          // Re-check: user may have clicked "Stay signed in" before this callback ran; avoid re-opening dialog
+          if (isInSkipOrRecentStaySignedIn()) {
+            inactivityDialogOpenRef.current = false;
+            setShowDialog(false);
+            return;
+          }
           inactivityDialogOpenRef.current = true;
           setShowDialog(true);
           setCountdownSec(Math.max(0, secondsLeft));
@@ -175,6 +197,73 @@ export function InactivityLogoutGuard() {
       }
     };
   }, [userId, scheduleLogoutAfterYield]);
+
+  // Expose console helpers for QA (short inactivity for faster testing); works in any environment
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const RESET_SKIP_MS = 15000; // same as SKIP_MS; skip window when resetting timing
+    window.enableInactivityTesting = () => {
+      try {
+        localStorage.setItem(INACTIVITY_TESTING_KEY, "1");
+        const now = Date.now();
+        sharedLastActivityRef.current = now;
+        sharedSkipLogoutUntilRef.current = now + RESET_SKIP_MS;
+        if (typeof window !== "undefined") {
+          window.__inactivity_last_activity__ = now;
+          window.__inactivity_skip_until__ = now + RESET_SKIP_MS;
+          if (window.__inactivity_pending_timeout_id__ != null) {
+            clearTimeout(window.__inactivity_pending_timeout_id__);
+            window.__inactivity_pending_timeout_id__ = undefined;
+          }
+        }
+        if (sharedPendingMaybeLogoutIdRef.current) {
+          clearTimeout(sharedPendingMaybeLogoutIdRef.current);
+          sharedPendingMaybeLogoutIdRef.current = null;
+        }
+        console.info("[inactivity] Enabled. Timer reset. Logout after 2 min of inactivity.");
+        return "enabled";
+      } catch {
+        console.warn("[inactivity] Could not enable short timing (localStorage not available).");
+        return "error";
+      }
+    };
+    window.disableInactivityTesting = () => {
+      try {
+        localStorage.removeItem(INACTIVITY_TESTING_KEY);
+        const now = Date.now();
+        sharedLastActivityRef.current = now;
+        sharedSkipLogoutUntilRef.current = now + RESET_SKIP_MS;
+        if (typeof window !== "undefined") {
+          window.__inactivity_last_activity__ = now;
+          window.__inactivity_skip_until__ = now + RESET_SKIP_MS;
+          if (window.__inactivity_pending_timeout_id__ != null) {
+            clearTimeout(window.__inactivity_pending_timeout_id__);
+            window.__inactivity_pending_timeout_id__ = undefined;
+          }
+        }
+        if (sharedPendingMaybeLogoutIdRef.current) {
+          clearTimeout(sharedPendingMaybeLogoutIdRef.current);
+          sharedPendingMaybeLogoutIdRef.current = null;
+        }
+        console.info("[inactivity] Disabled. Timer reset. Logout after 30 min of inactivity.");
+        return "disabled";
+      } catch {
+        return "error";
+      }
+    };
+    window.getInactivityTestingStatus = () => {
+      try {
+        return localStorage.getItem(INACTIVITY_TESTING_KEY) ? "enabled" : "disabled";
+      } catch {
+        return "disabled";
+      }
+    };
+    return () => {
+      delete window.enableInactivityTesting;
+      delete window.disableInactivityTesting;
+      delete window.getInactivityTestingStatus;
+    };
+  }, []);
 
   // Reset last activity on user interaction (only when dialog is not open)
   useEffect(() => {

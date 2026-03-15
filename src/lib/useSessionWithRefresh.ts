@@ -118,8 +118,8 @@ export function useSessionWithRefresh() {
       sharedRedirectTimeoutId = null;
     }
 
-    // Different user: redirect immediately (do not let skip/dialog swallow it)
-    if (previousUserId != null && currentUserId !== previousUserId) {
+    // Different user (another user signed in elsewhere): redirect immediately. Do not treat null session as "different user" — let it fall through to inactivity/defer logic.
+    if (previousUserId != null && currentUserId != null && currentUserId !== previousUserId) {
       hasRedirectedToLoggedOutRef.current = true;
       window.location.replace("/logged-out");
       return;
