@@ -5,11 +5,29 @@ import { useSession as useBetterAuthSession } from "@/lib/auth-client";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef } from "react";
 
+/** Timestamp (ms) until which this hook will not redirect to /logged-out. Set when the user clicks "Stay signed in". */
+const skipRedirectUntilRef = { current: 0 };
+
+/** True while the inactivity warning dialog is open; redirect is not scheduled so the user can click "Stay signed in". */
+export const inactivityDialogOpenRef = { current: false };
+
+/** Pending redirect timeout id; module-level so skipRedirectForStaySignedIn can clear it from any hook instance. */
+let sharedRedirectTimeoutId: ReturnType<typeof setTimeout> | null = null;
+
+/** Call when the user clicks "Stay signed in": clear any pending redirect and do not redirect for the next msFromNow ms. */
+export function skipRedirectForStaySignedIn(msFromNow = 20000) {
+  if (sharedRedirectTimeoutId) {
+    clearTimeout(sharedRedirectTimeoutId);
+    sharedRedirectTimeoutId = null;
+  }
+  skipRedirectUntilRef.current = Date.now() + msFromNow;
+}
+
 /**
- * Wraps better-auth useSession with cross-tab sync and safe redirects.
- * - Polling and focus: refetches session and calls router.refresh() on an interval and when the tab gains focus so all tabs stay in sync with the server.
- * - BroadcastChannel: listens for SESSION_CHANGED (sent after sign-in, sign-out, register); other tabs refetch and refresh so they show the same user.
- * - Redirect to /logged-out when the session user changes to a different user so we never show the wrong user's data.
+ * Session hook with cross-tab sync and redirect handling.
+ * - Refetches session on a poll interval and on tab focus; calls router.refresh() only when not in the "Stay signed in" skip window (so the server does not redirect to signin).
+ * - Listens for SESSION_CHANGED on BroadcastChannel; other tabs refetch and refresh.
+ * - When session is gone (inactivity) or user changed in another tab: redirects to /logged-out after a short delay (or immediately for different user).
  */
 export function useSessionWithRefresh() {
   const sessionResult = useBetterAuthSession();
@@ -18,12 +36,16 @@ export function useSessionWithRefresh() {
   const pollIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const lastUserIdRef = useRef<string | null>(null);
   const hasRedirectedToLoggedOutRef = useRef(false);
+  const redirectTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const refetchRef = useRef<(() => void) | undefined>(undefined);
   if (typeof sessionResult.refetch === "function") refetchRef.current = sessionResult.refetch;
 
   const triggerRefresh = useCallback(() => {
     refetchRef.current?.();
-    router.refresh();
+    // Skip router.refresh() in the "Stay signed in" window so the server does not redirect to /signin
+    if (Date.now() >= skipRedirectUntilRef.current) {
+      router.refresh();
+    }
   }, [router]);
 
   useEffect(() => {
@@ -42,7 +64,7 @@ export function useSessionWithRefresh() {
     };
   }, [triggerRefresh]);
 
-  // Poll periodically so we stay in sync with server (e.g. cookie changed in another tab)
+  // Poll to keep session in sync with server (e.g. cookie changed in another tab)
   useEffect(() => {
     pollIntervalRef.current = setInterval(triggerRefresh, SESSION.POLL_INTERVAL_MS);
     return () => {
@@ -50,29 +72,70 @@ export function useSessionWithRefresh() {
     };
   }, [triggerRefresh]);
 
-  // Refresh when tab gains focus (user switched back to this tab)
+  // Refetch when tab gains focus
   useEffect(() => {
     const onFocus = () => triggerRefresh();
     window.addEventListener("focus", onFocus);
     return () => window.removeEventListener("focus", onFocus);
   }, [triggerRefresh]);
 
-  // When session user changes to a different user (e.g. another tab signed in as User B), redirect so we never show wrong user
+  // Redirect to /logged-out when session is gone or user changed; skip when in skip window or dialog open
   useEffect(() => {
     const currentUserId = sessionResult.data?.user?.id ?? null;
     const previousUserId = lastUserIdRef.current;
 
-    if (
-      previousUserId != null &&
-      currentUserId != null &&
-      previousUserId !== currentUserId &&
-      !hasRedirectedToLoggedOutRef.current
-    ) {
-      hasRedirectedToLoggedOutRef.current = true;
-      window.location.replace("/logged-out");
+    if (redirectTimeoutRef.current) {
+      clearTimeout(redirectTimeoutRef.current);
+      redirectTimeoutRef.current = null;
+    }
+    if (sharedRedirectTimeoutId) {
+      clearTimeout(sharedRedirectTimeoutId);
+      sharedRedirectTimeoutId = null;
+    }
+
+    if (Date.now() < skipRedirectUntilRef.current) {
+      lastUserIdRef.current = currentUserId;
+      return;
+    }
+
+    if (inactivityDialogOpenRef.current) {
+      lastUserIdRef.current = currentUserId;
+      return;
+    }
+
+    if (previousUserId != null && !hasRedirectedToLoggedOutRef.current) {
+      if (currentUserId == null) {
+        const timeoutId = setTimeout(() => {
+          sharedRedirectTimeoutId = null;
+          redirectTimeoutRef.current = null;
+          const now = Date.now();
+          const skipUntil = skipRedirectUntilRef.current;
+          const inSkipWindow = now < skipUntil;
+          const dialogOpen = inactivityDialogOpenRef.current;
+          if (hasRedirectedToLoggedOutRef.current) return;
+          if (inSkipWindow || dialogOpen) return;
+          hasRedirectedToLoggedOutRef.current = true;
+          window.location.replace("/logged-out?reason=inactivity");
+        }, 5000);
+        sharedRedirectTimeoutId = timeoutId;
+        redirectTimeoutRef.current = timeoutId;
+        return;
+      }
+      if (currentUserId !== previousUserId) {
+        hasRedirectedToLoggedOutRef.current = true;
+        window.location.replace("/logged-out");
+        return;
+      }
     }
 
     lastUserIdRef.current = currentUserId;
+    return () => {
+      if (redirectTimeoutRef.current) {
+        clearTimeout(redirectTimeoutRef.current);
+        if (sharedRedirectTimeoutId === redirectTimeoutRef.current) sharedRedirectTimeoutId = null;
+        redirectTimeoutRef.current = null;
+      }
+    };
   }, [sessionResult.data?.user?.id]);
 
   return sessionResult;

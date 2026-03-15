@@ -18,6 +18,8 @@ const rateLimit = {
 export const RATE_LIMIT = rateLimit[env.ENV || "PROD"];
 
 export const SESSION = {
+  /** Session duration in seconds. Must match client INACTIVITY_LOGOUT_MS. */
   EXPIRES_IN: 60 * 30, // 30 minutes
-  UPDATE_AGE: 60 * 5, // 5 minutes (every 5 minutes the session expiration is updated)
+  /** Seconds after which getSession will refresh the session cookie. 0 = every getSession (so "Stay signed in" refetch always extends the session, including at the last second). */
+  UPDATE_AGE: 0,
 };
