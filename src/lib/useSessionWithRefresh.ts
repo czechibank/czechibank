@@ -40,6 +40,7 @@ export function useSessionWithRefresh() {
   const refetchRef = useRef<(() => void) | undefined>(undefined);
   if (typeof sessionResult.refetch === "function") refetchRef.current = sessionResult.refetch;
 
+  /** Refetches session and calls router.refresh() when not in the "Stay signed in" skip window. */
   const triggerRefresh = useCallback(() => {
     refetchRef.current?.();
     // Skip router.refresh() in the "Stay signed in" window so the server does not redirect to /signin

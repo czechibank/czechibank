@@ -34,10 +34,13 @@ const sharedLastActivityRef = { current: Date.now() };
 const sharedSkipLogoutUntilRef = { current: 0 };
 const sharedPendingMaybeLogoutIdRef = { current: null as ReturnType<typeof setTimeout> | null };
 
+/** Returns the timestamp (ms) until which we skip inactivity logout (e.g. after "Stay signed in"). */
 function getSkipUntil(): number {
   if (typeof window === "undefined") return sharedSkipLogoutUntilRef.current;
   return window.__inactivity_skip_until__ ?? sharedSkipLogoutUntilRef.current;
 }
+
+/** Returns the last activity timestamp (ms) used for inactivity elapsed time. */
 function getLastActivity(): number {
   if (typeof window === "undefined") return sharedLastActivityRef.current;
   return window.__inactivity_last_activity__ ?? sharedLastActivityRef.current;
@@ -62,6 +65,7 @@ export function InactivityLogoutGuard() {
   const userId = session?.user != null && "id" in session.user ? (session.user as { id: string }).id : null;
   const SKIP_MS = 15000;
 
+  /** Signs out and redirects to /logged-out?reason=inactivity. */
   const performLogout = useCallback(() => {
     const goToLoggedOut = () => {
       broadcastSessionChanged();
@@ -76,7 +80,7 @@ export function InactivityLogoutGuard() {
     });
   }, []);
 
-  /** Delay (ms) before re-checking after deciding to logout; lets a "Stay signed in" click in the same tick run first. */
+  /** Schedules a short delay then re-checks skip window and maybe calls performLogout; lets "Stay signed in" click run first. */
   const YIELD_MS = 100;
   const scheduleLogoutAfterYield = useCallback(() => {
     if (typeof window !== "undefined" && window.__inactivity_pending_timeout_id__ != null) {
@@ -206,6 +210,7 @@ export function InactivityLogoutGuard() {
     }
   }, []);
 
+  /** Handles "Stay signed in" click: commits skip/activity, notifies session hook, refetches session, closes dialog. */
   const handleStaySignedIn = useCallback(() => {
     commitStaySignedInRefs();
     inactivityDialogOpenRef.current = false;
