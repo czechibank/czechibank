@@ -8,6 +8,7 @@ Feature: Login user
   @login
   @happy-path
   @CZBANK-T5
+  @general
   Scenario: 001_Login with valid username and password
     When I fill username "zachranNas+brno@pejsekAKocicka.cz"
     And I fill password "PejsekAKocicka123"
@@ -19,6 +20,7 @@ Feature: Login user
   @login
   @negative
   @CZBANK-T7
+  @general
   Scenario Outline: 002_Login with invalid email format
     When I fill username "<email>"
     And I fill password "<password>"
@@ -35,6 +37,7 @@ Feature: Login user
   @login
   @negative
   @CZBANK-T8
+  @general
   Scenario: 003_Login with valid email and wrong password
     When I fill username "zachranNas+brno@pejsekAKocicka.cz"
     And I fill password "PejsekAKocicka12"
@@ -44,8 +47,9 @@ Feature: Login user
   @smoke
   @login
   @negative
-  @CZBANK-T8_2
-  Scenario: 003_2_Try to login without password filled
+  @CZBANK-T8
+  @specific
+  Scenario: 003_Try to login without password filled
     When I fill username "zachranNas+brno@pejsekAKocicka.cz"
     And I fill password ""
     And I click sign in button
@@ -55,6 +59,7 @@ Feature: Login user
   @login
   @happy-path
   @CZBANK-T9
+  @general
   Scenario: 004_Sign out from app
     Given I am logged in as "zachranNas+brno@pejsekAKocicka.cz" with password "PejsekAKocicka123"
     And I click profile button

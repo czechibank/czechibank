@@ -41,8 +41,8 @@ Then("I should see error message {string}", async ({ page }, errorText: string) 
 });
 
 Then("I should see {string} validation text {string}", async ({ page }, fieldID: string, validationText: string) => {
-  await expect(page.locator(`#${fieldID}-message`)).toBeVisible();
-  await expect(page.locator(`#${fieldID}-message`)).toContainText(validationText);
+  await expect(page.getByTestId(`${fieldID}-message`)).toBeVisible();
+  await expect(page.getByTestId(`${fieldID}-message`)).toContainText(validationText);
 });
 
 Then("I click profile button", async ({ page }) => {
