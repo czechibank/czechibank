@@ -81,17 +81,14 @@ jobs:
           name: playwright-report
           path: playwright-report/
           retention-days: 30
-      - name: Upload results to Zephyr Squad
+      - name: Upload results to Zephyr Scale
         if: always()
         run: |
           if [ -f "results.xml" ]; then
-            HTTP_RESPONSE=$(curl --fail --silent --show-error --max-time 60 -w "\n%{http_code}" -X POST \
-              "https://api.zapi.zephyr.smartbear.com/v2/automation/job/upload?projectKey=CZBANK&versionName=Unscheduled&cycleName=GitHub_Run_${{ github.run_number }}" \
+            echo "Uploading test results to Zephyr Scale..."
+            curl -X POST "https://api.zephyrscale.smartbear.com/v2/automations/executions/junit?projectKey=CZBANK&autoCreateTestCases=true" \
               -H "Authorization: Bearer ${{ secrets.ZEPHYR_TOKEN }}" \
-              -F "file=@results.xml" \
-              -F "framework=JUNIT" 2>&1) || {
-              echo "::warning::Zephyr upload failed: $HTTP_RESPONSE"
-            }
+              -F "file=@results.xml"
           else
-            echo "results.xml not found, skipping Zephyr upload."
+            echo "results.xml not found, skipping upload."
           fi
