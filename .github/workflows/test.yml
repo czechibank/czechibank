@@ -82,13 +82,16 @@ jobs:
           path: playwright-report/
           retention-days: 30
       - name: Upload results to Zephyr Squad
-        if: always() # Důležité: pošle report, i když testy selžou
+        if: always()
         run: |
           if [ -f "results.xml" ]; then
-            curl -X POST "https://api.zapi.zephyr.smartbear.com/v2/automation/job/upload?projectKey=CZBANK&versionName=Unscheduled&cycleName=GitHub_Run_${{ github.run_number }}" \
+            HTTP_RESPONSE=$(curl --fail --silent --show-error --max-time 60 -w "\n%{http_code}" -X POST \
+              "https://api.zapi.zephyr.smartbear.com/v2/automation/job/upload?projectKey=CZBANK&versionName=Unscheduled&cycleName=GitHub_Run_${{ github.run_number }}" \
               -H "Authorization: Bearer ${{ secrets.ZEPHYR_TOKEN }}" \
               -F "file=@results.xml" \
-              -F "framework=JUNIT"
+              -F "framework=JUNIT" 2>&1) || {
+              echo "::warning::Zephyr upload failed: $HTTP_RESPONSE"
+            }
           else
-            echo "results.xml nebyl nalezen, přeskočeno odesílání do Zephyru."
+            echo "results.xml not found, skipping Zephyr upload."
           fi
