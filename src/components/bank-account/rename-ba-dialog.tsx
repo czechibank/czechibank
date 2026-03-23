@@ -50,10 +50,11 @@ export function RenameDialog({ bankAccountId, currentName, session, onRenamed }:
     try {
       const response = await bankAccountService.renameBankAccount(bankAccountId, session.userId, data.name);
 
-      if (response.success && !("error" in response)) {
+      if (response.success) {
+        const renamedName = response.data.name;
         toast({
           title: "Bank Account Renamed",
-          description: `Account renamed to "${data.name}" successfully!`,
+          description: `Account renamed to "${renamedName}" successfully!`,
         });
         setOpen(false);
         onRenamed?.();
