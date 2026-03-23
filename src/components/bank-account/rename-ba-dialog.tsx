@@ -15,6 +15,7 @@ import { Label } from "@/components/ui/label";
 import { useToast } from "@/components/ui/use-toast";
 import { RenameBankAccountSchema } from "@/domain/bankAccount-domain/ba-schema";
 import bankAccountService from "@/domain/bankAccount-domain/ba-service";
+import { bankAccountNameSavedToast } from "@/lib/bank-account-name-toast";
 import { Pencil } from "lucide-react";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
@@ -30,6 +31,7 @@ interface RenameBankAccountDialogProps {
 
 type FormData = z.infer<typeof RenameBankAccountSchema>;
 
+/** Opens the rename dialog and reports the final saved name in the toast. */
 export function RenameDialog({ bankAccountId, currentName, session, onRenamed }: RenameBankAccountDialogProps) {
   const [open, setOpen] = useState(false);
   const { toast } = useToast();
@@ -50,11 +52,13 @@ export function RenameDialog({ bankAccountId, currentName, session, onRenamed }:
     try {
       const response = await bankAccountService.renameBankAccount(bankAccountId, session.userId, data.name);
 
-      if (response.success && !("error" in response)) {
-        toast({
-          title: "Bank Account Renamed",
-          description: `Account renamed to "${data.name}" successfully!`,
+      if (response.success) {
+        const { title, description } = bankAccountNameSavedToast({
+          requestedName: data.name,
+          savedName: response.data.name,
+          action: "rename",
         });
+        toast({ title, description });
         setOpen(false);
         onRenamed?.();
       } else {

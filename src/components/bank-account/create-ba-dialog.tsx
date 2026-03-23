@@ -16,6 +16,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useToast } from "@/components/ui/use-toast";
 import { CreateBankAccountSchema } from "@/domain/bankAccount-domain/ba-schema";
 import bankAccountService from "@/domain/bankAccount-domain/ba-service";
+import { bankAccountNameSavedToast } from "@/lib/bank-account-name-toast";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Plus } from "lucide-react";
 import { useState } from "react";
@@ -37,6 +38,7 @@ function getErrorMessage(error: unknown): string {
   return String(error) || "Unknown error";
 }
 
+/** Opens the create-account dialog and reports the final saved name in the toast. */
 export function CreateDialog({ session, onCreated }: CreateBankAccountDialogProps) {
   const [open, setOpen] = useState(false);
   const { toast } = useToast();
@@ -60,10 +62,12 @@ export function CreateDialog({ session, onCreated }: CreateBankAccountDialogProp
       });
 
       if (response.success) {
-        toast({
-          title: "Bank Account Created",
-          description: `Account "${data.name}" created successfully!`,
+        const { title, description } = bankAccountNameSavedToast({
+          requestedName: data.name,
+          savedName: response.data.name,
+          action: "create",
         });
+        toast({ title, description });
         form.reset();
         setOpen(false);
         onCreated?.(response.data);
