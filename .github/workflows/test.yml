@@ -92,5 +92,3 @@ jobs:
           else
             echo "results.xml not found, skipping upload."
           fi
-
-     
