@@ -86,9 +86,11 @@ jobs:
         run: |
           if [ -f "results.xml" ]; then
             echo "Uploading test results to Zephyr Scale..."
-            curl -X POST "https://api.zephyrscale.smartbear.com/v2/automations/executions/junit?projectKey=CZBANK&autoCreateTestCases=true" \
+            curl -X POST "https://api.zephyrscale.smartbear.com/v2/automations/executions/junit?projectKey=CZBANK&autoCreateTestCases=true&testCaseKeyCustomField=name" \
               -H "Authorization: Bearer ${{ secrets.ZEPHYR_TOKEN }}" \
               -F "file=@results.xml"
           else
             echo "results.xml not found, skipping upload."
           fi
+
+     
