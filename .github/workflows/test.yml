@@ -46,6 +46,8 @@ jobs:
         run: pnpm install --frozen-lockfile
       - name: Generate Prisma Client
         run: pnpm exec prisma generate
+      - name: Run unit tests
+        run: pnpm run test:unit
       - name: Run database migrations
         run: pnpm exec prisma migrate deploy
       - name: Fill database with test data

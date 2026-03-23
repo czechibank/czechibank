@@ -1,6 +1,7 @@
 "use client";
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { splitBankAccountNameForDisplay } from "@/domain/bankAccount-domain/ba-helpers";
 import { BankAccount } from "@prisma/client";
 import Image from "next/image";
 import CustomSession from "../../../types/session-betterAuth";
@@ -14,7 +15,10 @@ interface Props {
   onRename?: () => void;
 }
 
+/** Displays one bank account card, including muted rendering of the app-assigned numeric suffix. */
 export default function BankAccountCard({ bankAccount, session, onDelete, onRename }: Props) {
+  const { base, suffix } = splitBankAccountNameForDisplay(bankAccount.name);
+
   return (
     <Card className="w-max-[400px] group relative duration-300 hover:shadow-md">
       <div className="absolute right-2 top-2 opacity-0 transition-opacity group-hover:opacity-100">
@@ -31,8 +35,9 @@ export default function BankAccountCard({ bankAccount, session, onDelete, onRena
       <CardHeader>
         <div className="flex w-full items-center justify-between">
           <CardTitle>
-            <div className="flex gap-2">
-              {bankAccount.name}
+            <div className="flex flex-wrap items-center gap-2">
+              <span>{base}</span>
+              {suffix ? <span className="text-muted-foreground">{suffix}</span> : null}
               <RenameDialog
                 bankAccountId={bankAccount.id}
                 currentName={bankAccount.name}

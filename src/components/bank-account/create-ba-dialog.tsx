@@ -60,9 +60,10 @@ export function CreateDialog({ session, onCreated }: CreateBankAccountDialogProp
       });
 
       if (response.success) {
+        const createdName = response.data.name;
         toast({
           title: "Bank Account Created",
-          description: `Account "${data.name}" created successfully!`,
+          description: `Account "${createdName}" created successfully!`,
         });
         form.reset();
         setOpen(false);
