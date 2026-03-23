@@ -3,7 +3,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 type MockAccount = Pick<BankAccount, "id" | "name" | "userId">;
 
-/** Hoisted so `vi.mock` factory can safely close over `mockAccounts` (avoids TDZ / IDE errors). */
+/** Hoisted so the `vi.mock` factory can safely reference `mockAccounts`. */
 const { mockAccounts } = vi.hoisted(() => ({
   mockAccounts: [] as MockAccount[],
 }));
@@ -16,10 +16,8 @@ vi.mock("../../../src/domain/bankAccount-domain/ba-repository", () => ({
   },
 }));
 
-import {
-  getUniqueBankAccountName,
-  splitBankAccountNameForDisplay,
-} from "../../../src/domain/bankAccount-domain/ba-helpers";
+import { getUniqueBankAccountName } from "../../../src/domain/bankAccount-domain/ba-helpers";
+import { splitBankAccountNameForDisplay } from "../../../src/lib/bank-account-name-display";
 
 function setMockAccounts(...accounts: MockAccount[]) {
   mockAccounts.length = 0;
@@ -34,6 +32,12 @@ describe("getUniqueBankAccountName", () => {
   });
 
   it("returns base name when not used yet", async () => {
+    const next = await getUniqueBankAccountName("AKA", userId);
+    expect(next).toBe("AKA");
+  });
+
+  it("allows the same name when it belongs to a different user", async () => {
+    setMockAccounts({ id: "other", userId: "user-2", name: "AKA" });
     const next = await getUniqueBankAccountName("AKA", userId);
     expect(next).toBe("AKA");
   });
@@ -63,7 +67,7 @@ describe("getUniqueBankAccountName", () => {
   it("does not reserve AKA (1) as a system suffix when creating a duplicate of AKA", async () => {
     setMockAccounts(
       { id: "a1", userId, name: "AKA" },
-      // "(1)" is user text, not a system suffix (2+ digits only)
+      // "(1)" is user-entered text, not an app-generated suffix.
       { id: "a2", userId, name: "AKA (1)" },
     );
     const next = await getUniqueBankAccountName("AKA", userId);
@@ -141,5 +145,11 @@ describe("splitBankAccountNameForDisplay", () => {
     const { base, suffix } = splitBankAccountNameForDisplay("AKA (1)");
     expect(base).toBe("AKA (1)");
     expect(suffix).toBeNull();
+  });
+
+  it("trims trailing space before splitting app suffix", () => {
+    const { base, suffix } = splitBankAccountNameForDisplay("AKA (01) ");
+    expect(base).toBe("AKA");
+    expect(suffix).toBe(" (01)");
   });
 });

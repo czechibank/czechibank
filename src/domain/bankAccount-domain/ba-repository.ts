@@ -75,7 +75,7 @@ export async function createBankAccount({
   balance: number;
   number?: string;
 }) {
-  // If number is provided, attempt once and fail fast on collision
+  // Caller supplied the account number, so fail immediately if that number is already taken.
   if (number !== undefined && number !== null) {
     try {
       const bankAccount = await prisma.bankAccount.create({
@@ -99,18 +99,19 @@ export async function createBankAccount({
 
       return bankAccount;
     } catch (error: any) {
-      // Prisma unique constraint error code is P2002
       if (error?.code === "P2002") {
-        throw new Error(
-          `Bank account number "${number}" already exists. Cannot create bank account with duplicate number.`,
-        );
+        const target = error?.meta?.target as string[] | undefined;
+        if (target?.includes("number")) {
+          throw new Error(
+            `Bank account number "${number}" already exists. Cannot create bank account with duplicate number.`,
+          );
+        }
       }
-      // For other errors, rethrow immediately
       throw error;
     }
   }
 
-  // Try creating a bank account with a random number; retry on unique-constraint collisions.
+  // Generate a random account number and retry only when that number collides.
   const MAX_ATTEMPTS = 6;
   let lastError: any = null;
 
@@ -139,13 +140,17 @@ export async function createBankAccount({
       return bankAccount;
     } catch (error: any) {
       lastError = error;
-      // Prisma unique constraint error code is P2002 — retry with a new number
+      // Name collisions are retried in the service layer with a freshly computed name.
+      // This repository loop only retries random account-number collisions.
       if (error?.code === "P2002") {
-        // small backoff before retrying
+        const target = error?.meta?.target as string[] | undefined;
+        if (target?.includes("name")) {
+          throw error;
+        }
+        // Small backoff reduces repeated collisions during bursty writes.
         await new Promise((res) => setTimeout(res, 50 * attempt));
         continue;
       }
-      // For other errors, rethrow immediately
       throw error;
     }
   }

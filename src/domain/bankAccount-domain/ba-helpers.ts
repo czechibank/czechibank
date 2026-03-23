@@ -1,6 +1,9 @@
+import { APP_SUFFIX_REGEX } from "@/lib/bank-account-name-display";
 import { ApiErrorCode } from "@/lib/response";
 import { BankAccount } from "@prisma/client";
 import * as repository from "./ba-repository";
+
+export { splitBankAccountNameForDisplay } from "@/lib/bank-account-name-display";
 
 /** Prevents deleting the last remaining active bank account for a user. */
 export async function enforceMinActiveBankAccount(userId: string) {
@@ -13,7 +16,7 @@ export async function enforceMinActiveBankAccount(userId: string) {
   }
 }
 
-/** Returns the initial balance for a new bank account: 100_000 for the first account, otherwise 0. */
+/** Returns the starting balance for a new account: 100_000 for the first one, otherwise 0. */
 export async function getInitialBalanceForUser(userId: string): Promise<number> {
   const { total } = await repository.getBankAccountsByUserId(userId, { page: 1, limit: 1 });
   return total === 0 ? 100_000 : 0;
@@ -36,27 +39,15 @@ export async function enforceZeroBalance(bankAccount: BankAccount) {
   }
 }
 
-/** Matches the app-assigned suffix at the end of a name: " (01)", " (10)", " (123)". Not " (1)" or "name(1)". */
-const APP_SUFFIX_REGEX = /\s\((\d{2,})\)$/;
-
-/** Splits a stored name into base text and optional app suffix for muted/grey UI display. */
-export function splitBankAccountNameForDisplay(name: string): { base: string; suffix: string | null } {
-  const match = name.trim().match(APP_SUFFIX_REGEX);
-  if (!match) return { base: name, suffix: null };
-  const suffix = match[0];
-  const base = name.slice(0, -suffix.length);
-  return { base, suffix };
-}
-
 /**
- * Returns a unique bank account name for one user.
+ * Returns a name that is unique among one user's active bank accounts.
  *
  * Rules:
  * - Only rename when the requested name already exists exactly.
- * - A trailing " (NN)" with 2+ digits is treated as the app suffix and stripped to get the base.
- * - Plain-name duplicates (e.g. second "AKA"): start from 1 and pick the first free suffix (fills gaps).
- * - Numbered duplicates (e.g. second "AKA (04)"): start from (parsed suffix + 1) and pick the first free ≥ that.
- * - Single-digit " (1)" or names like "AKA(1)" are treated as user text, not app suffixes.
+ * - A trailing " (NN)" with 2+ digits is treated as an app-generated suffix and stripped to get the base.
+ * - Plain-name duplicates (for example a second "AKA") start at 1 and use the first free suffix.
+ * - Numbered duplicates (for example a second "AKA (04)") start at the next number and move upward.
+ * - Single-digit " (1)" or names like "AKA(1)" are treated as user-entered text, not app suffixes.
  */
 export async function getUniqueBankAccountName(
   baseName: string,
@@ -75,8 +66,8 @@ export async function getUniqueBankAccountName(
 
   const filtered = currentAccountId ? existingAccounts.filter((ba) => ba.id !== currentAccountId) : existingAccounts;
 
-  // Only auto-rename when there is already an account with exactly the same requested name.
-  // If there is no exact match (e.g. existing AKA (10), requested AKA (04)), respect the user's name.
+  // Only auto-rename exact collisions. If the exact requested name is free,
+  // keep it even when related names such as "AKA (10)" already exist.
   const hasExactName = filtered.some((ba) => ba.name === trimmed);
   if (!hasExactName) return trimmed;
 
@@ -93,9 +84,8 @@ export async function getUniqueBankAccountName(
 
   if (used.size === 0) return trimmed;
 
-  // Windows-like behaviour:
-  // - If we're colliding with the plain base name (no suffix), start from 1 and pick the first free.
-  // - If we're colliding with a suffixed name like "AKA (04)", start from 5 and pick the first free ≥ that.
+  // Match Windows-style naming:
+  // plain-name collisions start from 1, while "AKA (04)" collisions start from 5.
   let startFrom = 1;
   if (appSuffixMatch) {
     const originalNum = parseInt(appSuffixMatch[1], 10);

@@ -1,7 +1,7 @@
 "use client";
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { splitBankAccountNameForDisplay } from "@/domain/bankAccount-domain/ba-helpers";
+import { splitBankAccountNameForDisplay } from "@/lib/bank-account-name-display";
 import { BankAccount } from "@prisma/client";
 import Image from "next/image";
 import CustomSession from "../../../types/session-betterAuth";
@@ -15,7 +15,7 @@ interface Props {
   onRename?: () => void;
 }
 
-/** Displays one bank account card, including muted rendering of the app-assigned numeric suffix. */
+/** Renders one bank account card and mutes the app-generated suffix when present. */
 export default function BankAccountCard({ bankAccount, session, onDelete, onRename }: Props) {
   const { base, suffix } = splitBankAccountNameForDisplay(bankAccount.name);
 

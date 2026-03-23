@@ -5,12 +5,19 @@ This document describes how Czechibank keeps bank account names unique.
 - The rule is **per user**: one user cannot have two active accounts with the exact same name.
 - Different users may still use the same name, for example both can have an account called `AKA`.
 - Logic: `src/domain/bankAccount-domain/ba-helpers.ts`
+- Display helper (no server deps): `src/lib/bank-account-name-display.ts`
 - Tests: `tests/unit/bankAccount-domain/ba-helpers.test.ts`
+
+## Database and races
+
+Active accounts are enforced in the database with a **partial unique index** on `(userId, name)` where `isActive` is true (see Prisma migration `20260126120000_bankaccount_active_user_name_unique`). Inactive rows are excluded, so a soft-deleted name does not block creating a new active account with the same name.
+
+If two requests race, `createBankAccount` / `renameBankAccount` in `ba-service.ts` catch Prisma `P2002` on that constraint, recompute a name with `getUniqueBankAccountName`, and retry a bounded number of times.
 
 ## Main rules
 
 1. If the requested name is **not used yet** by that user, we keep it unchanged.
-2. If the same user already has that **exact** name, we add or change a suffix such as ` (01)`, ` (02)`.
+2. If the same user already has that **exact** name, we add or change a suffix such as " (01)" or " (02)".
 3. In the UI, only that system-added suffix is shown in grey.
 
 ## What counts as a system suffix
