@@ -50,3 +50,6 @@ next-env.d.ts
 
 # Playwright BDD generated files
 **/.features-gen/**/*.spec.js
+
+# Storybook
+storybook-static/
