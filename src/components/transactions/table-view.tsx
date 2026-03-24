@@ -8,7 +8,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Transaction, User } from "@prisma/client";
+import type { Transaction, User } from "@prisma/client";
 import { UserAvatar } from "../user/avatar";
 import { AlertDestructive } from "./alert";
 
@@ -41,6 +41,11 @@ export function TransactionTableView({
   limit: number;
 }) {
   const totalAmount = calculateTotalAmount(transactions, bankAccountId);
+  const dateFormatter = new Intl.DateTimeFormat(undefined, {
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  });
 
   return (
     <div className="my-8 w-full">
@@ -60,10 +65,8 @@ export function TransactionTableView({
         </TableHeader>
         <TableBody>
           {transactions.map((transaction) => (
-            <TableRow key={transaction.id.padStart(10)}>
-              <TableCell className="hidden md:table-cell">
-                {transaction.createdAt.toISOString().split("T")[0]}
-              </TableCell>
+            <TableRow key={transaction.id}>
+              <TableCell className="hidden md:table-cell">{dateFormatter.format(transaction.createdAt)}</TableCell>
               <TableCell className="font-medium">
                 <div className="flex items-center justify-start space-x-2 md:flex-row">
                   <UserAvatar size={8} image={transaction.from.user.image ?? null} />

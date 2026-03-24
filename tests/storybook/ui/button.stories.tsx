@@ -51,7 +51,7 @@ export const AllSizes: Story = {
       <Button size="sm">Small</Button>
       <Button size="default">Default</Button>
       <Button size="lg">Large</Button>
-      <Button size="icon">
+      <Button size="icon" aria-label="Open mail">
         <Mail className="h-4 w-4" />
       </Button>
     </div>

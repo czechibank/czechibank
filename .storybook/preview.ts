@@ -4,7 +4,7 @@ import type { Preview } from "storybook";
 
 import "../src/app/globals.css";
 
-initialize();
+initialize({ onUnhandledRequest: "warn" });
 
 const preview: Preview = {
   parameters: {
