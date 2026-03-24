@@ -136,7 +136,7 @@ importers:
         specifier: ^15.5.2
         version: 15.5.2
       msw:
-        specifier: ^2.12.14
+        specifier: 2.12.14
         version: 2.12.14(@types/node@20.19.26)(typescript@5.9.3)
       msw-storybook-addon:
         specifier: ^2.0.6
