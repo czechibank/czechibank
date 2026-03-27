@@ -3,7 +3,7 @@ export { DELETE, HEAD, OPTIONS, PATCH, PUT } from "../../routes";
 import apikeyService from "@/domain/apikey/apikey-service";
 import { UserSchema } from "@/domain/user-domain/user-schema";
 import userService from "@/domain/user-domain/user-service";
-import { fromUnknown } from "@/lib/errors";
+import { badRequest, fromUnknown } from "@/lib/errors";
 import { toApiResponse, validateWithResult } from "@/lib/result-helpers";
 import { ResultAsync } from "neverthrow";
 
@@ -66,7 +66,7 @@ import { ResultAsync } from "neverthrow";
  *               $ref: '#/components/schemas/Error'
  */
 export async function POST(request: Request) {
-  const result = ResultAsync.fromPromise(request.json(), () => fromUnknown(null, "Invalid JSON body"))
+  const result = ResultAsync.fromPromise(request.json(), () => badRequest("Invalid JSON body"))
     .andThen((body) => validateWithResult(UserSchema, body))
     .andThen((parsedUser) =>
       ResultAsync.fromPromise(userService.server.createUser(parsedUser, "user"), (e) =>

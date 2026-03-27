@@ -158,7 +158,7 @@ export async function GET(request: NextRequest) {
   const sortOrder = sortOrderParam as (typeof ALLOWED_SORT_ORDER)[number];
 
   const result = authenticateRequest(request).andThen((user) =>
-    transactionService.getAllTransactionsByUserIdForAPIResult(user.id, sortBy, sortOrder, page, limit),
+    transactionService.getAllTransactionsByUserIdForAPIResult(user.id, sortBy, sortOrder, pageNum, limitNum),
   );
 
   return toPaginatedApiResponse(result, "Transactions retrieved successfully", (data) => ({

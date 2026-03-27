@@ -55,10 +55,21 @@ const bankAccountService = {
     userId: string,
     pagination: Pagination,
   ): ResultAsync<repository.PaginatedResult<any>, AppError> {
-    if (isNaN(pagination.page) || isNaN(pagination.limit) || pagination.page < 1 || pagination.limit < 1) {
+    if (
+      isNaN(pagination.page) ||
+      isNaN(pagination.limit) ||
+      pagination.page < 1 ||
+      pagination.limit < 1 ||
+      pagination.limit > 100
+    ) {
       return errAsync(
         validationError("Invalid pagination parameters", [
-          { code: ApiErrorCode.VALIDATION_ERROR, message: "Page and limit must be positive numbers" },
+          ...(isNaN(pagination.page) || pagination.page < 1
+            ? [{ code: ApiErrorCode.VALIDATION_ERROR, message: "Page must be a positive integer" }]
+            : []),
+          ...(isNaN(pagination.limit) || pagination.limit < 1 || pagination.limit > 100
+            ? [{ code: ApiErrorCode.VALIDATION_ERROR, message: "Limit must be between 1 and 100" }]
+            : []),
         ]),
       );
     }
@@ -68,10 +79,21 @@ const bankAccountService = {
   },
 
   getAllBankAccountsResult(pagination: Pagination): ResultAsync<repository.PaginatedResult<any>, AppError> {
-    if (isNaN(pagination.page) || isNaN(pagination.limit) || pagination.page < 1 || pagination.limit < 1) {
+    if (
+      isNaN(pagination.page) ||
+      isNaN(pagination.limit) ||
+      pagination.page < 1 ||
+      pagination.limit < 1 ||
+      pagination.limit > 100
+    ) {
       return errAsync(
         validationError("Invalid pagination parameters", [
-          { code: ApiErrorCode.VALIDATION_ERROR, message: "Page and limit must be positive numbers" },
+          ...(isNaN(pagination.page) || pagination.page < 1
+            ? [{ code: ApiErrorCode.VALIDATION_ERROR, message: "Page must be a positive integer" }]
+            : []),
+          ...(isNaN(pagination.limit) || pagination.limit < 1 || pagination.limit > 100
+            ? [{ code: ApiErrorCode.VALIDATION_ERROR, message: "Limit must be between 1 and 100" }]
+            : []),
         ]),
       );
     }

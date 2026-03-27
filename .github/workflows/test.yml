@@ -66,6 +66,8 @@ jobs:
           done
           echo "Application failed to start"
           exit 1
+      - name: Run unit tests
+        run: pnpm run test:unit
       - name: Run API tests
         run: pnpm run test:api
       - name: Install Playwright Browsers

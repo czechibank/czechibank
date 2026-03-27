@@ -91,13 +91,10 @@ const transactionService = {
     userId: string,
     orderBy: string,
     order: "asc" | "desc",
-    page: string,
-    limit: string,
+    page: number,
+    limit: number,
   ): ResultAsync<any, AppError> {
-    const pageNum = parseInt(page, 10);
-    const limitNum = parseInt(limit, 10);
-
-    if (isNaN(pageNum) || isNaN(limitNum) || pageNum < 1 || limitNum < 1) {
+    if (isNaN(page) || isNaN(limit) || page < 1 || limit < 1) {
       return errAsync(
         validationError("Invalid pagination parameters", [
           { code: ApiErrorCode.VALIDATION_ERROR, message: "Page and limit must be positive numbers" },
@@ -106,7 +103,7 @@ const transactionService = {
     }
 
     return ResultAsync.fromPromise(
-      repository.getAllTransactionsByUserIdForAPI(userId, orderBy, order, pageNum, limitNum),
+      repository.getAllTransactionsByUserIdForAPI(userId, orderBy, order, page, limit),
       (e) => fromUnknown(e, "Failed to retrieve transactions"),
     ).andThen((result) => {
       if (!result) {
@@ -114,10 +111,10 @@ const transactionService = {
       }
 
       // If requested page is beyond total pages, return empty
-      if (pageNum > result.pagination.totalPages) {
+      if (page > result.pagination.totalPages) {
         return okAsync({
           transactions: [],
-          pagination: { ...result.pagination, page: pageNum },
+          pagination: { ...result.pagination, page },
         });
       }
 
@@ -159,7 +156,7 @@ const transactionService = {
     limit: string,
   ) {
     return toServiceResponse(
-      this.getAllTransactionsByUserIdForAPIResult(userId, orderBy, order, page, limit),
+      this.getAllTransactionsByUserIdForAPIResult(userId, orderBy, order, parseInt(page, 10), parseInt(limit, 10)),
       "Transactions retrieved successfully",
     );
   },
