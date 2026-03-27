@@ -135,7 +135,7 @@ describe("User API", () => {
       expect(data.success).toBe(false);
     });
 
-    it("should reject duplicate email", async () => {
+    it("should return 409 for duplicate email", async () => {
       const response = await fetch(`${config.BASE_URL}/api/v1/user/create`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -145,10 +145,10 @@ describe("User API", () => {
           name: "Duplicate User",
         }),
       });
-      // Duplicate email should not return 201
-      expect(response.status).not.toBe(201);
+      expect(response.status).toBe(409);
       const data = await response.json();
       expect(data.success).toBe(false);
+      expect(data.error.code).toBe("EMAIL_ALREADY_EXISTS");
     });
   });
 });

@@ -33,8 +33,8 @@ const transactionService = {
     // Feature flag check (non-blocking — if it fails, we just skip the delay)
     return featuresService.server
       .getAllFeaturesResult()
-      .andThen((features) => {
-        if (increaseTimeInSendingTransactionsFeature(features)) {
+      .andThen((result) => {
+        if (increaseTimeInSendingTransactionsFeature(result.items)) {
           return ResultAsync.fromSafePromise<void, AppError>(new Promise((resolve) => setTimeout(resolve, 5000)));
         }
         return okAsync<void, AppError>(undefined);

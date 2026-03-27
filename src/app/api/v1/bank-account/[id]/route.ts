@@ -213,7 +213,7 @@ export async function GET(request: Request, context: { params: Promise<{ id: str
         // Check feature flag: if enabled, anyone can see any bank account
         return featuresService.server
           .getAllFeaturesResult()
-          .map((features) => anyOneCanSeeYourBankAccountFeature(features))
+          .map((result) => anyOneCanSeeYourBankAccountFeature(result.items))
           .orElse(() => okAsync(false))
           .andThen((anyoneCanSee) =>
             anyoneCanSee
