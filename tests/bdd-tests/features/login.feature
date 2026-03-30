@@ -13,17 +13,17 @@ Feature: Login user
     And I should see title "[BRNO] Pejsek a Kočička 🐶&🐱"
 
   @smoke @login @negative @CZBANK-T7 @general
-  Scenario Outline: CZBANK-T7_Login with invalid email format
+  Scenario Outline: CZBANK-T7_Login with invalid email format - <description>
     When I fill username "<email>"
     And I fill password "<password>"
     And I click sign in button
     Then I should see "email" validation text "<emailValidationText>"
 
     Examples:
-      | email                            | password          | emailValidationText |
-      | zachranNas+brnopejsekAKocicka.cz | PejsekAKocicka123 | Invalid email       |
-      | zachranNas+brno@pejsekAKocicka   | PejsekAKocicka123 | Invalid email       |
-      |                                  | PejsekAKocicka123 | Invalid email       |
+      | description    | email                            | password          | emailValidationText |
+      | Missing @      | zachranNas+brnopejsekAKocicka.cz | PejsekAKocicka123 | Invalid email       |
+      | Missing domain | zachranNas+brno@pejsekAKocicka   | PejsekAKocicka123 | Invalid email       |
+      | Empty email    |                                  | PejsekAKocicka123 | Invalid email       |
 
   @smoke @login @negative @CZBANK-T8 @general
   Scenario: CZBANK-T8_Login with valid email and wrong password
