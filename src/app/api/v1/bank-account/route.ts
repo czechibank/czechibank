@@ -81,6 +81,8 @@ import { DELETE, HEAD, PATCH, POST, PUT } from "../routes";
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/Error'
+ *       429:
+ *         $ref: '#/components/responses/RateLimitExceeded'
  *       502:
  *         description: Bad Gateway - Bank account service returned malformed or invalid data
  *         content:

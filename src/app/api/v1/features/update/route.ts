@@ -42,6 +42,8 @@
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/Error'
+ *       429:
+ *         $ref: '#/components/responses/RateLimitExceeded'
  *       403:
  *         description: Forbidden - requires admin role
  *         content:

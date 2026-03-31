@@ -75,6 +75,8 @@ export { DELETE, HEAD, OPTIONS, PATCH, PUT } from "../routes";
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/Error'
+ *       429:
+ *         $ref: '#/components/responses/RateLimitExceeded'
  *       422:
  *         description: Validation error (e.g., invalid page, limit, sortBy, or sortOrder)
  *         content:

@@ -41,6 +41,8 @@ import { DELETE, HEAD, OPTIONS, PATCH, POST, PUT } from "../../routes";
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/Error'
+ *       429:
+ *         $ref: '#/components/responses/RateLimitExceeded'
  *       404:
  *         description: Transaction not found
  *         content:

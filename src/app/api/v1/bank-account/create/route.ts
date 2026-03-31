@@ -46,6 +46,8 @@ import { ResultAsync } from "neverthrow";
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/Error'
+ *       429:
+ *         $ref: '#/components/responses/RateLimitExceeded'
  */
 export async function POST(request: Request) {
   const result = authenticateRequest(request)

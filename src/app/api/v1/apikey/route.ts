@@ -34,6 +34,8 @@ import { headers } from "next/headers";
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/Error'
+ *       429:
+ *         $ref: '#/components/responses/RateLimitExceeded'
  *       500:
  *         description: Internal server error
  *         content:

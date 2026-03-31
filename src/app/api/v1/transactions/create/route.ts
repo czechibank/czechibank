@@ -47,6 +47,8 @@ import { errAsync, ResultAsync } from "neverthrow";
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/Error'
+ *       429:
+ *         $ref: '#/components/responses/RateLimitExceeded'
  *       404:
  *         description: Bank account not found
  *         content:

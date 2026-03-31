@@ -396,6 +396,18 @@ All responses follow a consistent format:
           required: ["success", "message", "error"],
         },
       },
+      responses: {
+        RateLimitExceeded: {
+          description: "Too Many Requests - API key rate limit exceeded",
+          content: {
+            "application/json": {
+              schema: {
+                $ref: "#/components/schemas/Error",
+              },
+            },
+          },
+        },
+      },
     },
     security: [{ ApiKeyAuth: [] }],
     tags: [
