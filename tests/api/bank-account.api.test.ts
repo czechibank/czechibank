@@ -68,17 +68,63 @@ describe("Bank Account API", () => {
       expect(data.meta.pagination.limit).toBe(5);
     });
 
-    it("should return 400 for invalid pagination parameters", async () => {
+    it("should return 422 for invalid pagination parameters", async () => {
       const response = await fetch(`${config.BASE_URL}/api/v1/bank-account?page=0&limit=0`, {
         headers: {
           "X-API-Key": apiKey.highBalance,
         },
       });
-      expect(response.status).toBe(400);
+      expect(response.status).toBe(422);
       const data = await response.json();
 
       expect(data.success).toBe(false);
-      expect(data.error.details[0].message).toBe("Page and limit must be positive numbers");
+      expect(data.error.details[0].message).toBe("Page must be a positive integer");
+    });
+  });
+
+  describe("Method Not Allowed (405)", () => {
+    it("should return 405 for POST /api/v1/bank-account", async () => {
+      const response = await fetch(`${config.BASE_URL}/api/v1/bank-account`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "X-API-Key": apiKey.standardUser,
+        },
+        body: JSON.stringify({}),
+      });
+      expect(response.status).toBe(405);
+    });
+
+    it("should return 405 for DELETE /api/v1/bank-account", async () => {
+      const response = await fetch(`${config.BASE_URL}/api/v1/bank-account`, {
+        method: "DELETE",
+        headers: { "X-API-Key": apiKey.standardUser },
+      });
+      expect(response.status).toBe(405);
+    });
+
+    it("should return 405 for PUT /api/v1/bank-account", async () => {
+      const response = await fetch(`${config.BASE_URL}/api/v1/bank-account`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          "X-API-Key": apiKey.standardUser,
+        },
+        body: JSON.stringify({}),
+      });
+      expect(response.status).toBe(405);
+    });
+
+    it("should return 405 for PATCH /api/v1/bank-account", async () => {
+      const response = await fetch(`${config.BASE_URL}/api/v1/bank-account`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          "X-API-Key": apiKey.standardUser,
+        },
+        body: JSON.stringify({}),
+      });
+      expect(response.status).toBe(405);
     });
   });
 });

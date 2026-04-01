@@ -11,4 +11,5 @@ export const apiKey = {
   highBalance: SEED_USERS.highBalance.apiKeys[0].key,
   multipleKeys: SEED_USERS.multipleKeys.apiKeys[0].key,
   expiredKeyActive: SEED_USERS.expiredKey.apiKeys[1].key,
+  rateLimited: SEED_USERS.rateLimited.apiKeys[0].key,
 } as const;

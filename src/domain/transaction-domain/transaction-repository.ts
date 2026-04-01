@@ -1,8 +1,23 @@
 "use server";
 import prisma from "@/lib/db";
-import { successResponse } from "@/lib/response";
 import { Currency } from "@prisma/client";
 import { revalidatePath } from "next/cache";
+
+export type SendMoneyResult = {
+  amount: number;
+  createdAt: Date;
+  id: string;
+  currency: Currency;
+  from: {
+    number: string;
+    user: {
+      name: string;
+    };
+  };
+  to: {
+    number: string;
+  };
+};
 
 export async function sendMoney({
   fromBankId,
@@ -14,9 +29,24 @@ export async function sendMoney({
   fromBankId: string;
   amount: number;
   currency: Currency;
-}) {
-  const response = await prisma.$transaction([
-    prisma.transaction.create({
+}): Promise<SendMoneyResult> {
+  const response = await prisma.$transaction(async (tx) => {
+    // Check and lock the source account balance
+    const fromAccount = await tx.bankAccount.findUnique({
+      where: { id: fromBankId },
+      select: { balance: true },
+    });
+
+    if (!fromAccount) {
+      throw new Error("Source bank account not found");
+    }
+
+    if (fromAccount.balance < amount) {
+      throw new Error("INSUFFICIENT_BALANCE");
+    }
+
+    // Create the transaction record
+    const transaction = await tx.transaction.create({
       data: {
         amount: amount,
         currency: currency,
@@ -44,8 +74,10 @@ export async function sendMoney({
           },
         },
       },
-    }),
-    prisma.bankAccount.update({
+    });
+
+    // Decrement source account balance
+    await tx.bankAccount.update({
       where: {
         id: fromBankId,
       },
@@ -54,8 +86,10 @@ export async function sendMoney({
           decrement: amount,
         },
       },
-    }),
-    prisma.bankAccount.update({
+    });
+
+    // Increment destination account balance
+    await tx.bankAccount.update({
       where: {
         id: toBankId,
       },
@@ -64,12 +98,14 @@ export async function sendMoney({
           increment: amount,
         },
       },
-    }),
-  ]);
+    });
+
+    return transaction;
+  });
 
   revalidatePath("/bankAccount");
 
-  return successResponse("Money sent successfully", { message: response[0] });
+  return response;
 }
 
 export async function getAllTransactionsByUserId(userId: string) {

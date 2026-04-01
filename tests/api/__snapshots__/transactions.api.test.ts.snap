@@ -1,20 +1,14 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`Transactions API > POST /api/v1/transactions/create > should return 400 for invalid amount 1`] = `
+exports[`Transactions API > POST /api/v1/transactions/create > should return 422 for invalid amount 1`] = `
 {
   "error": {
     "code": "VALIDATION_ERROR",
     "details": [
       {
-        "code": "too_small",
-        "exact": false,
-        "inclusive": false,
+        "code": "VALIDATION_ERROR",
+        "field": "amount",
         "message": "Amount should be positive, this incident was reported. Nice day!",
-        "minimum": 0,
-        "path": [
-          "amount",
-        ],
-        "type": "number",
       },
     ],
     "message": "Validation error",

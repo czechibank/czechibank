@@ -1,7 +1,10 @@
+import { authenticateRequest } from "@/app/api/v1/auth";
 import transactionService from "@/domain/transaction-domain/transaction-service";
-import { ApiErrorCode, errorResponse } from "@/lib/response";
-import { NextRequest, NextResponse } from "next/server";
-import { checkUserAuthOrThrowError } from "../server-actions";
+import { validationError } from "@/lib/errors";
+import { ApiErrorCode } from "@/lib/response";
+import { toApiResponse, toPaginatedApiResponse } from "@/lib/result-helpers";
+import { errAsync } from "neverthrow";
+import { NextRequest } from "next/server";
 export { DELETE, HEAD, OPTIONS, PATCH, PUT } from "../routes";
 
 /**
@@ -72,56 +75,96 @@ export { DELETE, HEAD, OPTIONS, PATCH, PUT } from "../routes";
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/Error'
+ *       429:
+ *         $ref: '#/components/responses/RateLimitExceeded'
+ *       422:
+ *         description: Validation error (e.g., invalid page, limit, sortBy, or sortOrder)
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
  */
+const ALLOWED_SORT_BY = ["createdAt", "amount"] as const;
+const ALLOWED_SORT_ORDER = ["asc", "desc"] as const;
+
 export async function GET(request: NextRequest) {
-  try {
-    const user = await checkUserAuthOrThrowError(request);
-    if ("error" in user) {
-      return NextResponse.json(errorResponse(user.error.message, user.error.code), { status: 401 });
-    }
+  const searchParams = request.nextUrl.searchParams;
+  const page = searchParams.get("page") || "1";
+  const limit = searchParams.get("limit") || "10";
+  const sortByParam = searchParams.get("sortBy") || "createdAt";
+  const sortOrderParam = searchParams.get("sortOrder") || "desc";
 
-    const searchParams = request.nextUrl.searchParams;
-    const page = searchParams.get("page") || "1";
-    const limit = searchParams.get("limit") || "10";
-    const sortBy = searchParams.get("sortBy") || "createdAt";
-    const sortOrder = (searchParams.get("sortOrder") || "desc") as "asc" | "desc";
-
-    // Validate pagination parameters
-    const pageNum = parseInt(page, 10);
-    const limitNum = parseInt(limit, 10);
-
-    if (isNaN(pageNum) || isNaN(limitNum) || pageNum < 1 || limitNum < 1) {
-      return NextResponse.json(
-        errorResponse("Invalid pagination parameters", "400", [
+  // Validate and parse page
+  const pageNum = parseInt(page, 10);
+  if (isNaN(pageNum) || pageNum < 1) {
+    return toApiResponse(
+      errAsync(
+        validationError("Invalid pagination parameters", [
           {
             code: ApiErrorCode.VALIDATION_ERROR,
-            message: "Page and limit must be positive numbers",
+            message: "Page must be a positive integer",
           },
         ]),
-        { status: 400 },
-      );
-    }
-
-    const result = await transactionService.getAllTransactionsByIdFromAPI(user.id, sortBy, sortOrder, page, limit);
-
-    if ("error" in result) {
-      if (result.error.code === "VALIDATION_ERROR") {
-        return NextResponse.json(errorResponse(result.error.message, "400"), { status: 400 });
-      }
-      return NextResponse.json(errorResponse(result.error.message, "500"), { status: 500 });
-    }
-
-    return NextResponse.json({
-      success: true,
-      data: {
-        transactions: result.data.transactions,
-      },
-      meta: {
-        pagination: result.data.pagination,
-      },
-    });
-  } catch (error) {
-    console.error("Error in GET /api/v1/transactions:", error);
-    return NextResponse.json(errorResponse("Internal server error", "500"), { status: 500 });
+      ),
+      "Validation failed",
+    );
   }
+
+  // Validate and parse limit
+  const limitNum = parseInt(limit, 10);
+  if (isNaN(limitNum) || limitNum < 1 || limitNum > 100) {
+    return toApiResponse(
+      errAsync(
+        validationError("Invalid pagination parameters", [
+          {
+            code: ApiErrorCode.VALIDATION_ERROR,
+            message: "Limit must be a positive integer between 1 and 100",
+          },
+        ]),
+      ),
+      "Validation failed",
+    );
+  }
+
+  // Validate sortBy
+  if (!ALLOWED_SORT_BY.includes(sortByParam as any)) {
+    return toApiResponse(
+      errAsync(
+        validationError(`Invalid sortBy parameter. Allowed values: ${ALLOWED_SORT_BY.join(", ")}`, [
+          {
+            code: ApiErrorCode.VALIDATION_ERROR,
+            message: `sortBy must be one of: ${ALLOWED_SORT_BY.join(", ")}`,
+          },
+        ]),
+      ),
+      "Validation failed",
+    );
+  }
+
+  // Validate sortOrder
+  if (!ALLOWED_SORT_ORDER.includes(sortOrderParam as any)) {
+    return toApiResponse(
+      errAsync(
+        validationError(`Invalid sortOrder parameter. Allowed values: ${ALLOWED_SORT_ORDER.join(", ")}`, [
+          {
+            code: ApiErrorCode.VALIDATION_ERROR,
+            message: `sortOrder must be one of: ${ALLOWED_SORT_ORDER.join(", ")}`,
+          },
+        ]),
+      ),
+      "Validation failed",
+    );
+  }
+
+  const sortBy = sortByParam as (typeof ALLOWED_SORT_BY)[number];
+  const sortOrder = sortOrderParam as (typeof ALLOWED_SORT_ORDER)[number];
+
+  const result = authenticateRequest(request).andThen((user) =>
+    transactionService.getAllTransactionsByUserIdForAPIResult(user.id, sortBy, sortOrder, pageNum, limitNum),
+  );
+
+  return toPaginatedApiResponse(result, "Transactions retrieved successfully", (data) => ({
+    body: { transactions: data.transactions },
+    pagination: data.pagination,
+  }));
 }
