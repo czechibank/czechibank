@@ -1,6 +1,7 @@
 import { afterAll, describe, expect, it } from "vitest";
 import { apiKey } from "../../shared/fixtures";
 import { config } from "./config/config";
+import { fetchApi } from "./helpers/fetch-api";
 
 describe("Features API", () => {
   // Store original features state for cleanup
@@ -9,7 +10,7 @@ describe("Features API", () => {
   afterAll(async () => {
     // Restore original feature state if we modified it
     if (originalFeatures) {
-      await fetch(`${config.BASE_URL}/api/v1/features/update`, {
+      await fetchApi(`${config.BASE_URL}/api/v1/features/update`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -22,7 +23,7 @@ describe("Features API", () => {
 
   describe("GET /api/v1/features/get-all", () => {
     it("should return 401 when no API key is provided", async () => {
-      const response = await fetch(`${config.BASE_URL}/api/v1/features/get-all`);
+      const response = await fetchApi(`${config.BASE_URL}/api/v1/features/get-all`);
       expect(response.status).toBe(401);
       const data = await response.json();
       expect(data.success).toBe(false);
@@ -30,7 +31,7 @@ describe("Features API", () => {
     });
 
     it("should return 200 and list of features", async () => {
-      const response = await fetch(`${config.BASE_URL}/api/v1/features/get-all`, {
+      const response = await fetchApi(`${config.BASE_URL}/api/v1/features/get-all`, {
         headers: { "X-API-Key": apiKey.standardUser },
       });
       expect(response.status).toBe(200);
@@ -41,8 +42,8 @@ describe("Features API", () => {
     });
 
     it("should return features with expected fields", async () => {
-      const response = await fetch(`${config.BASE_URL}/api/v1/features/get-all`, {
-        headers: { "X-API-Key": apiKey.standardUser },
+      const response = await fetchApi(`${config.BASE_URL}/api/v1/features/get-all`, {
+        headers: { "X-API-Key": apiKey.vojta },
       });
       expect(response.status).toBe(200);
       const data = await response.json();
@@ -55,8 +56,8 @@ describe("Features API", () => {
     });
 
     it("should contain SEND_MONEY_WITHOUT_ACCOUNT_BALANCE feature key", async () => {
-      const response = await fetch(`${config.BASE_URL}/api/v1/features/get-all`, {
-        headers: { "X-API-Key": apiKey.standardUser },
+      const response = await fetchApi(`${config.BASE_URL}/api/v1/features/get-all`, {
+        headers: { "X-API-Key": apiKey.highBalance },
       });
       expect(response.status).toBe(200);
       const data = await response.json();
@@ -65,8 +66,8 @@ describe("Features API", () => {
     });
 
     it("should return pagination meta in response", async () => {
-      const response = await fetch(`${config.BASE_URL}/api/v1/features/get-all`, {
-        headers: { "X-API-Key": apiKey.standardUser },
+      const response = await fetchApi(`${config.BASE_URL}/api/v1/features/get-all`, {
+        headers: { "X-API-Key": apiKey.multipleKeys },
       });
       expect(response.status).toBe(200);
       const data = await response.json();
@@ -79,8 +80,8 @@ describe("Features API", () => {
     });
 
     it("should respect page and limit query parameters", async () => {
-      const response = await fetch(`${config.BASE_URL}/api/v1/features/get-all?page=1&limit=2`, {
-        headers: { "X-API-Key": apiKey.standardUser },
+      const response = await fetchApi(`${config.BASE_URL}/api/v1/features/get-all?page=1&limit=2`, {
+        headers: { "X-API-Key": apiKey.appAdmin },
       });
       expect(response.status).toBe(200);
       const data = await response.json();
@@ -91,23 +92,23 @@ describe("Features API", () => {
 
     it("should return correct totalPages based on limit", async () => {
       // First get total count with a large limit
-      const allResponse = await fetch(`${config.BASE_URL}/api/v1/features/get-all?page=1&limit=100`, {
-        headers: { "X-API-Key": apiKey.standardUser },
+      const allResponse = await fetchApi(`${config.BASE_URL}/api/v1/features/get-all?page=1&limit=100`, {
+        headers: { "X-API-Key": apiKey.vojta },
       });
       const allData = await allResponse.json();
       const total = allData.meta.pagination.total;
 
       // Now request with limit=2 and verify totalPages
-      const response = await fetch(`${config.BASE_URL}/api/v1/features/get-all?page=1&limit=2`, {
-        headers: { "X-API-Key": apiKey.standardUser },
+      const response = await fetchApi(`${config.BASE_URL}/api/v1/features/get-all?page=1&limit=2`, {
+        headers: { "X-API-Key": apiKey.multipleKeys },
       });
       const data = await response.json();
       expect(data.meta.pagination.totalPages).toBe(Math.ceil(total / 2));
     });
 
     it("should use default page=1 and limit=10 when not provided", async () => {
-      const response = await fetch(`${config.BASE_URL}/api/v1/features/get-all`, {
-        headers: { "X-API-Key": apiKey.standardUser },
+      const response = await fetchApi(`${config.BASE_URL}/api/v1/features/get-all`, {
+        headers: { "X-API-Key": apiKey.highBalance },
       });
       expect(response.status).toBe(200);
       const data = await response.json();
@@ -116,7 +117,7 @@ describe("Features API", () => {
     });
 
     it("should return 422 for page < 1", async () => {
-      const response = await fetch(`${config.BASE_URL}/api/v1/features/get-all?page=-1`, {
+      const response = await fetchApi(`${config.BASE_URL}/api/v1/features/get-all?page=-1`, {
         headers: { "X-API-Key": apiKey.standardUser },
       });
       expect(response.status).toBe(422);
@@ -125,8 +126,8 @@ describe("Features API", () => {
     });
 
     it("should return 422 for limit < 1", async () => {
-      const response = await fetch(`${config.BASE_URL}/api/v1/features/get-all?limit=0`, {
-        headers: { "X-API-Key": apiKey.standardUser },
+      const response = await fetchApi(`${config.BASE_URL}/api/v1/features/get-all?limit=0`, {
+        headers: { "X-API-Key": apiKey.vojta },
       });
       expect(response.status).toBe(422);
       const data = await response.json();
@@ -134,8 +135,8 @@ describe("Features API", () => {
     });
 
     it("should return 422 for limit > 100", async () => {
-      const response = await fetch(`${config.BASE_URL}/api/v1/features/get-all?limit=101`, {
-        headers: { "X-API-Key": apiKey.standardUser },
+      const response = await fetchApi(`${config.BASE_URL}/api/v1/features/get-all?limit=101`, {
+        headers: { "X-API-Key": apiKey.multipleKeys },
       });
       expect(response.status).toBe(422);
       const data = await response.json();
@@ -143,15 +144,15 @@ describe("Features API", () => {
     });
 
     it("should accept limit=100 (boundary)", async () => {
-      const response = await fetch(`${config.BASE_URL}/api/v1/features/get-all?limit=100`, {
-        headers: { "X-API-Key": apiKey.standardUser },
+      const response = await fetchApi(`${config.BASE_URL}/api/v1/features/get-all?limit=100`, {
+        headers: { "X-API-Key": apiKey.appAdmin },
       });
       expect(response.status).toBe(200);
     });
 
     it("should accept limit=1 (boundary)", async () => {
-      const response = await fetch(`${config.BASE_URL}/api/v1/features/get-all?limit=1`, {
-        headers: { "X-API-Key": apiKey.standardUser },
+      const response = await fetchApi(`${config.BASE_URL}/api/v1/features/get-all?limit=1`, {
+        headers: { "X-API-Key": apiKey.zeroBalance },
       });
       expect(response.status).toBe(200);
       const data = await response.json();
@@ -162,7 +163,7 @@ describe("Features API", () => {
 
   describe("POST /api/v1/features/update", () => {
     it("should return 401 when no API key is provided", async () => {
-      const response = await fetch(`${config.BASE_URL}/api/v1/features/update`, {
+      const response = await fetchApi(`${config.BASE_URL}/api/v1/features/update`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ features: [] }),
@@ -175,7 +176,7 @@ describe("Features API", () => {
 
     it("should return 200 and update a feature toggle", async () => {
       // First, get all features to save original state
-      const getResponse = await fetch(`${config.BASE_URL}/api/v1/features/get-all`, {
+      const getResponse = await fetchApi(`${config.BASE_URL}/api/v1/features/get-all`, {
         headers: { "X-API-Key": apiKey.appAdmin },
       });
       const getData = await getResponse.json();
@@ -185,7 +186,7 @@ describe("Features API", () => {
       const featureToToggle = { ...getData.data.features[0] };
       featureToToggle.toggle = !featureToToggle.toggle;
 
-      const response = await fetch(`${config.BASE_URL}/api/v1/features/update`, {
+      const response = await fetchApi(`${config.BASE_URL}/api/v1/features/update`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -199,7 +200,7 @@ describe("Features API", () => {
     });
 
     it("should return 403 when user is not admin", async () => {
-      const response = await fetch(`${config.BASE_URL}/api/v1/features/update`, {
+      const response = await fetchApi(`${config.BASE_URL}/api/v1/features/update`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -214,7 +215,7 @@ describe("Features API", () => {
     });
 
     it("should return 422 for empty body", async () => {
-      const response = await fetch(`${config.BASE_URL}/api/v1/features/update`, {
+      const response = await fetchApi(`${config.BASE_URL}/api/v1/features/update`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

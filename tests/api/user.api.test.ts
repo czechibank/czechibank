@@ -1,11 +1,12 @@
 import { describe, expect, it } from "vitest";
 import { apiKey, SEED_USERS } from "../../shared/fixtures";
 import { config } from "./config/config";
+import { fetchApi } from "./helpers/fetch-api";
 
 describe("User API", () => {
   describe("GET /api/v1/user", () => {
     it("should return 401 when no API key is provided", async () => {
-      const response = await fetch(`${config.BASE_URL}/api/v1/user`);
+      const response = await fetchApi(`${config.BASE_URL}/api/v1/user`);
       expect(response.status).toBe(401);
       const data = await response.json();
       expect(data.success).toBe(false);
@@ -13,7 +14,7 @@ describe("User API", () => {
     });
 
     it("should return 401 when invalid API key is provided", async () => {
-      const response = await fetch(`${config.BASE_URL}/api/v1/user`, {
+      const response = await fetchApi(`${config.BASE_URL}/api/v1/user`, {
         headers: { "X-API-Key": "invalid-token" },
       });
       expect(response.status).toBe(401);
@@ -23,7 +24,7 @@ describe("User API", () => {
     });
 
     it("should return 200 and user profile for valid API key", async () => {
-      const response = await fetch(`${config.BASE_URL}/api/v1/user`, {
+      const response = await fetchApi(`${config.BASE_URL}/api/v1/user`, {
         headers: { "X-API-Key": apiKey.standardUser },
       });
       expect(response.status).toBe(200);
@@ -34,7 +35,7 @@ describe("User API", () => {
     });
 
     it("should return 401 for disabled API key", async () => {
-      const response = await fetch(`${config.BASE_URL}/api/v1/user`, {
+      const response = await fetchApi(`${config.BASE_URL}/api/v1/user`, {
         headers: { "X-API-Key": SEED_USERS.expiredKey.apiKeys[0].key },
       });
       expect(response.status).toBe(401);
@@ -46,7 +47,7 @@ describe("User API", () => {
 
   describe("POST /api/v1/user/create", () => {
     it("should return 201 and create a new user", async () => {
-      const response = await fetch(`${config.BASE_URL}/api/v1/user/create`, {
+      const response = await fetchApi(`${config.BASE_URL}/api/v1/user/create`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -63,7 +64,7 @@ describe("User API", () => {
     });
 
     it("should return 422 for short password", async () => {
-      const response = await fetch(`${config.BASE_URL}/api/v1/user/create`, {
+      const response = await fetchApi(`${config.BASE_URL}/api/v1/user/create`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -79,7 +80,7 @@ describe("User API", () => {
     });
 
     it("should return 422 for missing name", async () => {
-      const response = await fetch(`${config.BASE_URL}/api/v1/user/create`, {
+      const response = await fetchApi(`${config.BASE_URL}/api/v1/user/create`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -93,7 +94,7 @@ describe("User API", () => {
     });
 
     it("should return 422 for missing email", async () => {
-      const response = await fetch(`${config.BASE_URL}/api/v1/user/create`, {
+      const response = await fetchApi(`${config.BASE_URL}/api/v1/user/create`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -107,7 +108,7 @@ describe("User API", () => {
     });
 
     it("should return 422 for missing password", async () => {
-      const response = await fetch(`${config.BASE_URL}/api/v1/user/create`, {
+      const response = await fetchApi(`${config.BASE_URL}/api/v1/user/create`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -121,7 +122,7 @@ describe("User API", () => {
     });
 
     it("should return 422 for invalid email format", async () => {
-      const response = await fetch(`${config.BASE_URL}/api/v1/user/create`, {
+      const response = await fetchApi(`${config.BASE_URL}/api/v1/user/create`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -136,7 +137,7 @@ describe("User API", () => {
     });
 
     it("should return 409 for duplicate email", async () => {
-      const response = await fetch(`${config.BASE_URL}/api/v1/user/create`, {
+      const response = await fetchApi(`${config.BASE_URL}/api/v1/user/create`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

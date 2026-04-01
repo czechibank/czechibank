@@ -1,11 +1,12 @@
 import { describe, expect, it } from "vitest";
 import { apiKey, SEED_USERS } from "../../shared/fixtures";
 import { config } from "./config/config";
+import { fetchApi } from "./helpers/fetch-api";
 
 describe("Bank Account CRUD API", () => {
   describe("POST /api/v1/bank-account/create", () => {
     it("should return 401 when no API key is provided", async () => {
-      const response = await fetch(`${config.BASE_URL}/api/v1/bank-account/create`, {
+      const response = await fetchApi(`${config.BASE_URL}/api/v1/bank-account/create`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ currency: "CZECHITOKEN" }),
@@ -17,7 +18,7 @@ describe("Bank Account CRUD API", () => {
     });
 
     it("should return 201 and create account with CZECHITOKEN currency", async () => {
-      const response = await fetch(`${config.BASE_URL}/api/v1/bank-account/create`, {
+      const response = await fetchApi(`${config.BASE_URL}/api/v1/bank-account/create`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -34,7 +35,7 @@ describe("Bank Account CRUD API", () => {
     });
 
     it("should return 201 and create account with custom name", async () => {
-      const response = await fetch(`${config.BASE_URL}/api/v1/bank-account/create`, {
+      const response = await fetchApi(`${config.BASE_URL}/api/v1/bank-account/create`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -49,7 +50,7 @@ describe("Bank Account CRUD API", () => {
     });
 
     it("should return 422 when body is empty", async () => {
-      const response = await fetch(`${config.BASE_URL}/api/v1/bank-account/create`, {
+      const response = await fetchApi(`${config.BASE_URL}/api/v1/bank-account/create`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -63,7 +64,7 @@ describe("Bank Account CRUD API", () => {
     });
 
     it("should return 422 when currency is invalid", async () => {
-      const response = await fetch(`${config.BASE_URL}/api/v1/bank-account/create`, {
+      const response = await fetchApi(`${config.BASE_URL}/api/v1/bank-account/create`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -80,13 +81,13 @@ describe("Bank Account CRUD API", () => {
   describe("GET /api/v1/bank-account/[id]", () => {
     it("should return 401 when no API key is provided (with valid CUID)", async () => {
       // GET route validates CUID format first — use a real account ID to pass validation
-      const listResponse = await fetch(`${config.BASE_URL}/api/v1/bank-account`, {
+      const listResponse = await fetchApi(`${config.BASE_URL}/api/v1/bank-account`, {
         headers: { "X-API-Key": apiKey.vojta },
       });
       const listData = await listResponse.json();
       const validId = listData.data.bankAccounts[0].id;
 
-      const response = await fetch(`${config.BASE_URL}/api/v1/bank-account/${validId}`);
+      const response = await fetchApi(`${config.BASE_URL}/api/v1/bank-account/${validId}`);
       expect(response.status).toBe(401);
       const data = await response.json();
       expect(data.success).toBe(false);
@@ -95,13 +96,13 @@ describe("Bank Account CRUD API", () => {
 
     it("should return 200 and own account details", async () => {
       // First get list to find a valid account ID
-      const listResponse = await fetch(`${config.BASE_URL}/api/v1/bank-account`, {
+      const listResponse = await fetchApi(`${config.BASE_URL}/api/v1/bank-account`, {
         headers: { "X-API-Key": apiKey.vojta },
       });
       const listData = await listResponse.json();
       const accountId = listData.data.bankAccounts[0].id;
 
-      const response = await fetch(`${config.BASE_URL}/api/v1/bank-account/${accountId}`, {
+      const response = await fetchApi(`${config.BASE_URL}/api/v1/bank-account/${accountId}`, {
         headers: { "X-API-Key": apiKey.vojta },
       });
       expect(response.status).toBe(200);
@@ -112,7 +113,7 @@ describe("Bank Account CRUD API", () => {
     });
 
     it("should return 422 for invalid CUID format", async () => {
-      const response = await fetch(`${config.BASE_URL}/api/v1/bank-account/not-a-cuid`, {
+      const response = await fetchApi(`${config.BASE_URL}/api/v1/bank-account/not-a-cuid`, {
         headers: { "X-API-Key": apiKey.vojta },
       });
       expect(response.status).toBe(422);
@@ -122,14 +123,17 @@ describe("Bank Account CRUD API", () => {
 
     it("should return 404 for another user's account", async () => {
       // Get standardUser's account ID using standardUser's key
-      const listResponse = await fetch(`${config.BASE_URL}/api/v1/bank-account`, {
+      const listResponse = await fetchApi(`${config.BASE_URL}/api/v1/bank-account`, {
         headers: { "X-API-Key": apiKey.standardUser },
       });
+      expect(listResponse.status).toBe(200);
       const listData = await listResponse.json();
+      expect(listData.success).toBe(true);
+      expect(listData.data?.bankAccounts?.[0]?.id).toBeDefined();
       const otherAccountId = listData.data.bankAccounts[0].id;
 
       // Try to access it with vojta's key
-      const response = await fetch(`${config.BASE_URL}/api/v1/bank-account/${otherAccountId}`, {
+      const response = await fetchApi(`${config.BASE_URL}/api/v1/bank-account/${otherAccountId}`, {
         headers: { "X-API-Key": apiKey.vojta },
       });
       expect(response.status).toBe(404);
@@ -141,7 +145,7 @@ describe("Bank Account CRUD API", () => {
 
   describe("PATCH /api/v1/bank-account/[id]", () => {
     it("should return 401 when no API key is provided", async () => {
-      const response = await fetch(`${config.BASE_URL}/api/v1/bank-account/some-id`, {
+      const response = await fetchApi(`${config.BASE_URL}/api/v1/bank-account/some-id`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ name: "New Name" }),
@@ -154,13 +158,13 @@ describe("Bank Account CRUD API", () => {
 
     it("should return 200 and rename account", async () => {
       // Get vojta's account ID
-      const listResponse = await fetch(`${config.BASE_URL}/api/v1/bank-account`, {
+      const listResponse = await fetchApi(`${config.BASE_URL}/api/v1/bank-account`, {
         headers: { "X-API-Key": apiKey.vojta },
       });
       const listData = await listResponse.json();
       const accountId = listData.data.bankAccounts[0].id;
 
-      const response = await fetch(`${config.BASE_URL}/api/v1/bank-account/${accountId}`, {
+      const response = await fetchApi(`${config.BASE_URL}/api/v1/bank-account/${accountId}`, {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",
@@ -175,14 +179,17 @@ describe("Bank Account CRUD API", () => {
 
     it("should return 404 when renaming another user's account", async () => {
       // Get standardUser's account ID
-      const listResponse = await fetch(`${config.BASE_URL}/api/v1/bank-account`, {
+      const listResponse = await fetchApi(`${config.BASE_URL}/api/v1/bank-account`, {
         headers: { "X-API-Key": apiKey.standardUser },
       });
+      expect(listResponse.status).toBe(200);
       const listData = await listResponse.json();
+      expect(listData.success).toBe(true);
+      expect(listData.data?.bankAccounts?.[0]?.id).toBeDefined();
       const otherAccountId = listData.data.bankAccounts[0].id;
 
       // Try to rename it with vojta's key
-      const response = await fetch(`${config.BASE_URL}/api/v1/bank-account/${otherAccountId}`, {
+      const response = await fetchApi(`${config.BASE_URL}/api/v1/bank-account/${otherAccountId}`, {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",
@@ -197,13 +204,13 @@ describe("Bank Account CRUD API", () => {
     });
 
     it("should return 422 for empty name", async () => {
-      const listResponse = await fetch(`${config.BASE_URL}/api/v1/bank-account`, {
+      const listResponse = await fetchApi(`${config.BASE_URL}/api/v1/bank-account`, {
         headers: { "X-API-Key": apiKey.vojta },
       });
       const listData = await listResponse.json();
       const accountId = listData.data.bankAccounts[0].id;
 
-      const response = await fetch(`${config.BASE_URL}/api/v1/bank-account/${accountId}`, {
+      const response = await fetchApi(`${config.BASE_URL}/api/v1/bank-account/${accountId}`, {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",
@@ -219,7 +226,7 @@ describe("Bank Account CRUD API", () => {
 
   describe("DELETE /api/v1/bank-account/[id]", () => {
     it("should return 401 when no API key is provided", async () => {
-      const response = await fetch(`${config.BASE_URL}/api/v1/bank-account/some-id`, {
+      const response = await fetchApi(`${config.BASE_URL}/api/v1/bank-account/some-id`, {
         method: "DELETE",
       });
       expect(response.status).toBe(401);
@@ -229,7 +236,7 @@ describe("Bank Account CRUD API", () => {
     });
 
     it("should return 401 for invalid/incomplete API key", async () => {
-      const response = await fetch(`${config.BASE_URL}/api/v1/bank-account/some-id`, {
+      const response = await fetchApi(`${config.BASE_URL}/api/v1/bank-account/some-id`, {
         method: "DELETE",
         headers: { "X-API-Key": "invalid-token" },
       });
@@ -240,7 +247,7 @@ describe("Bank Account CRUD API", () => {
     });
 
     it("should return 401 for disabled/expired API key", async () => {
-      const response = await fetch(`${config.BASE_URL}/api/v1/bank-account/some-id`, {
+      const response = await fetchApi(`${config.BASE_URL}/api/v1/bank-account/some-id`, {
         method: "DELETE",
         headers: { "X-API-Key": SEED_USERS.expiredKey.apiKeys[0].key },
       });
@@ -252,7 +259,7 @@ describe("Bank Account CRUD API", () => {
 
     it("should return 409 NON_ZERO_BALANCE when deleting account with balance", async () => {
       // highBalance has 2 accounts and 1M balance — passes min-account check, hits balance check
-      const listResponse = await fetch(`${config.BASE_URL}/api/v1/bank-account`, {
+      const listResponse = await fetchApi(`${config.BASE_URL}/api/v1/bank-account`, {
         headers: { "X-API-Key": apiKey.highBalance },
       });
       const listData = await listResponse.json();
@@ -262,7 +269,7 @@ describe("Bank Account CRUD API", () => {
       const accountId =
         listData.data.bankAccounts.find((a: any) => a.balance > 0)?.id ?? listData.data.bankAccounts[0].id;
 
-      const response = await fetch(`${config.BASE_URL}/api/v1/bank-account/${accountId}`, {
+      const response = await fetchApi(`${config.BASE_URL}/api/v1/bank-account/${accountId}`, {
         method: "DELETE",
         headers: { "X-API-Key": apiKey.highBalance },
       });
@@ -274,7 +281,7 @@ describe("Bank Account CRUD API", () => {
 
     it("should return 200 when deleting zero-balance account (not the last one)", async () => {
       // Create a fresh account so the test is self-contained and repeatable
-      const createResponse = await fetch(`${config.BASE_URL}/api/v1/bank-account/create`, {
+      const createResponse = await fetchApi(`${config.BASE_URL}/api/v1/bank-account/create`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -287,7 +294,7 @@ describe("Bank Account CRUD API", () => {
       const newAccountId = createData.data.bankAccount.id;
 
       // Delete the newly created account (0 balance, not the last one)
-      const response = await fetch(`${config.BASE_URL}/api/v1/bank-account/${newAccountId}`, {
+      const response = await fetchApi(`${config.BASE_URL}/api/v1/bank-account/${newAccountId}`, {
         method: "DELETE",
         headers: { "X-API-Key": apiKey.zeroBalance },
       });
@@ -298,13 +305,16 @@ describe("Bank Account CRUD API", () => {
 
     it("should return 400 when deleting last active account", async () => {
       // standardUser has exactly 1 account — no dependency on prior tests
-      const listResponse = await fetch(`${config.BASE_URL}/api/v1/bank-account`, {
+      const listResponse = await fetchApi(`${config.BASE_URL}/api/v1/bank-account`, {
         headers: { "X-API-Key": apiKey.standardUser },
       });
+      expect(listResponse.status).toBe(200);
       const listData = await listResponse.json();
+      expect(listData.success).toBe(true);
+      expect(listData.data?.bankAccounts?.[0]?.id).toBeDefined();
       const lastAccountId = listData.data.bankAccounts[0].id;
 
-      const response = await fetch(`${config.BASE_URL}/api/v1/bank-account/${lastAccountId}`, {
+      const response = await fetchApi(`${config.BASE_URL}/api/v1/bank-account/${lastAccountId}`, {
         method: "DELETE",
         headers: { "X-API-Key": apiKey.standardUser },
       });
@@ -316,13 +326,16 @@ describe("Bank Account CRUD API", () => {
 
     it("should return 404 when deleting another user's account", async () => {
       // Get standardUser's account, try to delete with vojta's key
-      const listResponse = await fetch(`${config.BASE_URL}/api/v1/bank-account`, {
+      const listResponse = await fetchApi(`${config.BASE_URL}/api/v1/bank-account`, {
         headers: { "X-API-Key": apiKey.standardUser },
       });
+      expect(listResponse.status).toBe(200);
       const listData = await listResponse.json();
+      expect(listData.success).toBe(true);
+      expect(listData.data?.bankAccounts?.[0]?.id).toBeDefined();
       const otherAccountId = listData.data.bankAccounts[0].id;
 
-      const response = await fetch(`${config.BASE_URL}/api/v1/bank-account/${otherAccountId}`, {
+      const response = await fetchApi(`${config.BASE_URL}/api/v1/bank-account/${otherAccountId}`, {
         method: "DELETE",
         headers: { "X-API-Key": apiKey.vojta },
       });

@@ -1,9 +1,10 @@
 import { describe, expect, it, test } from "vitest";
 import { apiKey } from "../../shared/fixtures";
 import { config } from "./config/config";
+import { fetchApi } from "./helpers/fetch-api";
 
 test.skip("should create a bank account", async () => {
-  const response = await fetch(`${config.BASE_URL}/api/v1/bank-account`, {
+  const response = await fetchApi(`${config.BASE_URL}/api/v1/bank-account`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -20,7 +21,7 @@ test.skip("should create a bank account", async () => {
 describe("Bank Account API", () => {
   describe("GET /api/v1/bank-account", () => {
     it("should return 401 when no API key is provided", async () => {
-      const response = await fetch(`${config.BASE_URL}/api/v1/bank-account`);
+      const response = await fetchApi(`${config.BASE_URL}/api/v1/bank-account`);
       expect(response.status).toBe(401);
       const data = await response.json();
 
@@ -29,7 +30,7 @@ describe("Bank Account API", () => {
     });
 
     it("should return 401 when invalid API key is provided", async () => {
-      const response = await fetch(`${config.BASE_URL}/api/v1/bank-account`, {
+      const response = await fetchApi(`${config.BASE_URL}/api/v1/bank-account`, {
         headers: {
           "X-API-Key": "invalid-token",
         },
@@ -42,7 +43,7 @@ describe("Bank Account API", () => {
     });
 
     it("should return bank accounts with valid API key", async () => {
-      const response = await fetch(`${config.BASE_URL}/api/v1/bank-account`, {
+      const response = await fetchApi(`${config.BASE_URL}/api/v1/bank-account`, {
         headers: {
           "X-API-Key": apiKey.standardUser,
         },
@@ -56,7 +57,7 @@ describe("Bank Account API", () => {
     });
 
     it("should handle pagination parameters", async () => {
-      const response = await fetch(`${config.BASE_URL}/api/v1/bank-account?page=1&limit=5`, {
+      const response = await fetchApi(`${config.BASE_URL}/api/v1/bank-account?page=1&limit=5`, {
         headers: {
           "X-API-Key": apiKey.highBalance,
         },
@@ -69,7 +70,7 @@ describe("Bank Account API", () => {
     });
 
     it("should return 422 for invalid pagination parameters", async () => {
-      const response = await fetch(`${config.BASE_URL}/api/v1/bank-account?page=0&limit=0`, {
+      const response = await fetchApi(`${config.BASE_URL}/api/v1/bank-account?page=0&limit=0`, {
         headers: {
           "X-API-Key": apiKey.highBalance,
         },
@@ -84,7 +85,7 @@ describe("Bank Account API", () => {
 
   describe("Method Not Allowed (405)", () => {
     it("should return 405 for POST /api/v1/bank-account", async () => {
-      const response = await fetch(`${config.BASE_URL}/api/v1/bank-account`, {
+      const response = await fetchApi(`${config.BASE_URL}/api/v1/bank-account`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -96,7 +97,7 @@ describe("Bank Account API", () => {
     });
 
     it("should return 405 for DELETE /api/v1/bank-account", async () => {
-      const response = await fetch(`${config.BASE_URL}/api/v1/bank-account`, {
+      const response = await fetchApi(`${config.BASE_URL}/api/v1/bank-account`, {
         method: "DELETE",
         headers: { "X-API-Key": apiKey.standardUser },
       });
@@ -104,7 +105,7 @@ describe("Bank Account API", () => {
     });
 
     it("should return 405 for PUT /api/v1/bank-account", async () => {
-      const response = await fetch(`${config.BASE_URL}/api/v1/bank-account`, {
+      const response = await fetchApi(`${config.BASE_URL}/api/v1/bank-account`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
@@ -116,7 +117,7 @@ describe("Bank Account API", () => {
     });
 
     it("should return 405 for PATCH /api/v1/bank-account", async () => {
-      const response = await fetch(`${config.BASE_URL}/api/v1/bank-account`, {
+      const response = await fetchApi(`${config.BASE_URL}/api/v1/bank-account`, {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",

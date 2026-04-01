@@ -1,11 +1,12 @@
 import { describe, expect, it } from "vitest";
 import { apiKey, SEED_USERS } from "../../shared/fixtures";
 import { config } from "./config/config";
+import { fetchApi } from "./helpers/fetch-api";
 
 describe("Transactions API", () => {
   describe("GET /api/v1/transactions", () => {
     it("should return 401 when no API key is provided", async () => {
-      const response = await fetch(`${config.BASE_URL}/api/v1/transactions`);
+      const response = await fetchApi(`${config.BASE_URL}/api/v1/transactions`);
       expect(response.status).toBe(401);
       const data = await response.json();
       expect(data.success).toBe(false);
@@ -13,7 +14,7 @@ describe("Transactions API", () => {
     });
 
     it("should return 401 when invalid API key is provided", async () => {
-      const response = await fetch(`${config.BASE_URL}/api/v1/transactions`, {
+      const response = await fetchApi(`${config.BASE_URL}/api/v1/transactions`, {
         headers: {
           "X-API-Key": "invalid-token",
         },
@@ -25,7 +26,7 @@ describe("Transactions API", () => {
     });
 
     it("should return 401 for disabled/expired API key", async () => {
-      const response = await fetch(`${config.BASE_URL}/api/v1/transactions`, {
+      const response = await fetchApi(`${config.BASE_URL}/api/v1/transactions`, {
         headers: {
           "X-API-Key": SEED_USERS.expiredKey.apiKeys[0].key,
         },
@@ -37,7 +38,7 @@ describe("Transactions API", () => {
     });
 
     it("should return transactions with valid API key", async () => {
-      const response = await fetch(`${config.BASE_URL}/api/v1/transactions`, {
+      const response = await fetchApi(`${config.BASE_URL}/api/v1/transactions`, {
         headers: {
           "X-API-Key": apiKey.vojta,
         },
@@ -51,7 +52,7 @@ describe("Transactions API", () => {
 
     describe("Pagination", () => {
       it("should return first page with default limit (10)", async () => {
-        const response = await fetch(`${config.BASE_URL}/api/v1/transactions`, {
+        const response = await fetchApi(`${config.BASE_URL}/api/v1/transactions`, {
           headers: {
             "X-API-Key": apiKey.highBalance,
           },
@@ -69,7 +70,7 @@ describe("Transactions API", () => {
       });
 
       it("should return second page with 10 items", async () => {
-        const response = await fetch(`${config.BASE_URL}/api/v1/transactions?page=2`, {
+        const response = await fetchApi(`${config.BASE_URL}/api/v1/transactions?page=2`, {
           headers: {
             "X-API-Key": apiKey.highBalance,
           },
@@ -87,7 +88,7 @@ describe("Transactions API", () => {
       });
 
       it("should return 422 for invalid pagination parameters", async () => {
-        const response = await fetch(`${config.BASE_URL}/api/v1/transactions?page=0&limit=0`, {
+        const response = await fetchApi(`${config.BASE_URL}/api/v1/transactions?page=0&limit=0`, {
           headers: {
             "X-API-Key": apiKey.highBalance,
           },
@@ -99,7 +100,7 @@ describe("Transactions API", () => {
       });
 
       it("should return empty array for page beyond total pages", async () => {
-        const response = await fetch(`${config.BASE_URL}/api/v1/transactions?page=921`, {
+        const response = await fetchApi(`${config.BASE_URL}/api/v1/transactions?page=921`, {
           headers: {
             "X-API-Key": apiKey.vojta,
           },
@@ -119,7 +120,7 @@ describe("Transactions API", () => {
 
     describe("Sorting", () => {
       it("should sort by createdAt in descending order by default", async () => {
-        const response = await fetch(`${config.BASE_URL}/api/v1/transactions`, {
+        const response = await fetchApi(`${config.BASE_URL}/api/v1/transactions`, {
           headers: {
             "X-API-Key": apiKey.highBalance,
           },
@@ -134,7 +135,7 @@ describe("Transactions API", () => {
       });
 
       it("should sort by amount in ascending order", async () => {
-        const response = await fetch(`${config.BASE_URL}/api/v1/transactions?sortBy=amount&sortOrder=asc`, {
+        const response = await fetchApi(`${config.BASE_URL}/api/v1/transactions?sortBy=amount&sortOrder=asc`, {
           headers: {
             "X-API-Key": apiKey.highBalance,
           },
@@ -150,7 +151,7 @@ describe("Transactions API", () => {
 
   describe("GET /api/v1/transactions/[id]", () => {
     it("should return 401 when no API key is provided", async () => {
-      const response = await fetch(`${config.BASE_URL}/api/v1/transactions/123`);
+      const response = await fetchApi(`${config.BASE_URL}/api/v1/transactions/123`);
       expect(response.status).toBe(401);
       const data = await response.json();
       expect(data.success).toBe(false);
@@ -158,7 +159,7 @@ describe("Transactions API", () => {
     });
 
     it("should return 401 for disabled/expired API key", async () => {
-      const response = await fetch(`${config.BASE_URL}/api/v1/transactions/some-id`, {
+      const response = await fetchApi(`${config.BASE_URL}/api/v1/transactions/some-id`, {
         headers: {
           "X-API-Key": SEED_USERS.expiredKey.apiKeys[0].key,
         },
@@ -170,7 +171,7 @@ describe("Transactions API", () => {
     });
 
     it("should return 401 when invalid API key is provided", async () => {
-      const response = await fetch(`${config.BASE_URL}/api/v1/transactions/some-id`, {
+      const response = await fetchApi(`${config.BASE_URL}/api/v1/transactions/some-id`, {
         headers: {
           "X-API-Key": "invalid-token",
         },
@@ -182,7 +183,7 @@ describe("Transactions API", () => {
     });
 
     it("should return 404 for non-existent transaction", async () => {
-      const response = await fetch(`${config.BASE_URL}/api/v1/transactions/non-existent-id`, {
+      const response = await fetchApi(`${config.BASE_URL}/api/v1/transactions/non-existent-id`, {
         headers: {
           "X-API-Key": apiKey.highBalance,
         },
@@ -195,7 +196,7 @@ describe("Transactions API", () => {
 
     it("should return transaction details for valid ID", async () => {
       // First get a list of transactions to get a valid ID
-      const listResponse = await fetch(`${config.BASE_URL}/api/v1/transactions`, {
+      const listResponse = await fetchApi(`${config.BASE_URL}/api/v1/transactions`, {
         headers: {
           "X-API-Key": apiKey.highBalance,
         },
@@ -204,7 +205,7 @@ describe("Transactions API", () => {
       const transactionId = listData.data.transactions[0].id;
 
       // Then get the details for that transaction
-      const response = await fetch(`${config.BASE_URL}/api/v1/transactions/${transactionId}`, {
+      const response = await fetchApi(`${config.BASE_URL}/api/v1/transactions/${transactionId}`, {
         headers: {
           "X-API-Key": apiKey.highBalance,
         },
@@ -219,7 +220,7 @@ describe("Transactions API", () => {
   describe("POST /api/v1/transactions/create", () => {
     it("should return 201 for valid request", async () => {
       const hb = SEED_USERS.highBalance;
-      const response = await fetch(`${config.BASE_URL}/api/v1/transactions/create`, {
+      const response = await fetchApi(`${config.BASE_URL}/api/v1/transactions/create`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -237,7 +238,7 @@ describe("Transactions API", () => {
     });
 
     it("should return 401 when no API key is provided", async () => {
-      const response = await fetch(`${config.BASE_URL}/api/v1/transactions/create`, {
+      const response = await fetchApi(`${config.BASE_URL}/api/v1/transactions/create`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -254,11 +255,11 @@ describe("Transactions API", () => {
     });
 
     it("should return 422 for missing required fields", async () => {
-      const response = await fetch(`${config.BASE_URL}/api/v1/transactions/create`, {
+      const response = await fetchApi(`${config.BASE_URL}/api/v1/transactions/create`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "X-API-Key": apiKey.highBalance,
+          "X-API-Key": apiKey.vojta,
         },
         body: JSON.stringify({}),
       });
@@ -270,7 +271,7 @@ describe("Transactions API", () => {
 
     it("should return 422 for invalid amount", async () => {
       const hb = SEED_USERS.highBalance;
-      const response = await fetch(`${config.BASE_URL}/api/v1/transactions/create`, {
+      const response = await fetchApi(`${config.BASE_URL}/api/v1/transactions/create`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -295,7 +296,7 @@ describe("Transactions API", () => {
 
     it("should return 404 for non-existent recipient bank account", async () => {
       const hb = SEED_USERS.highBalance;
-      const response = await fetch(`${config.BASE_URL}/api/v1/transactions/create`, {
+      const response = await fetchApi(`${config.BASE_URL}/api/v1/transactions/create`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -316,7 +317,7 @@ describe("Transactions API", () => {
 
     it("should return 422 for amount greater than Number.MAX_SAFE_INTEGER", async () => {
       const hb = SEED_USERS.highBalance;
-      const response = await fetch(`${config.BASE_URL}/api/v1/transactions/create`, {
+      const response = await fetchApi(`${config.BASE_URL}/api/v1/transactions/create`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -340,7 +341,7 @@ describe("Transactions API", () => {
     it("should return 409 INSUFFICIENT_BALANCE when sender has no funds", async () => {
       // Look up zeroBalance's active account dynamically (seed account may have
       // been soft-deleted by a prior test run)
-      const listResponse = await fetch(`${config.BASE_URL}/api/v1/bank-account`, {
+      const listResponse = await fetchApi(`${config.BASE_URL}/api/v1/bank-account`, {
         headers: { "X-API-Key": apiKey.zeroBalance },
       });
       const listData = await listResponse.json();
@@ -348,7 +349,7 @@ describe("Transactions API", () => {
       expect(listData.data.bankAccounts.length).toBeGreaterThan(0);
       const fromNumber = listData.data.bankAccounts[0].number;
 
-      const response = await fetch(`${config.BASE_URL}/api/v1/transactions/create`, {
+      const response = await fetchApi(`${config.BASE_URL}/api/v1/transactions/create`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -367,7 +368,7 @@ describe("Transactions API", () => {
     });
 
     it("should return 403 FORBIDDEN when sending from another user's account", async () => {
-      const response = await fetch(`${config.BASE_URL}/api/v1/transactions/create`, {
+      const response = await fetchApi(`${config.BASE_URL}/api/v1/transactions/create`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -386,17 +387,17 @@ describe("Transactions API", () => {
     });
 
     it("should return 422 for toBankNumber not ending with /5555", async () => {
-      const hb = SEED_USERS.highBalance;
-      const response = await fetch(`${config.BASE_URL}/api/v1/transactions/create`, {
+      const v = SEED_USERS.vojta;
+      const response = await fetchApi(`${config.BASE_URL}/api/v1/transactions/create`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "X-API-Key": apiKey.highBalance,
+          "X-API-Key": apiKey.vojta,
         },
         body: JSON.stringify({
           amount: 1,
           toBankNumber: "123456789012/1234",
-          fromBankNumber: hb.bankAccounts[0].number,
+          fromBankNumber: v.bankAccounts[0].number,
         }),
       });
       expect(response.status).toBe(422);
@@ -405,17 +406,17 @@ describe("Transactions API", () => {
     });
 
     it("should return 422 for toBankNumber with wrong length", async () => {
-      const hb = SEED_USERS.highBalance;
-      const response = await fetch(`${config.BASE_URL}/api/v1/transactions/create`, {
+      const v = SEED_USERS.vojta;
+      const response = await fetchApi(`${config.BASE_URL}/api/v1/transactions/create`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "X-API-Key": apiKey.highBalance,
+          "X-API-Key": apiKey.vojta,
         },
         body: JSON.stringify({
           amount: 1,
           toBankNumber: "12345/5555",
-          fromBankNumber: hb.bankAccounts[0].number,
+          fromBankNumber: v.bankAccounts[0].number,
         }),
       });
       expect(response.status).toBe(422);
@@ -424,15 +425,16 @@ describe("Transactions API", () => {
     });
 
     it("should return 422 for fromBankNumber not ending with /5555", async () => {
-      const response = await fetch(`${config.BASE_URL}/api/v1/transactions/create`, {
+      const v = SEED_USERS.vojta;
+      const response = await fetchApi(`${config.BASE_URL}/api/v1/transactions/create`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "X-API-Key": apiKey.highBalance,
+          "X-API-Key": apiKey.vojta,
         },
         body: JSON.stringify({
           amount: 1,
-          toBankNumber: SEED_USERS.vojta.bankAccounts[0].number,
+          toBankNumber: v.bankAccounts[1].number,
           fromBankNumber: "123456789012/1234",
         }),
       });
@@ -442,17 +444,17 @@ describe("Transactions API", () => {
     });
 
     it("should return 422 for amount of 0", async () => {
-      const hb = SEED_USERS.highBalance;
-      const response = await fetch(`${config.BASE_URL}/api/v1/transactions/create`, {
+      const v = SEED_USERS.vojta;
+      const response = await fetchApi(`${config.BASE_URL}/api/v1/transactions/create`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "X-API-Key": apiKey.highBalance,
+          "X-API-Key": apiKey.vojta,
         },
         body: JSON.stringify({
           amount: 0,
-          toBankNumber: SEED_USERS.vojta.bankAccounts[0].number,
-          fromBankNumber: hb.bankAccounts[0].number,
+          toBankNumber: v.bankAccounts[2].number,
+          fromBankNumber: v.bankAccounts[0].number,
         }),
       });
       expect(response.status).toBe(422);
@@ -461,17 +463,17 @@ describe("Transactions API", () => {
     });
 
     it("should return 422 when amount is a string", async () => {
-      const hb = SEED_USERS.highBalance;
-      const response = await fetch(`${config.BASE_URL}/api/v1/transactions/create`, {
+      const su = SEED_USERS.standardUser;
+      const response = await fetchApi(`${config.BASE_URL}/api/v1/transactions/create`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "X-API-Key": apiKey.highBalance,
+          "X-API-Key": apiKey.standardUser,
         },
         body: JSON.stringify({
           amount: "one hundred",
-          toBankNumber: hb.bankAccounts[1].number,
-          fromBankNumber: hb.bankAccounts[0].number,
+          toBankNumber: SEED_USERS.vojta.bankAccounts[0].number,
+          fromBankNumber: su.bankAccounts[0].number,
         }),
       });
       expect(response.status).toBe(422);
@@ -481,7 +483,7 @@ describe("Transactions API", () => {
 
     it("should round amount to 1 decimal place", async () => {
       const hb = SEED_USERS.highBalance;
-      const response = await fetch(`${config.BASE_URL}/api/v1/transactions/create`, {
+      const response = await fetchApi(`${config.BASE_URL}/api/v1/transactions/create`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -501,16 +503,16 @@ describe("Transactions API", () => {
     });
 
     it("should return 422 when toBankNumber field is missing", async () => {
-      const hb = SEED_USERS.highBalance;
-      const response = await fetch(`${config.BASE_URL}/api/v1/transactions/create`, {
+      const v = SEED_USERS.vojta;
+      const response = await fetchApi(`${config.BASE_URL}/api/v1/transactions/create`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "X-API-Key": apiKey.highBalance,
+          "X-API-Key": apiKey.vojta,
         },
         body: JSON.stringify({
           amount: 1,
-          fromBankNumber: hb.bankAccounts[0].number,
+          fromBankNumber: v.bankAccounts[0].number,
         }),
       });
       expect(response.status).toBe(422);
@@ -519,15 +521,16 @@ describe("Transactions API", () => {
     });
 
     it("should return 422 when fromBankNumber field is missing", async () => {
-      const response = await fetch(`${config.BASE_URL}/api/v1/transactions/create`, {
+      const v = SEED_USERS.vojta;
+      const response = await fetchApi(`${config.BASE_URL}/api/v1/transactions/create`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "X-API-Key": apiKey.highBalance,
+          "X-API-Key": apiKey.vojta,
         },
         body: JSON.stringify({
           amount: 1,
-          toBankNumber: SEED_USERS.vojta.bankAccounts[0].number,
+          toBankNumber: v.bankAccounts[1].number,
         }),
       });
       expect(response.status).toBe(422);
@@ -536,16 +539,16 @@ describe("Transactions API", () => {
     });
 
     it("should return 422 when amount field is missing", async () => {
-      const hb = SEED_USERS.highBalance;
-      const response = await fetch(`${config.BASE_URL}/api/v1/transactions/create`, {
+      const v = SEED_USERS.vojta;
+      const response = await fetchApi(`${config.BASE_URL}/api/v1/transactions/create`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "X-API-Key": apiKey.highBalance,
+          "X-API-Key": apiKey.vojta,
         },
         body: JSON.stringify({
-          toBankNumber: hb.bankAccounts[1].number,
-          fromBankNumber: hb.bankAccounts[0].number,
+          toBankNumber: v.bankAccounts[1].number,
+          fromBankNumber: v.bankAccounts[0].number,
         }),
       });
       expect(response.status).toBe(422);
@@ -554,17 +557,17 @@ describe("Transactions API", () => {
     });
 
     it("should return 422 for toBankNumber that is too long", async () => {
-      const hb = SEED_USERS.highBalance;
-      const response = await fetch(`${config.BASE_URL}/api/v1/transactions/create`, {
+      const v = SEED_USERS.vojta;
+      const response = await fetchApi(`${config.BASE_URL}/api/v1/transactions/create`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "X-API-Key": apiKey.highBalance,
+          "X-API-Key": apiKey.vojta,
         },
         body: JSON.stringify({
           amount: 1,
           toBankNumber: "1234567890123456/5555",
-          fromBankNumber: hb.bankAccounts[0].number,
+          fromBankNumber: v.bankAccounts[0].number,
         }),
       });
       expect(response.status).toBe(422);
