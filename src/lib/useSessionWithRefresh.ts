@@ -104,7 +104,7 @@ export function useRedirectToHomeWhenSignedIn(
 
   useEffect(() => {
     if (options?.skipRedirect || userId == null) return;
-    window.location.replace("/");
+    window.location.replace("/dashboard");
   }, [userId, options?.skipRedirect]);
 }
 

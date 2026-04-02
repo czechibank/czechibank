@@ -22,7 +22,7 @@ export default async function Dashboard() {
           <Sparkles className="h-4 w-4" />
           Dashboard
         </div>
-        <h1 className="text-4xl font-black tracking-tight">
+        <h1 className="text-4xl font-black tracking-tight" aria-label={session.user.name}>
           Hello{" "}
           <span className="relative inline-block">
             <span className="relative z-10">{session.user.name}</span>
