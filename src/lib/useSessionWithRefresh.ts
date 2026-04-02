@@ -69,7 +69,7 @@ export function useSessionWithRefresh() {
       !hasRedirectedToLoggedOutRef.current
     ) {
       hasRedirectedToLoggedOutRef.current = true;
-      window.location.replace("/logged-out");
+      window.location.replace("/signin");
     }
 
     lastUserIdRef.current = currentUserId;

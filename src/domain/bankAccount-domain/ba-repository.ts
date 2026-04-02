@@ -99,8 +99,11 @@ export async function createBankAccount({
 
       return bankAccount;
     } catch (error: any) {
-      // Prisma unique constraint error code is P2002
       if (error?.code === "P2002") {
+        const target = error?.meta?.target;
+        if (Array.isArray(target) && target.includes("name")) {
+          throw new Error(`Bank account name "${name}" already exists. Please choose a different name.`);
+        }
         throw new Error(
           `Bank account number "${number}" already exists. Cannot create bank account with duplicate number.`,
         );
@@ -139,9 +142,13 @@ export async function createBankAccount({
       return bankAccount;
     } catch (error: any) {
       lastError = error;
-      // Prisma unique constraint error code is P2002 — retry with a new number
       if (error?.code === "P2002") {
-        // small backoff before retrying
+        const target = error?.meta?.target;
+        // Name uniqueness constraint — don't retry, surface a clear error
+        if (Array.isArray(target) && target.includes("name")) {
+          throw new Error(`Bank account name "${name}" already exists. Please choose a different name.`);
+        }
+        // Account number collision — retry with a new number
         await new Promise((res) => setTimeout(res, 50 * attempt));
         continue;
       }

@@ -1,4 +1,4 @@
-import { type AppError, fromUnknown, notFound, validationError } from "@/lib/errors";
+import { type AppError, conflict, fromUnknown, notFound, validationError } from "@/lib/errors";
 import { type ErrorResponse, type SuccessResponse, ApiErrorCode } from "@/lib/response";
 import { toServiceResponse } from "@/lib/result-helpers";
 import { BankAccount } from "@prisma/client";
@@ -33,9 +33,12 @@ const bankAccountService = {
         return getInitialBalanceForUser(bankAccount.userId).map((balance) => ({ finalName, balance }));
       })
       .andThen(({ finalName, balance }) =>
-        ResultAsync.fromPromise(repository.createBankAccount({ ...bankAccount, name: finalName, balance }), (e) =>
-          fromUnknown(e, "Failed to create bank account"),
-        ),
+        ResultAsync.fromPromise(repository.createBankAccount({ ...bankAccount, name: finalName, balance }), (e) => {
+          if (e instanceof Error && e.message.includes("already exists")) {
+            return conflict(e.message);
+          }
+          return fromUnknown(e, "Failed to create bank account");
+        }),
       );
   },
 
