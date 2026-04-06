@@ -21,7 +21,7 @@ Feature: Login user
 
     Examples:
       | description    | email                            | password          | emailValidationText |
-      | Missing @      | zachranNas+brnopejsekAKocicka.cz | PejsekAKocicka123 | Invalid email       |
+      | Missing @      | zachranNas+brnopejsek@AKocicka.cz | PejsekAKocicka123 | Invalid email       |
       | Missing domain | zachranNas+brno@pejsekAKocicka   | PejsekAKocicka123 | Invalid email       |
       | Empty email    |                                  | PejsekAKocicka123 | Invalid email       |
 
