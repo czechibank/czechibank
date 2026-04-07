@@ -74,7 +74,7 @@ export default function SignInPage() {
                   <Input placeholder="" {...field} aria-required="true" aria-invalid={!!form.formState.errors.email} />
                 </FormControl>
                 <FormDescription>Email for sign in</FormDescription>
-                <FormMessage id="email-message" />
+                <FormMessage id="email-message" data-testid="email-message" />
               </FormItem>
             )}
           />
@@ -96,7 +96,7 @@ export default function SignInPage() {
                   />
                 </FormControl>
                 <FormDescription>Your password must be at least {MIN_PASSWORD_LENGTH} characters long.</FormDescription>
-                <FormMessage id="password-message" />
+                <FormMessage id="password-message" data-testid="password-message" />
               </FormItem>
             )}
           />
