@@ -71,7 +71,13 @@ export default function SignInPage() {
                   Email <span className="text-red-500">*</span>
                 </FormLabel>
                 <FormControl>
-                  <Input placeholder="" {...field} aria-required="true" aria-invalid={!!form.formState.errors.email} />
+                  <Input
+                    placeholder=""
+                    {...field}
+                    aria-required="true"
+                    aria-invalid={!!form.formState.errors.email}
+                    autoComplete="email"
+                  />
                 </FormControl>
                 <FormDescription>Email for sign in</FormDescription>
                 <FormMessage id="email-message" data-testid="email-message" />
@@ -93,6 +99,7 @@ export default function SignInPage() {
                     aria-required="true"
                     aria-invalid={!!form.formState.errors.password}
                     type="password"
+                    autoComplete="current-password"
                   />
                 </FormControl>
                 <FormDescription>Your password must be at least {MIN_PASSWORD_LENGTH} characters long.</FormDescription>

@@ -21,7 +21,20 @@ All responses follow a consistent format:
   "message": "Operation description",
   "data": { /* Operation-specific data */ }
 }
-\`\`\``,
+\`\`\`
+
+---
+
+**QA: Short inactivity timing (faster logout test)**  
+To test the inactivity auto-logout with 2 min timeout and 30 s warning (instead of 30 min / 5 min), use the browser console on the app page (any env, including production; only your browser is affected):
+
+1. Open the app (e.g. dashboard), then open **DevTools** (F12) → **Console**.
+2. Run: \`enableInactivityTesting()\`  
+   Timer resets so you get a full 2 min from now. Console: _Enabled. Timer reset. Logout after 2 min of inactivity._ Returns \`"enabled"\`.
+3. Stay idle (no clicks/keys). After ~1.5 min the warning dialog appears; after 2 min you are logged out.
+4. To turn off: \`disableInactivityTesting()\` — timer resets. Console: _Disabled. Timer reset. Logout after 30 min of inactivity._ Returns \`"disabled"\`.  
+   To check status: \`getInactivityTestingStatus()\` (returns \`"enabled"\` or \`"disabled"\`).
+5. Optional: same via localStorage — \`localStorage.setItem('inactivityTestingShort','1')\` to enable, \`localStorage.removeItem('inactivityTestingShort')\` to disable. (Timer reset only when using the console helpers above.)`,
       contact: {
         name: "API Support",
         url: "https://github.com/czechibank/czechibank",
