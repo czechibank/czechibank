@@ -10,6 +10,25 @@ const SHORT_WARNING_MS = 30 * 1000; // 30 sec
 /** Used by console helpers; exported for tests. */
 export const INACTIVITY_TESTING_KEY = INACTIVITY_TESTING_STORAGE_KEY;
 
+/** Implementation timing constants used by the inactivity logout system. */
+export const INACTIVITY_TIMERS = {
+  /** How long (ms) to suppress logout after "Stay signed in" or timer reset. */
+  SKIP_MS: 15_000,
+  /** Small delay (ms) to yield to the event loop before confirming logout. */
+  YIELD_MS: 100,
+  /** How long (ms) we still consider "Stay signed in" as recent for deferred re-checks. */
+  RECENT_STAY_SIGNED_IN_MS: 20_000,
+  /** Delay (ms) before the session-loss redirect check runs. */
+  REDIRECT_CHECK_DELAY_MS: 5_000,
+} as const;
+
+/** localStorage keys for cross-tab inactivity state. */
+export const INACTIVITY_LS_KEYS = {
+  LAST_ACTIVITY: "inactivity_lastActivity",
+  SKIP_UNTIL: "inactivity_skipUntil",
+  STAY_SIGNED_IN_AT: "inactivity_staySignedInAt",
+} as const;
+
 /**
  * Returns effective inactivity timing. When QA enables "short" mode via console (see Swagger docs),
  * returns 2 min / 30 sec for faster testing; otherwise returns production 30 min / 5 min.

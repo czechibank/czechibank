@@ -2,6 +2,7 @@
 
 import { SESSION } from "@/constants";
 import { useSession as useBetterAuthSession } from "@/lib/auth-client";
+import { INACTIVITY_TIMERS } from "@/lib/inactivity-logout-timing";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef } from "react";
 
@@ -15,7 +16,7 @@ export const inactivityDialogOpenRef = { current: false };
 let sharedRedirectTimeoutId: ReturnType<typeof setTimeout> | null = null;
 
 /** Call when the user clicks "Stay signed in": clear any pending redirect and do not redirect for the next msFromNow ms. */
-export function skipRedirectForStaySignedIn(msFromNow = 20000) {
+export function skipRedirectForStaySignedIn(msFromNow = INACTIVITY_TIMERS.RECENT_STAY_SIGNED_IN_MS) {
   if (sharedRedirectTimeoutId) {
     clearTimeout(sharedRedirectTimeoutId);
     sharedRedirectTimeoutId = null;
@@ -128,7 +129,7 @@ export function useSessionWithRefresh() {
     // Skip window: only suppress inactivity redirect; if session became null, re-arm the deferred redirect
     if (Date.now() < skipRedirectUntilRef.current) {
       if (previousUserId != null && currentUserId == null && !hasRedirectedToLoggedOutRef.current)
-        scheduleRedirectCheck(5000);
+        scheduleRedirectCheck(INACTIVITY_TIMERS.REDIRECT_CHECK_DELAY_MS);
       lastUserIdRef.current = currentUserId;
       return;
     }
@@ -136,13 +137,13 @@ export function useSessionWithRefresh() {
     // Dialog open: same — re-arm if session became null
     if (inactivityDialogOpenRef.current) {
       if (previousUserId != null && currentUserId == null && !hasRedirectedToLoggedOutRef.current)
-        scheduleRedirectCheck(5000);
+        scheduleRedirectCheck(INACTIVITY_TIMERS.REDIRECT_CHECK_DELAY_MS);
       lastUserIdRef.current = currentUserId;
       return;
     }
 
     if (previousUserId != null && !hasRedirectedToLoggedOutRef.current && currentUserId == null) {
-      scheduleRedirectCheck(5000);
+      scheduleRedirectCheck(INACTIVITY_TIMERS.REDIRECT_CHECK_DELAY_MS);
       return;
     }
 

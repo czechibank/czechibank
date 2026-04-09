@@ -20,6 +20,10 @@ export const RATE_LIMIT = rateLimit[env.ENV || "PROD"];
 export const SESSION = {
   /** Session duration in seconds. Must match client INACTIVITY_LOGOUT_MS. */
   EXPIRES_IN: 60 * 30, // 30 minutes
-  /** Seconds after which getSession will refresh the session cookie. 0 = every getSession (so "Stay signed in" refetch always extends the session, including at the last second). */
-  UPDATE_AGE: 0,
+  /**
+   * Seconds after which getSession will refresh the session cookie.
+   * 60 = at most one DB write per minute per tab (10-second polling means ~6 polls between renewals).
+   * "Stay signed in" still works reliably because the session always has ~29 min left after the latest renewal.
+   */
+  UPDATE_AGE: 60, // 1 minute
 };
