@@ -2,6 +2,7 @@
 
 import { HeartDoodle, HeroIllustration, SparkDoodle, StarDoodle } from "@/components/hero-illustration";
 import { AnimationLine } from "@/components/text-decorations";
+import { ModeToggle } from "@/components/theme/toggle-button";
 import { Button } from "@/components/ui/button";
 import { nbColors as colors } from "@/lib/neo-brutalism";
 import { motion } from "framer-motion";
@@ -152,16 +153,23 @@ function APIPreviewCard() {
         <code>
           <span className="text-gray-500"># Create a transfer</span>
           {"\n"}
-          <span className="text-blue-400">POST</span> <span className="text-green-400">/api/v1/transactions</span>
+          <span className="text-blue-400">POST</span>{" "}
+          <span className="text-green-400">/api/v1/transactions/create</span>
           {"\n\n"}
           <span className="text-purple-400">{"{"}</span>
           {"\n  "}
           <span className="text-yellow-300">&quot;amount&quot;</span>
-          <span className="text-white">:</span> <span className="text-orange-400">1000</span>
+          <span className="text-white">:</span> <span className="text-orange-400">100.5</span>
           <span className="text-white">,</span>
           {"\n  "}
-          <span className="text-yellow-300">&quot;to&quot;</span>
-          <span className="text-white">:</span> <span className="text-green-400">&quot;CZ123456&quot;</span>
+          <span className="text-yellow-300">&quot;fromBankNumber&quot;</span>
+          <span className="text-white">:</span>{" "}
+          <span className="text-green-400">&quot;1111222233334444/5555&quot;</span>
+          <span className="text-white">,</span>
+          {"\n  "}
+          <span className="text-yellow-300">&quot;toBankNumber&quot;</span>
+          <span className="text-white">:</span>{" "}
+          <span className="text-green-400">&quot;9999888877776666/5555&quot;</span>
           {"\n"}
           <span className="text-purple-400">{"}"}</span>
         </code>
@@ -195,6 +203,7 @@ export default function LandingPage() {
             <Link href="/api/v1/docs/page" className="hidden text-sm font-bold hover:underline md:block">
               API Docs
             </Link>
+            <ModeToggle />
             <Link href="/signin">
               <Button
                 variant="outline"
@@ -628,7 +637,7 @@ export default function LandingPage() {
           >
             <motion.div
               variants={fadeInUp}
-              className="mb-4 inline-flex items-center gap-2 rounded-full border-3 border-black bg-white px-4 py-2 font-bold shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]"
+              className="mb-4 inline-flex items-center gap-2 rounded-full border-3 border-black bg-white px-4 py-2 font-bold text-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]"
             >
               <PartyPopper className="h-4 w-4" />
               Ready to play?

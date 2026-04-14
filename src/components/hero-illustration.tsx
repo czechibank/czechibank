@@ -761,7 +761,7 @@ function RenderCard({ element }: { element: CardElement }) {
       style={{ ...getPositionStyle(element.position), zIndex: element.zIndex }}
     >
       <div
-        className="rounded-xl border-3 border-black p-2 shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]"
+        className="rounded-xl border-3 border-black p-2 text-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]"
         style={{ backgroundColor: heroColors[element.color] }}
       >
         <Icon className="h-4 w-4" />
@@ -806,7 +806,7 @@ function RenderBadge({ element }: { element: BadgeElement }) {
         className="rounded border-2 border-black px-1.5 py-0.5 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]"
         style={{ backgroundColor: bgColor }}
       >
-        <p className={`${sizeMap[size].text} font-black`}>{element.label}</p>
+        <p className={`${sizeMap[size].text} font-black text-black`}>{element.label}</p>
       </div>
     </motion.div>
   );
@@ -851,7 +851,7 @@ function RenderPill({ element }: { element: PillElement }) {
       >
         {hasCzechitasIcon && <BadgeCheck className="h-3 w-3 text-pink-500" />}
         {element.emoji && <span className="text-[10px]">{element.emoji}</span>}
-        <span className="text-[9px] font-bold">{element.label}</span>
+        <span className="text-[9px] font-bold text-black">{element.label}</span>
       </div>
     </motion.div>
   );
@@ -1091,28 +1091,31 @@ function LaptopCodeEditor() {
     >
       <div className="relative">
         <div className="h-36 w-56 rounded-t-xl border-4 border-black bg-zinc-900 p-2.5 shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] md:h-40 md:w-64">
-          <div className="space-y-1.5">
-            <div className="flex items-center gap-1.5">
-              <span className="text-[10px] text-purple-400">const</span>
-              <span className="text-[10px] text-blue-400">bank</span>
-              <span className="text-[10px] text-white">=</span>
-              <span className="text-[10px] text-yellow-400">&apos;CzechiBank&apos;</span>
+          <div className="space-y-1">
+            <div className="flex items-center gap-1">
+              <span className="text-[9px] text-blue-400">POST</span>
+              <span className="text-[9px] text-green-400">/transactions/create</span>
             </div>
-            <div className="flex items-center gap-1.5">
-              <span className="text-[10px] text-purple-400">await</span>
-              <span className="text-[10px] text-green-400">api</span>
-              <span className="text-[10px] text-white">.</span>
-              <span className="text-[10px] text-blue-400">transfer</span>
-              <span className="text-[10px] text-white">(</span>
-              <span className="text-[10px] text-orange-400">100</span>
-              <span className="text-[10px] text-white">)</span>
+            <div className="text-[9px] text-purple-400">{"{"}</div>
+            <div className="pl-2 text-[9px]">
+              <span className="text-yellow-300">amount</span>
+              <span className="text-white">: </span>
+              <span className="text-orange-400">100</span>
+              <span className="text-white">,</span>
             </div>
-            <div className="mt-2 flex items-center gap-1.5">
-              <span className="text-[10px] text-gray-500">// It&apos;s that easy!</span>
+            <div className="pl-2 text-[9px]">
+              <span className="text-yellow-300">fromBankNumber</span>
+              <span className="text-white">,</span>
+            </div>
+            <div className="pl-2 text-[9px]">
+              <span className="text-yellow-300">toBankNumber</span>
+            </div>
+            <div className="flex items-center gap-1">
+              <span className="text-[9px] text-purple-400">{"}"}</span>
               <motion.span
                 animate={{ opacity: [1, 0] }}
                 transition={{ duration: 0.8, repeat: Infinity }}
-                className="text-[10px] text-white"
+                className="text-[9px] text-white"
               >
                 |
               </motion.span>

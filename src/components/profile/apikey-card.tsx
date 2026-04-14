@@ -47,12 +47,12 @@ export function ApiKeyCard({ apiKey }: { apiKey: Omit<Apikey, "key"> }) {
           <div className="flex items-center space-x-2">
             <h3 className="text-lg font-black">{apiKey.name ?? "API Key (without name)"}</h3>
             {isExpired && (
-              <span className="rounded-full border-2 border-black bg-red-400 px-2 py-0.5 text-xs font-bold">
+              <span className="rounded-full border-2 border-black bg-red-400 px-2 py-0.5 text-xs font-bold text-black">
                 Expired
               </span>
             )}
             {expiresSoon && !isExpired && (
-              <span className="rounded-full border-2 border-black bg-[#FFE566] px-2 py-0.5 text-xs font-bold">
+              <span className="rounded-full border-2 border-black bg-[#FFE566] px-2 py-0.5 text-xs font-bold text-black">
                 Expires Soon
               </span>
             )}
