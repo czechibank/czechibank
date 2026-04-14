@@ -1,8 +1,9 @@
 import { RegisterForm } from "@/components/register/form";
 import userService from "@/domain/user-domain/user-service";
 
-import { AlertCircle, UserPlus } from "lucide-react";
+import { AlertCircle, ArrowLeft, UserPlus } from "lucide-react";
 import { headers } from "next/headers";
+import Link from "next/link";
 
 export default async function RegisterPage() {
   const session = await userService.server.getSession(await headers());
@@ -30,6 +31,13 @@ export default async function RegisterPage() {
     <div className="mx-auto max-w-md py-12">
       {/* Header */}
       <div className="mb-8">
+        <Link
+          href="/"
+          className="mb-4 flex w-fit items-center gap-1.5 text-sm font-bold text-muted-foreground transition-colors hover:text-foreground"
+        >
+          <ArrowLeft className="h-4 w-4" />
+          Back to home
+        </Link>
         <div className="mb-4 inline-flex items-center gap-2 rounded-full border-3 border-black bg-[#7ED957] px-4 py-2 font-bold text-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]">
           <UserPlus className="h-4 w-4" />
           Join Us

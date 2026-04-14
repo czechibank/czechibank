@@ -16,7 +16,7 @@ import {
 } from "@/lib/useSessionWithRefresh";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { ErrorContext } from "better-auth/react";
-import { LogIn } from "lucide-react";
+import { ArrowLeft, LogIn } from "lucide-react";
 import Link from "next/link";
 import { useForm } from "react-hook-form";
 
@@ -63,6 +63,13 @@ export default function SignInPage() {
     <div className="mx-auto max-w-md py-12">
       {/* Header */}
       <div className="mb-8">
+        <Link
+          href="/"
+          className="mb-4 flex w-fit items-center gap-1.5 text-sm font-bold text-muted-foreground transition-colors hover:text-foreground"
+        >
+          <ArrowLeft className="h-4 w-4" />
+          Back to home
+        </Link>
         <div className="mb-4 inline-flex items-center gap-2 rounded-full border-3 border-black bg-[#ff4c91] px-4 py-2 font-bold text-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]">
           <LogIn className="h-4 w-4" />
           Welcome Back
