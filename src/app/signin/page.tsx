@@ -8,12 +8,12 @@ import { Toast, useToast } from "@/components/ui/use-toast";
 import { MIN_PASSWORD_LENGTH } from "@/constants";
 import { LoginSchema, LoginSchemaType, UserBaseSchemaType } from "@/domain/user-domain/user-schema";
 import userServiceClient from "@/domain/user-domain/user-service-client";
+import { nbColors } from "@/lib/neo-brutalism";
 import {
   broadcastSessionChanged,
   useRedirectToHomeWhenSignedIn,
   useSessionWithRefresh,
 } from "@/lib/useSessionWithRefresh";
-import { nbColors } from "@/lib/neo-brutalism";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { ErrorContext } from "better-auth/react";
 import { LogIn } from "lucide-react";
@@ -99,7 +99,7 @@ export default function SignInPage() {
                       />
                     </FormControl>
                     <FormDescription>Email for sign in</FormDescription>
-                    <FormMessage id="email-message" />
+                    <FormMessage id="email-message" data-testid="email-message" />
                   </FormItem>
                 )}
               />
@@ -124,7 +124,7 @@ export default function SignInPage() {
                     <FormDescription>
                       Your password must be at least {MIN_PASSWORD_LENGTH} characters long.
                     </FormDescription>
-                    <FormMessage id="password-message" />
+                    <FormMessage id="password-message" data-testid="password-message" />
                   </FormItem>
                 )}
               />
