@@ -101,85 +101,111 @@ export function RegisterForm() {
   });
 
   return (
-    <Form {...form}>
-      <form action={action} className="space-y-8">
-        <FormField
-          control={form.control}
-          name="name"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>
-                Full name <span className="text-red-500">*</span>
-              </FormLabel>
-              <FormControl>
-                <Input placeholder="" {...field} aria-required="true" aria-invalid={!!form.formState.errors.name} />
-              </FormControl>
-              <FormDescription>This is your public display name. In format Firstname Lastname</FormDescription>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        <FormField
-          control={form.control}
-          name="email"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>
-                Email <span className="text-red-500">*</span>
-              </FormLabel>
-              <FormControl>
-                <Input placeholder="" {...field} aria-required="true" aria-invalid={!!form.formState.errors.email} />
-              </FormControl>
-              <FormDescription>Email for sign in</FormDescription>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        <FormField
-          control={form.control}
-          name="password"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>
-                Password <span className="text-red-500">*</span>
-              </FormLabel>
-              <FormControl>
-                <Input
-                  placeholder=""
-                  {...field}
-                  type="password"
-                  aria-required="true"
-                  aria-invalid={!!form.formState.errors.password}
-                />
-              </FormControl>
-              <FormDescription>Your password must be at least {MIN_PASSWORD_LENGTH} characters long.</FormDescription>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        <FormField
-          control={form.control}
-          name="confirmPassword"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>
-                Confirm Password <span className="text-red-500">*</span>
-              </FormLabel>
-              <FormControl>
-                <Input
-                  placeholder=""
-                  {...field}
-                  type="password"
-                  aria-required="true"
-                  aria-invalid={!!form.formState.errors.confirmPassword}
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        <Button type="submit">Register</Button>
-      </form>
-    </Form>
+    <div className="rounded-2xl border-3 border-black bg-white shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] dark:bg-zinc-900">
+      <div className="h-3 rounded-t-xl border-b-3 border-black bg-[#7ED957]" />
+      <div className="p-6">
+        <Form {...form}>
+          <form action={action} className="space-y-5">
+            <FormField
+              control={form.control}
+              name="name"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="font-bold">
+                    Full name <span className="text-red-500">*</span>
+                  </FormLabel>
+                  <FormControl>
+                    <Input
+                      placeholder=""
+                      {...field}
+                      aria-required="true"
+                      aria-invalid={!!form.formState.errors.name}
+                      className="rounded-lg border-2 border-black"
+                    />
+                  </FormControl>
+                  <FormDescription>This is your public display name. In format Firstname Lastname</FormDescription>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="email"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="font-bold">
+                    Email <span className="text-red-500">*</span>
+                  </FormLabel>
+                  <FormControl>
+                    <Input
+                      placeholder=""
+                      {...field}
+                      aria-required="true"
+                      aria-invalid={!!form.formState.errors.email}
+                      className="rounded-lg border-2 border-black"
+                    />
+                  </FormControl>
+                  <FormDescription>Email for sign in</FormDescription>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="password"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="font-bold">
+                    Password <span className="text-red-500">*</span>
+                  </FormLabel>
+                  <FormControl>
+                    <Input
+                      placeholder=""
+                      {...field}
+                      type="password"
+                      aria-required="true"
+                      aria-invalid={!!form.formState.errors.password}
+                      className="rounded-lg border-2 border-black"
+                    />
+                  </FormControl>
+                  <FormDescription>
+                    Your password must be at least {MIN_PASSWORD_LENGTH} characters long.
+                  </FormDescription>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="confirmPassword"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="font-bold">
+                    Confirm Password <span className="text-red-500">*</span>
+                  </FormLabel>
+                  <FormControl>
+                    <Input
+                      placeholder=""
+                      {...field}
+                      type="password"
+                      aria-required="true"
+                      aria-invalid={!!form.formState.errors.confirmPassword}
+                      className="rounded-lg border-2 border-black"
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <Button
+              type="submit"
+              className="border-3 border-black bg-[#7ED957] font-bold text-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] transition-all hover:bg-[#6bc348] hover:shadow-[5px_5px_0px_0px_rgba(0,0,0,1)]"
+            >
+              Register
+            </Button>
+          </form>
+        </Form>
+      </div>
+    </div>
   );
 }

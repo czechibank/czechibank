@@ -1,87 +1,155 @@
 "use server";
-import {
-  Table,
-  TableBody,
-  TableCaption,
-  TableCell,
-  TableFooter,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+import { Table, TableBody, TableCell, TableFooter, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import transactionService from "@/domain/transaction-domain/transaction-service";
-import { Transaction, User } from "@prisma/client";
+import { BankAccount, Transaction, User } from "@prisma/client";
+import { AlertTriangle, ArrowDownLeft, ArrowUpRight, Inbox } from "lucide-react";
 import { UserAvatar } from "../user/avatar";
-import { AlertDestructive } from "./alert";
 
 const LIMIT = 50;
+
+type TransactionWithDetails = Transaction & {
+  to: BankAccount & { user: User };
+  from: BankAccount & { user: User };
+};
+
+function formatDate(date: Date): { day: string; month: string } {
+  return {
+    day: date.getDate().toString(),
+    month: date.toLocaleString("en", { month: "short" }).toUpperCase(),
+  };
+}
+
+function formatAmount(amount: number): string {
+  return new Intl.NumberFormat("cs-CZ", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  }).format(amount);
+}
 
 export async function TransactionTable({ bankAccountId }: { bankAccountId: string }) {
   const transactions = await transactionService.getAllTransactionsByUserAndBankAccountId(bankAccountId, LIMIT);
 
-  type TransactionWithUsers = Transaction & {
-    to: { user: User };
-    from: { user: User };
-  };
-
-  function calculateTotalAmount(transactions: TransactionWithUsers[], bankAccount: string) {
-    let total = 0;
-
-    for (const transaction of transactions) {
-      if (transaction.fromBankId === bankAccount) {
-        total -= transaction.amount;
-      } else if (transaction.toBankId === bankAccount) {
-        total += transaction.amount;
-      }
-    }
-
-    return total;
+  function isIncoming(transaction: TransactionWithDetails) {
+    return transaction.toBankId === bankAccountId;
   }
 
-  const totalAmount = calculateTotalAmount(transactions, bankAccountId);
+  function getCounterparty(transaction: TransactionWithDetails) {
+    return isIncoming(transaction) ? transaction.from : transaction.to;
+  }
+
+  function calculateTotal(transactions: TransactionWithDetails[]) {
+    return transactions.reduce((total, t) => {
+      return total + (isIncoming(t) ? t.amount : -t.amount);
+    }, 0);
+  }
+
+  const totalAmount = calculateTotal(transactions);
+
+  if (transactions.length === 0) {
+    return (
+      <div className="flex flex-col items-center justify-center py-12 text-center">
+        <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-2xl border-3 border-black bg-zinc-100 shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] dark:bg-zinc-800">
+          <Inbox className="h-8 w-8 text-zinc-400" />
+        </div>
+        <p className="text-lg font-black">No transactions yet</p>
+        <p className="mt-1 text-sm text-muted-foreground">Send some tokens to get started!</p>
+      </div>
+    );
+  }
 
   return (
-    <div className="my-8 w-full">
-      <h1>Transactions</h1>
-      <AlertDestructive
-        message={`DUE to bad performance, you will see last ${LIMIT} transactions. Use API to see ALL your transactions.`}
-      />
+    <div className="w-full">
+      {/* Warning bar */}
+      <div className="mb-4 flex items-center gap-3 rounded-xl border-2 border-black bg-[#FFE566] p-3 text-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]">
+        <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg border-2 border-black bg-white">
+          <AlertTriangle className="h-4 w-4" />
+        </div>
+        <p className="text-sm font-bold">Showing last {LIMIT} transactions. Use the API for the complete history.</p>
+      </div>
+
       <Table className="w-full">
-        <TableCaption>A list of your recent transactions.</TableCaption>
         <TableHeader>
           <TableRow>
-            <TableHead className="hidden md:table-cell">Date</TableHead>
-            <TableHead className="">From</TableHead>
-            <TableHead>To</TableHead>
-            <TableHead className="text-right">Amount (CZK)</TableHead>
+            <TableHead className="hidden w-[70px] md:table-cell">Date</TableHead>
+            <TableHead>Transaction</TableHead>
+            <TableHead className="text-right">Amount</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
-          {transactions.map((transaction) => (
-            <TableRow key={transaction.id.padStart(10)}>
-              <TableCell className="hidden md:table-cell">
-                {transaction.createdAt.toISOString().split("T")[0]}
-              </TableCell>
-              <TableCell className="font-medium">
-                <div className="flex items-center justify-start space-x-2 md:flex-row">
-                  <UserAvatar size={8} image={transaction.from.user.image ?? null} />
-                  <span>{transaction.from.user.name}</span>
-                </div>
-              </TableCell>
-              <TableCell>
-                <div className="flex flex-row items-center justify-start space-x-2">
-                  <UserAvatar size={8} image={transaction.to.user.image ?? null} />
-                  <span>{transaction.to.user.name}</span>
-                </div>
-              </TableCell>
-              <TableCell className="max-w-[10px] text-right">{transaction.amount}</TableCell>
-            </TableRow>
-          ))}
+          {transactions.map((transaction) => {
+            const incoming = isIncoming(transaction);
+            const counterparty = getCounterparty(transaction);
+            const date = formatDate(transaction.createdAt);
+
+            return (
+              <TableRow key={transaction.id}>
+                {/* Date block */}
+                <TableCell className="hidden py-3 md:table-cell">
+                  <div className="flex flex-col items-center rounded-lg border-2 border-black bg-zinc-50 px-2 py-1 text-center dark:bg-zinc-800">
+                    <span className="text-lg font-black leading-tight">{date.day}</span>
+                    <span className="text-[10px] font-bold tracking-wider text-muted-foreground">{date.month}</span>
+                  </div>
+                </TableCell>
+
+                {/* Transaction details */}
+                <TableCell className="py-3">
+                  <div className="flex items-center gap-3">
+                    {/* Direction arrow badge */}
+                    <div
+                      className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border-2 border-black text-black ${
+                        incoming ? "bg-[#7ED957]" : "bg-[#ff4c91]"
+                      }`}
+                    >
+                      {incoming ? <ArrowDownLeft className="h-4 w-4" /> : <ArrowUpRight className="h-4 w-4" />}
+                    </div>
+
+                    {/* Counterparty info */}
+                    <div className="min-w-0 flex-1">
+                      <p className="text-sm font-bold">{incoming ? "Received from" : "Sent to"}</p>
+                      <div className="flex items-center gap-1.5">
+                        <UserAvatar size={5} image={counterparty.user.image ?? null} />
+                        <span className="truncate text-sm text-muted-foreground">{counterparty.user.name}</span>
+                      </div>
+                      <p className="mt-0.5 font-mono text-xs text-muted-foreground">{counterparty.number}</p>
+                    </div>
+                  </div>
+                </TableCell>
+
+                {/* Amount pill */}
+                <TableCell className="py-3 text-right">
+                  <span
+                    className={`inline-block rounded-lg border-2 border-black px-3 py-1 text-sm font-black ${
+                      incoming
+                        ? "bg-[#7ED957]/20 text-green-700 dark:text-green-400"
+                        : "bg-[#ff4c91]/20 text-pink-700 dark:text-pink-400"
+                    }`}
+                  >
+                    {incoming ? "+" : "\u2212"}
+                    {formatAmount(transaction.amount)} CZK
+                  </span>
+                </TableCell>
+              </TableRow>
+            );
+          })}
         </TableBody>
         <TableFooter>
-          <TableRow>
-            <TableCell colSpan={3}>Received/Send</TableCell>
-            <TableCell className="text-right">{totalAmount}</TableCell>
+          <TableRow className="border-t-2 border-black">
+            <TableCell colSpan={2} className="hidden py-3 md:table-cell">
+              <span className="font-black">Net Total</span>
+            </TableCell>
+            <TableCell className="py-3 md:hidden">
+              <span className="font-black">Net Total</span>
+            </TableCell>
+            <TableCell className="py-3 text-right">
+              <span
+                className={`inline-block rounded-xl border-3 border-black px-4 py-1.5 text-sm font-black text-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] ${
+                  totalAmount >= 0 ? "bg-[#7ED957]" : "bg-[#ff4c91]"
+                }`}
+              >
+                {totalAmount >= 0 ? "+" : "\u2212"}
+                {formatAmount(Math.abs(totalAmount))} CZK
+              </span>
+            </TableCell>
           </TableRow>
         </TableFooter>
       </Table>

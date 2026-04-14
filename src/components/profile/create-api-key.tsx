@@ -17,7 +17,7 @@ import { CreateApiKeySchema } from "@/domain/apikey/apikey-schema";
 import apikeyServiceClient from "@/domain/apikey/apikey-service-client";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Apikey } from "@prisma/client";
-import { CopyIcon, PlusIcon } from "lucide-react";
+import { AlertTriangle, CopyIcon, PlusIcon } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
@@ -88,17 +88,20 @@ export default function CreateApiKey() {
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
-        <Button size="sm" className="flex items-center space-x-2">
-          <PlusIcon className="h-4 w-4" />
-          <span>Create API Key</span>
+        <Button
+          size="sm"
+          className="border-3 border-black bg-[#FFE566] font-bold text-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] transition-all hover:bg-[#f0d85e] hover:shadow-[5px_5px_0px_0px_rgba(0,0,0,1)]"
+        >
+          <PlusIcon className="mr-1 h-4 w-4" />
+          Create API Key
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="rounded-2xl border-3 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Create New API Key</DialogTitle>
+          <DialogTitle className="text-xl font-black">Create New API Key</DialogTitle>
           <DialogDescription>
-            Create a new API key to access the Czechibank API. Make sure to copy it immediately as it won't be shown
-            again.
+            Create a new API key to access the Czechibank API. Make sure to copy it immediately as it won&apos;t be
+            shown again.
           </DialogDescription>
         </DialogHeader>
 
@@ -110,9 +113,13 @@ export default function CreateApiKey() {
                 name="name"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>API Key Name</FormLabel>
+                    <FormLabel className="font-bold">API Key Name</FormLabel>
                     <FormControl>
-                      <Input placeholder="e.g., Production API Key" {...field} />
+                      <Input
+                        placeholder="e.g., Production API Key"
+                        {...field}
+                        className="rounded-lg border-2 border-black"
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -123,7 +130,7 @@ export default function CreateApiKey() {
                 name="expiresInDays"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Expires In (days, optional)</FormLabel>
+                    <FormLabel className="font-bold">Expires In (days, optional)</FormLabel>
                     <FormControl>
                       <Input
                         type="number"
@@ -134,6 +141,7 @@ export default function CreateApiKey() {
                           const val = e.target.value;
                           field.onChange(val === "" ? undefined : Number(val));
                         }}
+                        className="rounded-lg border-2 border-black"
                       />
                     </FormControl>
                     <FormMessage />
@@ -141,10 +149,19 @@ export default function CreateApiKey() {
                 )}
               />
               <div className="flex justify-end space-x-2">
-                <Button type="button" variant="outline" onClick={() => setIsOpen(false)}>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setIsOpen(false)}
+                  className="border-2 border-black font-bold"
+                >
                   Cancel
                 </Button>
-                <Button type="submit" disabled={isCreating}>
+                <Button
+                  type="submit"
+                  disabled={isCreating}
+                  className="border-3 border-black bg-[#FFE566] font-bold text-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] transition-all hover:bg-[#f0d85e] hover:shadow-[5px_5px_0px_0px_rgba(0,0,0,1)]"
+                >
                   {isCreating ? "Creating..." : "Create API Key"}
                 </Button>
               </div>
@@ -153,17 +170,22 @@ export default function CreateApiKey() {
         ) : (
           <div className="space-y-4">
             <div className="space-y-2">
-              <Label>Your New API Key</Label>
+              <Label className="font-bold">Your New API Key</Label>
               <div className="flex items-center space-x-2">
-                <Input value={newApiKey} readOnly className="font-mono text-sm" />
-                <Button size="sm" onClick={handleCopyClick} className="flex-shrink-0">
+                <Input value={newApiKey} readOnly className="rounded-lg border-2 border-black font-mono text-sm" />
+                <Button
+                  size="sm"
+                  onClick={handleCopyClick}
+                  className="flex-shrink-0 border-2 border-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]"
+                >
                   <CopyIcon className="h-4 w-4" />
                 </Button>
               </div>
             </div>
-            <div className="rounded-lg border border-yellow-200 bg-yellow-50 p-3">
-              <p className="text-sm text-yellow-800">
-                ⚠️ Make sure to copy this API key now. You won't be able to see it again!
+            <div className="flex items-start gap-3 rounded-xl border-3 border-black bg-[#FFE566] p-4 text-black">
+              <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0" />
+              <p className="text-sm font-bold">
+                Make sure to copy this API key now. You won&apos;t be able to see it again!
               </p>
             </div>
             <div className="flex justify-end">
@@ -172,6 +194,7 @@ export default function CreateApiKey() {
                   setIsOpen(false);
                   setNewApiKey(null);
                 }}
+                className="border-3 border-black font-bold shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]"
               >
                 Done
               </Button>

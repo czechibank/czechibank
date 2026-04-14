@@ -69,7 +69,7 @@ export function useSessionWithRefresh() {
       !hasRedirectedToLoggedOutRef.current
     ) {
       hasRedirectedToLoggedOutRef.current = true;
-      window.location.replace("/logged-out");
+      window.location.replace("/signin");
     }
 
     lastUserIdRef.current = currentUserId;
@@ -104,7 +104,7 @@ export function useRedirectToHomeWhenSignedIn(
 
   useEffect(() => {
     if (options?.skipRedirect || userId == null) return;
-    window.location.replace("/");
+    window.location.replace("/dashboard");
   }, [userId, options?.skipRedirect]);
 }
 

@@ -1,20 +1,35 @@
-import UserButton from "@/components/auth/user-button";
 import { ThemeProvider } from "@/components/theme-provider";
-import { ModeToggle } from "@/components/theme/toggle-button";
-import { AppFooter } from "@/components/ui/app-footer";
 import { Toaster } from "@/components/ui/toaster";
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
-import Image from "next/image";
-import Link from "next/link";
 import Script from "next/script";
-import { Suspense } from "react";
 import "./globals.css";
+
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "CzechiBank",
-  description: "Best bank for YOU!",
+  metadataBase: new URL(process.env.NEXT_AUTH_URL || "http://localhost:3000"),
+  title: {
+    default: "CzechiBank",
+    template: "%s | CzechiBank",
+  },
+  description:
+    "A sandbox banking app for developers and students. Learn how APIs work — create accounts, make transfers, and explore REST endpoints. Built by the Czechitas community.",
+  keywords: ["banking API", "sandbox", "Czechitas", "REST API", "learning", "fintech"],
+  openGraph: {
+    title: "CzechiBank — Learn Banking APIs the Fun Way",
+    description:
+      "A sandbox banking app for developers and students. Create accounts, make transfers, explore REST endpoints — break things, learn, and have fun!",
+    siteName: "CzechiBank",
+    type: "website",
+    locale: "en_US",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "CzechiBank — Learn Banking APIs the Fun Way",
+    description:
+      "A sandbox banking app for developers and students. Create accounts, make transfers, and explore REST endpoints.",
+  },
 };
 
 export default async function RootLayout({
@@ -23,28 +38,13 @@ export default async function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <Script defer data-domain="czechibank.ostrava.digital" src="https://plausible.ff0000.cz/js/script.js" />
-      <body className="flex min-h-screen flex-col">
-        <div className={inter.className + " w-full min-w-full flex-grow px-4 py-4 pb-10 sm:px-6 md:max-w-3xl"}>
-          <ThemeProvider attribute="class" defaultTheme="system">
-            <div className="flex flex-row items-center justify-between">
-              <Link href={"/"} className="flex flex-row items-center space-x-2">
-                <Image src={`/logo.svg`} alt={"Logo"} width="40" height="40" />
-                <span className="text-2xl font-bold">CzechiBank</span>
-              </Link>
-              <div className="flex flex-1 items-center justify-end space-x-2 p-2">
-                <ModeToggle />
-                <Suspense fallback={<div>Loading...</div>}>
-                  <UserButton />
-                </Suspense>
-              </div>
-            </div>
-            <div className="mx-auto max-w-3xl">{children}</div>
-          </ThemeProvider>
-        </div>
+      <body className={`${inter.className} flex min-h-screen flex-col`}>
+        <ThemeProvider attribute="class" defaultTheme="system">
+          {children}
+        </ThemeProvider>
         <Toaster />
-        <AppFooter />
       </body>
     </html>
   );

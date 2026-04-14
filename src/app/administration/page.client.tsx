@@ -1,7 +1,6 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel } from "@/components/ui/form";
 import { Switch } from "@/components/ui/switch";
 import { toast } from "@/components/ui/use-toast";
@@ -9,7 +8,7 @@ import featuresService from "@/domain/features-domain/features-service";
 import { FeatureType } from "@/domain/features-domain/features.schema";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { flatMap, isEmpty, isEqual, omitBy, uniq } from "lodash";
-import { SettingsIcon } from "lucide-react";
+import { RotateCcw, Settings } from "lucide-react";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import z, { ZodBoolean, ZodDefault } from "zod";
@@ -167,68 +166,99 @@ export default function AdministrationClientPage({ features }: { features: Featu
   }
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center space-x-2">
-          <SettingsIcon className="h-5 w-5" />
-          <span>Features</span>
-        </CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-6">
-        {visibleFeatures.length > 0 ? (
-          <>
-            <div className="flex flex-wrap gap-1">
-              {featuresCategories.map((category: string) => (
-                <button
-                  type="button"
-                  onClick={() => selectCategory(category)}
-                  key={category}
-                  className={`rounded-full  px-2 py-1 text-xs ${
-                    selectedCategories.has(category) ? "bg-gray-800 text-white" : "bg-gray-100 text-gray-700"
-                  }`}
-                >
-                  {category}
-                </button>
-              ))}
-            </div>
+    <div className="pb-12">
+      {/* Page header */}
+      <div className="mb-8">
+        <div className="mb-4 inline-flex items-center gap-2 rounded-full border-3 border-black bg-[#FF6B35] px-4 py-2 font-bold text-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]">
+          <Settings className="h-4 w-4" />
+          Admin Panel
+        </div>
+        <h1 className="text-4xl font-black tracking-tight">
+          <span className="relative inline-block">
+            <span className="relative z-10">Administration</span>
+            <span className="absolute -bottom-1 left-0 h-3 w-full bg-[#FF6B35]" />
+          </span>
+        </h1>
+      </div>
 
-            <Form {...featuresForm}>
-              <form onChange={featuresForm.handleSubmit(onSubmit)} className="space-y-4">
-                {visibleFeatures.map((feature: FeatureType) => (
-                  <FormField
-                    control={featuresForm.control}
-                    name={feature.key}
-                    key={feature.key}
-                    render={({ field }) => (
-                      <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3 shadow-sm">
-                        <div className="space-y-0.5">
-                          <FormLabel>{feature.name}</FormLabel>
-                          <FormDescription>{feature.description}</FormDescription>
-                          <div className="flex flex-wrap gap-2 pt-2">
-                            {feature.category.map((cat) => (
-                              <span key={cat} className="rounded-full bg-gray-100 px-2 py-1 text-xs text-gray-700">
-                                {cat}
-                              </span>
-                            ))}
-                          </div>
-                        </div>
-                        <FormControl>
-                          <Switch checked={field.value} onCheckedChange={field.onChange} />
-                        </FormControl>
-                      </FormItem>
-                    )}
-                  />
+      {/* Features card */}
+      <div className="rounded-2xl border-3 border-black bg-white shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] dark:bg-zinc-900">
+        <div className="h-3 rounded-t-xl border-b-3 border-black bg-[#FF6B35]" />
+        <div className="p-6">
+          <div className="mb-5 flex items-center gap-3">
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl border-2 border-black bg-[#FF6B35] text-black">
+              <Settings className="h-5 w-5" />
+            </div>
+            <h2 className="text-lg font-black">Features</h2>
+          </div>
+
+          {visibleFeatures.length > 0 ? (
+            <div className="space-y-6">
+              {/* Category filters */}
+              <div className="flex flex-wrap gap-2">
+                {featuresCategories.map((category: string) => (
+                  <button
+                    type="button"
+                    onClick={() => selectCategory(category)}
+                    key={category}
+                    className={`rounded-full border-2 border-black px-3 py-1.5 text-xs font-bold transition-all ${
+                      selectedCategories.has(category)
+                        ? "bg-[#FF6B35] text-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]"
+                        : "bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800"
+                    }`}
+                  >
+                    {category}
+                  </button>
                 ))}
-                <Button type="button" variant={"outline"} onClick={resetToDefault}>
-                  Reset defaults
-                </Button>
-              </form>
-            </Form>
-          </>
-        ) : (
-          <p className="text-sm text-gray-500">No features available.</p>
-        )}
-      </CardContent>
-    </Card>
+              </div>
+
+              <Form {...featuresForm}>
+                <form onChange={featuresForm.handleSubmit(onSubmit)} className="space-y-4">
+                  {visibleFeatures.map((feature: FeatureType) => (
+                    <FormField
+                      control={featuresForm.control}
+                      name={feature.key}
+                      key={feature.key}
+                      render={({ field }) => (
+                        <FormItem className="flex flex-row items-center justify-between rounded-xl border-2 border-black p-4">
+                          <div className="space-y-0.5">
+                            <FormLabel className="font-bold">{feature.name}</FormLabel>
+                            <FormDescription>{feature.description}</FormDescription>
+                            <div className="flex flex-wrap gap-2 pt-2">
+                              {feature.category.map((cat) => (
+                                <span
+                                  key={cat}
+                                  className="rounded-full border border-black bg-zinc-100 px-2 py-0.5 text-xs font-bold dark:bg-zinc-800"
+                                >
+                                  {cat}
+                                </span>
+                              ))}
+                            </div>
+                          </div>
+                          <FormControl>
+                            <Switch checked={field.value} onCheckedChange={field.onChange} />
+                          </FormControl>
+                        </FormItem>
+                      )}
+                    />
+                  ))}
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={resetToDefault}
+                    className="border-2 border-black font-bold shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] transition-all hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]"
+                  >
+                    <RotateCcw className="mr-2 h-4 w-4" />
+                    Reset defaults
+                  </Button>
+                </form>
+              </Form>
+            </div>
+          ) : (
+            <p className="text-sm text-muted-foreground">No features available.</p>
+          )}
+        </div>
+      </div>
+    </div>
   );
 }

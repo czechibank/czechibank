@@ -56,14 +56,6 @@ export function TransactionTransfer({
   const transferScheme = z.object({
     toBankNumber: z.string(),
     amount: amountSchemaToCheckFeature(features, balance),
-    // .refine((value) => {
-    //   // const decimalPart = value.toString().split('.')[1];
-    //   // return decimalPart === undefined || decimalPart.length === 1;
-    // },
-    //   {
-    //     message: "Only one decimal is allowed",
-    //     path: ["amount"],
-    // })
   });
 
   const form = useForm<z.infer<typeof transferScheme>>({
@@ -89,25 +81,25 @@ export function TransactionTransfer({
       if (response.success) {
         if (showGifInTransactionsFeature(features)) {
           toast({
-            title: "💸 Transaction created!",
+            title: "Transaction created!",
             description: (
               <img src="https://media4.giphy.com/media/v1.Y2lkPTc5MGI3NjExbGw2OXB2cmMydW1kb3k5cnpub2x4bm02bmhzZm9lb3E3ZTRxdnhwNCZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/l0HFkA6omUyjVYqw8/giphy.gif" />
             ),
           });
         } else {
           toast({
-            title: "💸 Transaction created!",
+            title: "Transaction created!",
           });
         }
       } else {
         toast({
-          title: "💸 Transaction failed!",
+          title: "Transaction failed!",
           description: response.error.message,
         });
       }
     } catch (error) {
       toast({
-        title: "💸 Transaction failed!",
+        title: "Transaction failed!",
         description: error instanceof Error ? error.message : "Unknown error occurred",
       });
     } finally {
@@ -125,10 +117,10 @@ export function TransactionTransfer({
             name="toBankNumber"
             render={({ field }) => (
               <FormItem className="gap-4">
-                <FormLabel>Receiver</FormLabel>
+                <FormLabel className="font-bold">Receiver</FormLabel>
                 <FormControl>
                   <Select onValueChange={field.onChange} {...field}>
-                    <SelectTrigger className="p-6">
+                    <SelectTrigger className="border-2 border-black p-6">
                       <SelectValue placeholder="Select a receiver for your money">
                         {field.value
                           ? (() => {
@@ -145,7 +137,7 @@ export function TransactionTransfer({
                                 <div className="flex w-full items-center gap-3">
                                   <UserAvatar size={8} image={selectedUser.image ?? null} />
                                   <div className="flex flex-col">
-                                    <span className="truncate text-left font-semibold">{selectedUser.name}</span>
+                                    <span className="truncate text-left font-bold">{selectedUser.name}</span>
                                     <span className="text-left font-mono text-sm text-muted-foreground/70">
                                       {selectedAccount.number}
                                     </span>
@@ -156,7 +148,7 @@ export function TransactionTransfer({
                           : null}
                       </SelectValue>
                     </SelectTrigger>
-                    <SelectContent>
+                    <SelectContent className="border-2 border-black">
                       <SelectGroup>
                         {users.map((user) =>
                           user.bankAccounts.map((bankAccount) => (
@@ -164,7 +156,7 @@ export function TransactionTransfer({
                               <div className="flex w-full items-center gap-4">
                                 <UserAvatar size={8} image={user.image ?? null} />
                                 <div className="flex min-w-0 flex-1 flex-col">
-                                  <span className="truncate font-semibold">{user.name}</span>
+                                  <span className="truncate font-bold">{user.name}</span>
                                   <span className="font-mono text-sm text-muted-foreground/70">
                                     {bankAccount.number}
                                   </span>
@@ -187,16 +179,20 @@ export function TransactionTransfer({
             name="amount"
             render={({ field }) => (
               <FormItem className="gap-4">
-                <FormLabel>Amount</FormLabel>
+                <FormLabel className="font-bold">Amount</FormLabel>
                 <FormControl>
-                  <Input type="number" placeholder="Amount" {...field} />
+                  <Input type="number" placeholder="Amount" {...field} className="rounded-lg border-2 border-black" />
                 </FormControl>
                 <FormMessage />
               </FormItem>
             )}
           />
 
-          <Button type="submit" disabled={isLoading}>
+          <Button
+            type="submit"
+            disabled={isLoading}
+            className="border-3 border-black bg-[#7ED957] font-bold text-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] transition-all hover:bg-[#6bc348] hover:shadow-[5px_5px_0px_0px_rgba(0,0,0,1)]"
+          >
             {isLoading ? <Spinner /> : "Transfer"}
           </Button>
         </form>

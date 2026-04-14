@@ -13,6 +13,9 @@ const config = {
       },
     },
     extend: {
+      borderWidth: {
+        "3": "3px",
+      },
       colors: {
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
