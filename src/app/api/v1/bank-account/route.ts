@@ -1,8 +1,8 @@
-import { checkUserAuthOrThrowError } from "@/app/api/v1/server-actions";
+import { authenticateRequest } from "@/app/api/v1/auth";
 import bankAccountService from "@/domain/bankAccount-domain/ba-service";
-import { mapErrorCodeToStatus } from "@/lib/api-error-status-map";
-import { ApiErrorCode, createPaginationMeta, errorResponse, successResponse } from "@/lib/response";
-import { ApiError, DELETE, HEAD, PATCH, POST, PUT, handleErrors } from "../routes";
+import { createPaginationMeta } from "@/lib/response";
+import { toPaginatedApiResponse } from "@/lib/result-helpers";
+import { DELETE, HEAD, PATCH, POST, PUT } from "../routes";
 
 /**
  * @swagger
@@ -81,6 +81,8 @@ import { ApiError, DELETE, HEAD, PATCH, POST, PUT, handleErrors } from "../route
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/Error'
+ *       429:
+ *         $ref: '#/components/responses/RateLimitExceeded'
  *       502:
  *         description: Bad Gateway - Bank account service returned malformed or invalid data
  *         content:
@@ -99,75 +101,18 @@ import { ApiError, DELETE, HEAD, PATCH, POST, PUT, handleErrors } from "../route
  */
 
 export async function GET(request: Request) {
-  try {
-    console.log("GET /bank-account/route.ts");
-    // Authenticate user
-    const user = await checkUserAuthOrThrowError(request);
-    if ("error" in user) return Response.json(user, { status: mapErrorCodeToStatus(user.error.code) }); //401
+  const { searchParams } = new URL(request.url);
+  const page = parseInt(searchParams.get("page") || "1");
+  const limit = parseInt(searchParams.get("limit") || "10");
 
-    const { searchParams } = new URL(request.url);
-    const page = parseInt(searchParams.get("page") || "1");
-    const limit = parseInt(searchParams.get("limit") || "10");
+  const result = authenticateRequest(request).andThen((user) =>
+    bankAccountService.getMyBankAccountsResult(user.id, { page, limit }),
+  );
 
-    // Validate pagination parameters
-    if (isNaN(page) || isNaN(limit) || page < 1 || limit < 1) {
-      return Response.json(
-        errorResponse("Invalid pagination parameters", ApiErrorCode.VALIDATION_ERROR, [
-          {
-            code: ApiErrorCode.VALIDATION_ERROR,
-            message: "Page and limit must be positive numbers",
-          },
-        ]),
-        { status: 400 },
-      );
-    }
-
-    // Fetch bank accounts from service
-    let result;
-    try {
-      result = await bankAccountService.getMyBankAccounts(user.id, { page, limit });
-    } catch (serviceErr) {
-      return Response.json(
-        errorResponse("Failed to fetch bank accounts", ApiErrorCode.INTERNAL_ERROR, [
-          { code: ApiErrorCode.INTERNAL_ERROR, message: (serviceErr as Error).message },
-        ]),
-        { status: 500 },
-      );
-    }
-
-    // Check if service returned error
-    if ("error" in result) return Response.json(result, { status: mapErrorCodeToStatus(result.error.code) }); //VALIDATION (422), INTERNAL_ERROR (500)
-
-    if (!result.data || !Array.isArray(result.data.items)) {
-      return Response.json(
-        errorResponse("Invalid data from bank account service", ApiErrorCode.BAD_GATEWAY, [
-          { code: ApiErrorCode.BAD_GATEWAY, message: "Service returned missing or malformed data" },
-        ]),
-        { status: 502 },
-      );
-    }
-
-    // Return successful response
-    return Response.json(
-      successResponse(
-        "Bank accounts retrieved successfully",
-        { bankAccounts: result.data.items },
-        {
-          timestamp: new Date().toISOString(),
-          requestId: request.headers.get("x-request-id") || undefined,
-          pagination: createPaginationMeta(result.data.page, result.data.limit, result.data.total),
-        },
-      ),
-    );
-  } catch (error) {
-    if (error instanceof ApiError) {
-      return handleErrors(error);
-    } else {
-      throw new ApiError("Internal Server Error", 500, ApiErrorCode.INTERNAL_ERROR, [
-        { code: ApiErrorCode.INTERNAL_ERROR, message: error instanceof Error ? error.message : "Unknown error" },
-      ]);
-    }
-  }
+  return toPaginatedApiResponse(result, "Bank accounts retrieved successfully", (data) => ({
+    body: { bankAccounts: data.items },
+    pagination: createPaginationMeta(data.page, data.limit, data.total),
+  }));
 }
 
 export { DELETE, HEAD, PATCH, POST, PUT };

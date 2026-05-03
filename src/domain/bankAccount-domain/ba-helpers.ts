@@ -1,36 +1,31 @@
-import { ApiErrorCode } from "@/lib/response";
+import { type AppError, badRequest, fromUnknown, nonZeroBalance, notFound } from "@/lib/errors";
 import { BankAccount } from "@prisma/client";
+import { err, errAsync, ok, okAsync, type Result, ResultAsync } from "neverthrow";
 import * as repository from "./ba-repository";
 
-export async function enforceMinActiveBankAccount(userId: string) {
-  const activeAccounts = await repository.getBankAccountsByUserId(userId, {});
-  if (activeAccounts.total <= 1) {
-    throw {
-      code: ApiErrorCode.BAD_REQUEST,
-      message: "Cannot delete the last active bank account",
-    };
-  }
+export function enforceMinActiveBankAccount(userId: string): ResultAsync<void, AppError> {
+  return ResultAsync.fromPromise(repository.getBankAccountsByUserId(userId, {}), (e) => fromUnknown(e)).andThen(
+    (activeAccounts) =>
+      activeAccounts.total <= 1
+        ? errAsync<void, AppError>(badRequest("Cannot delete the last active bank account"))
+        : okAsync<void, AppError>(undefined),
+  );
 }
 
-export async function getInitialBalanceForUser(userId: string): Promise<number> {
-  const { total } = await repository.getBankAccountsByUserId(userId, { page: 1, limit: 1 });
-  return total === 0 ? 100_000 : 0;
-}
-
-export async function enforceZeroBalance(bankAccount: BankAccount) {
+export function enforceZeroBalance(bankAccount: BankAccount): Result<void, AppError> {
   if (!bankAccount) {
-    throw {
-      code: ApiErrorCode.NOT_FOUND,
-      message: "Bank account not found",
-    };
+    return err(notFound("Bank account not found"));
   }
+  if (bankAccount.balance !== 0) {
+    return err(nonZeroBalance());
+  }
+  return ok(undefined);
+}
 
-  if (bankAccount.balance > 0) {
-    throw {
-      code: ApiErrorCode.NON_ZERO_BALANCE,
-      message: "Cannot delete account with non-zero balance",
-    };
-  }
+export function getInitialBalanceForUser(userId: string): ResultAsync<number, AppError> {
+  return ResultAsync.fromPromise(repository.getBankAccountsByUserId(userId, { page: 1, limit: 1 }), (e) =>
+    fromUnknown(e),
+  ).map(({ total }) => (total === 0 ? 100_000 : 0));
 }
 
 export async function getUniqueBankAccountName(

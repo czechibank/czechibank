@@ -1,9 +1,8 @@
+import { authenticateRequest } from "@/app/api/v1/auth";
 import transactionService from "@/domain/transaction-domain/transaction-service";
-import { mapErrorCodeToStatus } from "@/lib/api-error-status-map";
-import { ApiErrorCode, errorResponse, successResponse } from "@/lib/response";
-import { NextRequest, NextResponse } from "next/server";
+import { toApiResponse } from "@/lib/result-helpers";
+import { NextRequest } from "next/server";
 import { DELETE, HEAD, OPTIONS, PATCH, POST, PUT } from "../../routes";
-import { checkUserAuthOrThrowError } from "../../server-actions";
 
 /**
  * @swagger
@@ -42,6 +41,8 @@ import { checkUserAuthOrThrowError } from "../../server-actions";
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/Error'
+ *       429:
+ *         $ref: '#/components/responses/RateLimitExceeded'
  *       404:
  *         description: Transaction not found
  *         content:
@@ -56,38 +57,13 @@ import { checkUserAuthOrThrowError } from "../../server-actions";
  *               $ref: '#/components/schemas/Error'
  */
 export async function GET(request: NextRequest, props: { params: Promise<{ id: string }> }) {
-  const params = await props.params;
-  try {
-    const user = await checkUserAuthOrThrowError(request);
-    if ("error" in user) {
-      return NextResponse.json(errorResponse(user.error.message, user.error.code), {
-        status: mapErrorCodeToStatus(user.error.code),
-      }); //401
-    }
+  const { id } = await props.params;
 
-    const result = await transactionService.getTransactionDetailByTransactionId(params.id, user.id);
+  const result = authenticateRequest(request)
+    .andThen((user) => transactionService.getTransactionDetailResult(id, user.id))
+    .map((transaction) => ({ transaction }));
 
-    if ("error" in result) {
-      const { code, message } = result.error;
-
-      if (code === ApiErrorCode.NOT_FOUND) {
-        return NextResponse.json(errorResponse("Transaction not found", code), { status: mapErrorCodeToStatus(code) }); //404
-      }
-
-      return NextResponse.json(errorResponse(message, ApiErrorCode.INTERNAL_ERROR), {
-        status: mapErrorCodeToStatus(ApiErrorCode.INTERNAL_ERROR), //500
-      });
-    }
-
-    return NextResponse.json(successResponse("Transaction retrieved successfully", { transaction: result.data }), {
-      status: 200,
-    });
-  } catch (error) {
-    console.error("Error in GET /api/v1/transactions/[id]:", error);
-    return NextResponse.json(errorResponse("Internal server error", ApiErrorCode.INTERNAL_ERROR), {
-      status: mapErrorCodeToStatus(ApiErrorCode.INTERNAL_ERROR), //500
-    });
-  }
+  return toApiResponse(result, "Transaction retrieved successfully");
 }
 
 export { DELETE, HEAD, OPTIONS, PATCH, POST, PUT };
