@@ -91,12 +91,12 @@ enum DropVisibility {
   SECRET
 }
 
-enum DropRewardKind {
+enum DropRewardType {
   SUPER_TOKENS
   BADGE
   VAULT_BONUS
   LOTTERY_ENTRY
-  COSMETIC_TITLE // e.g. emoji title
+  DISPLAY_TITLE
 }
 
 model DropMission {
@@ -116,7 +116,7 @@ model DropMission {
   /// JSON mission definition: schedule, rule DSL, progress behavior
   definition    Json
 
-  rewardKind    DropRewardKind
+  rewardType    DropRewardType
   rewardPayload Json?    // e.g. { "amount": 50 }, { "badgeId": "friendly-financier" }
   active        Boolean  @default(true)
   startsAt      DateTime?
