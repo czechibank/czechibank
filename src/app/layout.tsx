@@ -1,4 +1,5 @@
 import UserButton from "@/components/auth/user-button";
+import { GamificationHeader } from "@/components/gamification/gamification-header";
 import { ThemeProvider } from "@/components/theme-provider";
 import { ModeToggle } from "@/components/theme/toggle-button";
 import { AppFooter } from "@/components/ui/app-footer";
@@ -40,6 +41,9 @@ export default async function RootLayout({
                 </Suspense>
               </div>
             </div>
+            <Suspense fallback={null}>
+              <GamificationHeader />
+            </Suspense>
             <div className="mx-auto max-w-3xl">{children}</div>
           </ThemeProvider>
         </div>

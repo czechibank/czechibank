@@ -1,7 +1,6 @@
-import { authenticateRequest } from "@/app/api/v1/auth";
-import bankAccountService from "@/domain/bankAccount-domain/ba-service";
+import { handleListMyBankAccounts } from "@/app/api/v1/handlers/bank-account/list.handler";
+import { withPaginatedApiHandler } from "@/lib/api/with-api-handler";
 import { createPaginationMeta } from "@/lib/response";
-import { toPaginatedApiResponse } from "@/lib/result-helpers";
 import { DELETE, HEAD, PATCH, POST, PUT } from "../routes";
 
 /**
@@ -100,19 +99,12 @@ import { DELETE, HEAD, PATCH, POST, PUT } from "../routes";
  *                     message: "Service returned missing or malformed data"
  */
 
-export async function GET(request: Request) {
-  const { searchParams } = new URL(request.url);
-  const page = parseInt(searchParams.get("page") || "1");
-  const limit = parseInt(searchParams.get("limit") || "10");
-
-  const result = authenticateRequest(request).andThen((user) =>
-    bankAccountService.getMyBankAccountsResult(user.id, { page, limit }),
-  );
-
-  return toPaginatedApiResponse(result, "Bank accounts retrieved successfully", (data) => ({
+export const GET = withPaginatedApiHandler(handleListMyBankAccounts, {
+  successMessage: "Bank accounts retrieved successfully",
+  transform: (data) => ({
     body: { bankAccounts: data.items },
     pagination: createPaginationMeta(data.page, data.limit, data.total),
-  }));
-}
+  }),
+});
 
 export { DELETE, HEAD, PATCH, POST, PUT };

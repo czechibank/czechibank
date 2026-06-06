@@ -18,6 +18,7 @@
     "db:ci:setup": "tsx scripts/setup-database.ts",
     "db:seed:users": "tsx scripts/seed-users.ts",
     "db:seed:features": "tsx scripts/seed-features.ts",
+    "db:seed:missions": "tsx scripts/seed-missions.ts",
     "deploy:local": "next build && pm2 startOrRestart ecosystem.config.js --env local",
     "deploy:dev": "next build && pm2 startOrRestart ecosystem.config.js --env dev",
     "deploy:prod": "next build && pm2 startOrRestart ecosystem.config.js --env prod",

@@ -1,10 +1,12 @@
 "use client";
 import { ApiKeyCard } from "@/components/profile/apikey-card";
+import { ProfileGamificationCard } from "@/components/profile/profile-gamification-card";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { toast } from "@/components/ui/use-toast";
 import { UserAvatar } from "@/components/user/avatar";
+import type { GamificationCompletion } from "@/domain/drops-domain/drops-service";
 import userServiceClient from "@/domain/user-domain/user-service-client";
 import { authClient } from "@/lib/auth-client";
 import { useSessionWithRefresh } from "@/lib/useSessionWithRefresh";
@@ -18,9 +20,11 @@ import CreateApiKey from "../../components/profile/create-api-key";
 export default function ProfileClientPage({
   user,
   apiKeys,
+  gamification,
 }: {
   user: typeof authClient.$Infer.Session.user;
   apiKeys: Omit<Apikey, "key">[];
+  gamification: { superTokens: number; displayTitle: string | null; completed: GamificationCompletion[] };
 }) {
   const { data: session, isPending, error } = useSessionWithRefresh();
   const router = useRouter();
@@ -105,6 +109,8 @@ export default function ProfileClientPage({
           </div>
         </CardContent>
       </Card>
+
+      <ProfileGamificationCard gamification={gamification} />
 
       {/* API Keys Section */}
       <Card>

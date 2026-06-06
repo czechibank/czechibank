@@ -20,11 +20,15 @@ model User {
   banReason     String?
   banned        Boolean?
   role          String?
+  superTokens   Int           @default(0)
+  displayTitle  String?
   bankAccounts  BankAccount[]
   accounts      Account[]
   apikeys       Apikey[]
   sessions      Session[]
   feature       Feature[]
+  dropMissionProgress    DropMissionProgress[]
+  dropMissionCompletions DropMissionCompletion[]
 
   @@map("user")
 }
@@ -130,6 +134,69 @@ enum Currency {
   CZECHITOKEN
   CZK
   USD
+}
+
+enum DropVisibility {
+  PUBLISHED
+  SECRET
+}
+
+enum DropRewardType {
+  SUPER_TOKENS
+  BADGE
+  VAULT_BONUS
+  LOTTERY_ENTRY
+  DISPLAY_TITLE
+}
+
+model DropMission {
+  id            String         @id @default(cuid())
+  slug          String         @unique
+  name          String
+  description   String
+  visibility    DropVisibility @default(PUBLISHED)
+  triggerMethod String
+  triggerPath   String
+  timezone      String         @default("Europe/Prague")
+  definition    Json
+  rewardType    DropRewardType
+  rewardPayload Json?
+  active        Boolean        @default(true)
+  startsAt      DateTime?
+  endsAt        DateTime?
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  progress      DropMissionProgress[]
+  completions   DropMissionCompletion[]
+
+  @@index([triggerMethod, triggerPath, active])
+  @@map("drop_mission")
+}
+
+model DropMissionProgress {
+  id        String      @id @default(cuid())
+  missionId String
+  userId    String
+  mission   DropMission @relation(fields: [missionId], references: [id], onDelete: Cascade)
+  user      User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  state     Json        @default("{}")
+  updatedAt DateTime    @updatedAt
+
+  @@unique([missionId, userId])
+  @@map("drop_mission_progress")
+}
+
+model DropMissionCompletion {
+  id          String      @id @default(cuid())
+  missionId   String
+  userId      String
+  mission     DropMission @relation(fields: [missionId], references: [id], onDelete: Cascade)
+  user        User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  completedAt DateTime    @default(now())
+  metadata    Json?
+
+  @@unique([missionId, userId])
+  @@map("drop_mission_completion")
 }
 
 model Feature {

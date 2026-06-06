@@ -1,9 +1,5 @@
-import { authenticateRequest } from "@/app/api/v1/auth";
-import apikeyService from "@/domain/apikey/apikey-service";
-import { fromUnknown } from "@/lib/errors";
-import { toApiResponse } from "@/lib/result-helpers";
-import { ResultAsync } from "neverthrow";
-import { headers } from "next/headers";
+import { handleListApiKeys } from "@/app/api/v1/handlers/apikey/list.handler";
+import { withApiHandler } from "@/lib/api/with-api-handler";
 
 /**
  * @swagger
@@ -44,13 +40,6 @@ import { headers } from "next/headers";
  *               $ref: '#/components/schemas/Error'
  */
 
-export async function GET(request: Request) {
-  const result = authenticateRequest(request).andThen(() =>
-    ResultAsync.fromPromise(
-      headers().then((h) => apikeyService.server.listUserApiKey(h)),
-      (e) => fromUnknown(e, "Failed to list API keys"),
-    ),
-  );
-
-  return toApiResponse(result, "API keys retrieved successfully");
-}
+export const GET = withApiHandler(handleListApiKeys, {
+  successMessage: "API keys retrieved successfully",
+});

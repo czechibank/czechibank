@@ -1,9 +1,5 @@
-import { authenticateRequest } from "@/app/api/v1/auth";
-import { BankAccountSchema } from "@/domain/bankAccount-domain/ba-schema";
-import bankAccountService from "@/domain/bankAccount-domain/ba-service";
-import { badRequest } from "@/lib/errors";
-import { toApiResponse, validateWithResult } from "@/lib/result-helpers";
-import { ResultAsync } from "neverthrow";
+import { handleCreateBankAccount } from "@/app/api/v1/handlers/bank-account/create.handler";
+import { withApiHandler } from "@/lib/api/with-api-handler";
 /**
  * @swagger
  * /bank-account/create:
@@ -49,21 +45,7 @@ import { ResultAsync } from "neverthrow";
  *       429:
  *         $ref: '#/components/responses/RateLimitExceeded'
  */
-export async function POST(request: Request) {
-  const result = authenticateRequest(request)
-    .andThen((user) =>
-      ResultAsync.fromPromise(request.json(), () => badRequest("Invalid JSON body")).andThen((body) =>
-        validateWithResult(BankAccountSchema, body).map((parsed) => ({ user, parsed })),
-      ),
-    )
-    .andThen(({ user, parsed }) =>
-      bankAccountService.createBankAccountResult({
-        userId: user.id,
-        currency: parsed.currency,
-        name: parsed.name,
-      }),
-    )
-    .map((bankAccount) => ({ bankAccount }));
-
-  return toApiResponse(result, "Bank account created successfully", 201);
-}
+export const POST = withApiHandler(handleCreateBankAccount, {
+  successMessage: "Bank account created successfully",
+  successStatus: 201,
+});

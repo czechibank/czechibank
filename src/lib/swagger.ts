@@ -101,6 +101,16 @@ All responses follow a consistent format:
               example: null,
               description: "Ban expiration date if banned, otherwise null",
             },
+            superTokens: {
+              type: "integer",
+              example: 0,
+              description: "Gamification SUPER_TOKENS balance",
+            },
+            displayTitle: {
+              type: ["string", "null"],
+              example: "🕵️ Mystery solver",
+              description: "Optional gamification display line from DISPLAY_TITLE missions; not the legal name",
+            },
             apiKey: {
               type: ["string", "null"],
               example: "YUNKOBkSooRIXDgSSwYZgjPcAhTzqfIcGLvvFiODAmfdgfyrxQPuCRGsaDEYulQi",
@@ -434,6 +444,10 @@ All responses follow a consistent format:
       {
         name: "Features",
         description: "Feature flag management operations",
+      },
+      {
+        name: "Drops",
+        description: "Time-limited API drop missions and rewards",
       },
     ],
   },
