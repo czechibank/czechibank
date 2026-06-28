@@ -37,7 +37,7 @@ Then("I should see title {string}", async ({ page }, headingText: string) => {
 });
 
 Then("I should see error message {string}", async ({ page }, errorText: string) => {
-  await expect(page.getByRole("status")).toContainText(errorText);
+  await expect(page.getByText(errorText, { exact: true })).toBeVisible();
 });
 
 Then("I should see {string} validation text {string}", async ({ page }, fieldID: string, validationText: string) => {

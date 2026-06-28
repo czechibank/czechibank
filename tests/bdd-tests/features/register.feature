@@ -22,4 +22,15 @@ Feature: Register user
     And I am redirected to "Dashboard"
     And I should see welcome message for generated user
 
-
+  @smoke
+  @register
+  @negative
+  @CZBANK-T6
+  @general
+  Scenario: CZBANK-T6_Register user with already registered email
+    When I fill name "Karel Novák"
+    And I fill email "zachranNas+brno@pejsekAKocicka.cz"
+    And I fill registration password "12345678"
+    And I fill confirm password "12345678"
+    And I click register button
+    Then I should see error message "User already exists. Use another email."
