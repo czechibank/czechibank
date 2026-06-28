@@ -64,27 +64,11 @@
  *               $ref: '#/components/schemas/Error'
  */
 
-import { authenticateRequest } from "@/app/api/v1/auth";
-import featuresService from "@/domain/features-domain/features-service";
-import { AllFeaturesSchema } from "@/domain/features-domain/features.schema";
-import { badRequest, forbidden } from "@/lib/errors";
-import { toApiResponse, validateWithResult } from "@/lib/result-helpers";
-import { errAsync, okAsync, ResultAsync } from "neverthrow";
+import { handleUpdateFeatures } from "@/app/api/v1/handlers/features/update.handler";
+import { withApiHandler } from "@/lib/api/with-api-handler";
 
-export async function POST(request: Request): Promise<Response> {
-  const result = authenticateRequest(request)
-    .andThen((user) => {
-      if (user.role !== "admin") {
-        return errAsync(forbidden("Forbidden"));
-      }
-      return okAsync(user);
-    })
-    .andThen(() => ResultAsync.fromPromise(request.json(), () => badRequest("Invalid JSON body")))
-    .andThen((body) => validateWithResult(AllFeaturesSchema, body))
-    .andThen(({ features }) => featuresService.server.updateFeaturesResult(features))
-    .map((features) => ({ features }));
-
-  return toApiResponse(result, "Features updated successfully", 200, {
-    requestId: request.headers.get("x-request-id") || undefined,
-  });
-}
+export const POST = withApiHandler(handleUpdateFeatures, {
+  successMessage: "Features updated successfully",
+  successStatus: 200,
+  meta: (request) => ({ requestId: request.headers.get("x-request-id") || undefined }),
+});

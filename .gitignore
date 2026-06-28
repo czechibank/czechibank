@@ -52,3 +52,10 @@ results.xml
 
 # Playwright BDD generated files
 **/.features-gen/**/*.spec.js
+
+# Local mission backlog notes
+/documentation/remaining missions.md
+/documentation/gamification_consistency_action_plan.md
+/documentation/refactor_with_neverthrow_and_withApiHander_wraper.md
+/documentation/jira description.md
+/documentation/time-limited-api-challenges.md

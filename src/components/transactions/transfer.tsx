@@ -9,9 +9,11 @@ import { FeatureType } from "@/domain/features-domain/features.schema";
 import { sendMoneyToBankNumberAction } from "@/domain/transaction-domain/transaction-action";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Prisma } from "@prisma/client";
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
+import { MissionDropCelebrationImg } from "../gamification/mission-drop-celebration";
 import { Button } from "../ui/button";
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "../ui/form";
 import { Input } from "../ui/input";
@@ -43,6 +45,7 @@ export function TransactionTransfer({
 }) {
   console.log(userId, bankAccountNumber, balance);
   const { toast } = useToast();
+  const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
   const users = allUsers
     .filter((user) => user.id !== userId)
@@ -87,18 +90,47 @@ export function TransactionTransfer({
       });
 
       if (response.success) {
+        const drops = "drops" in response ? response.drops : [];
+        const dropLines =
+          drops.length > 0
+            ? drops
+                .map((d) => `· ${d.name}${d.rewardAmount != null ? ` (+${d.rewardAmount} Super Tokens)` : ""}`)
+                .join("\n")
+            : null;
+
         if (showGifInTransactionsFeature(features)) {
           toast({
             title: "💸 Transaction created!",
             description: (
-              <img src="https://media4.giphy.com/media/v1.Y2lkPTc5MGI3NjExbGw2OXB2cmMydW1kb3k5cnpub2x4bm02bmhzZm9lb3E3ZTRxdnhwNCZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/l0HFkA6omUyjVYqw8/giphy.gif" />
+              <div className="space-y-2">
+                <img src="https://media4.giphy.com/media/v1.Y2lkPTc5MGI3NjExbGw2OXB2cmMydW1kb3k5cnpub2x4bm02bmhzZm9lb3E3ZTRxdnhwNCZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/l0HFkA6omUyjVYqw8/giphy.gif" />
+                {dropLines ? (
+                  <p className="whitespace-pre-line text-sm font-medium text-amber-700 dark:text-amber-300">
+                    Mission rewards{"\n"}
+                    {dropLines}
+                  </p>
+                ) : null}
+              </div>
             ),
           });
         } else {
           toast({
             title: "💸 Transaction created!",
+            description:
+              drops.length > 0 ? (
+                <div className="space-y-2">
+                  <MissionDropCelebrationImg />
+                  {dropLines ? (
+                    <p className="whitespace-pre-line text-sm font-medium text-amber-700 dark:text-amber-300">
+                      Mission rewards{"\n"}
+                      {dropLines}
+                    </p>
+                  ) : null}
+                </div>
+              ) : undefined,
           });
         }
+        router.refresh();
       } else {
         toast({
           title: "💸 Transaction failed!",

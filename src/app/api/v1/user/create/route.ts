@@ -1,11 +1,7 @@
 export { DELETE, HEAD, OPTIONS, PATCH, PUT } from "../../routes";
 
-import apikeyService from "@/domain/apikey/apikey-service";
-import { UserSchema } from "@/domain/user-domain/user-schema";
-import userService from "@/domain/user-domain/user-service";
-import { badRequest, fromUnknown } from "@/lib/errors";
-import { toApiResponse, validateWithResult } from "@/lib/result-helpers";
-import { ResultAsync } from "neverthrow";
+import { handleCreateUser } from "@/app/api/v1/handlers/user/create.handler";
+import { withApiHandler } from "@/lib/api/with-api-handler";
 
 /**
  * @swagger
@@ -65,19 +61,7 @@ import { ResultAsync } from "neverthrow";
  *             schema:
  *               $ref: '#/components/schemas/Error'
  */
-export async function POST(request: Request) {
-  const result = ResultAsync.fromPromise(request.json(), () => badRequest("Invalid JSON body"))
-    .andThen((body) => validateWithResult(UserSchema, body))
-    .andThen((parsedUser) =>
-      ResultAsync.fromPromise(userService.server.createUser(parsedUser, "user"), (e) =>
-        fromUnknown(e, "Failed to create user"),
-      ),
-    )
-    .andThen((createdUser) =>
-      ResultAsync.fromPromise(apikeyService.server.createApiKey(createdUser.user.id), (e) =>
-        fromUnknown(e, "Failed to create API key"),
-      ).map((apiKey) => ({ ...createdUser.user, apiKey: apiKey.key })),
-    );
-
-  return toApiResponse(result, "User created successfully", 201);
-}
+export const POST = withApiHandler(handleCreateUser, {
+  successMessage: "User created successfully",
+  successStatus: 201,
+});

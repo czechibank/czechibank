@@ -1,12 +1,9 @@
-import { authenticateRequest } from "@/app/api/v1/auth";
-import { RenameBankAccountSchema } from "@/domain/bankAccount-domain/ba-schema";
-import bankAccountService from "@/domain/bankAccount-domain/ba-service";
-import { canSeeYourBankAccountDetailFeature as anyOneCanSeeYourBankAccountFeature } from "@/domain/features-domain/features-application-service";
-import featuresService from "@/domain/features-domain/features-service";
-import { badRequest, conflict } from "@/lib/errors";
-import { toApiResponse, validateWithResult } from "@/lib/result-helpers";
-import { errAsync, okAsync, ResultAsync } from "neverthrow";
-import { z } from "zod";
+import {
+  handleDeleteBankAccountById,
+  handleGetBankAccountById,
+  handleRenameBankAccountById,
+} from "@/app/api/v1/handlers/bank-account/by-id.handler";
+import { withApiHandler } from "@/lib/api/with-api-handler";
 
 /**
  * @swagger
@@ -208,66 +205,14 @@ import { z } from "zod";
  *
  */
 
-const idSchema = z.object({ id: z.string().cuid() });
+export const GET = withApiHandler(handleGetBankAccountById, {
+  successMessage: "Bank account details retrieved successfully",
+});
 
-export async function GET(request: Request, context: { params: Promise<{ id: string }> }) {
-  const { id } = await context.params;
+export const DELETE = withApiHandler(handleDeleteBankAccountById, {
+  successMessage: "Bank account deleted successfully",
+});
 
-  const result = authenticateRequest(request)
-    .andThen((user) =>
-      validateWithResult(idSchema, { id }).andThen((parsed) => {
-        // Check feature flag: if enabled, anyone can see any bank account
-        return featuresService.server
-          .getAllFeaturesResult()
-          .map((result) => anyOneCanSeeYourBankAccountFeature(result.items))
-          .orElse(() => okAsync(false))
-          .andThen((anyoneCanSee) =>
-            anyoneCanSee
-              ? bankAccountService.getBankAccountByIdResult(parsed.id)
-              : bankAccountService.getBankAccountByIdAndUserIdResult(parsed.id, user.id),
-          );
-      }),
-    )
-    .map((bankAccount) => ({ bankAccount }));
-
-  return toApiResponse(result, "Bank account details retrieved successfully");
-}
-
-export async function DELETE(request: Request, context: { params: Promise<{ id: string }> }) {
-  const { id } = await context.params;
-
-  const result = authenticateRequest(request).andThen((user) =>
-    validateWithResult(idSchema, { id }).andThen((parsed) =>
-      bankAccountService.getBankAccountByIdAndUserIdResult(parsed.id, user.id).andThen((bankAccount) =>
-        bankAccountService.deleteBankAccountResult(bankAccount, user.id).andThen((deleted) => {
-          if (deleted.isActive !== false) {
-            return errAsync<{ message: string }, import("@/lib/errors").AppError>(
-              conflict("Bank account deletion failed, account still active"),
-            );
-          }
-          return okAsync({ message: "Bank account deleted successfully" });
-        }),
-      ),
-    ),
-  );
-
-  return toApiResponse(result, "Bank account deleted successfully");
-}
-
-export async function PATCH(request: Request, context: { params: Promise<{ id: string }> }) {
-  const { id } = await context.params;
-
-  const result = authenticateRequest(request).andThen((user) =>
-    validateWithResult(idSchema, { id }).andThen((parsed) =>
-      ResultAsync.fromPromise(request.json(), () => badRequest("Invalid JSON body"))
-        .andThen((body) => validateWithResult(RenameBankAccountSchema, body))
-        .andThen(({ name: newName }) =>
-          bankAccountService
-            .getBankAccountByIdAndUserIdResult(parsed.id, user.id)
-            .andThen(() => bankAccountService.renameBankAccountResult(parsed.id, user.id, newName)),
-        ),
-    ),
-  );
-
-  return toApiResponse(result, "Bank account renamed successfully");
-}
+export const PATCH = withApiHandler(handleRenameBankAccountById, {
+  successMessage: "Bank account renamed successfully",
+});

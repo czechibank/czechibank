@@ -1,7 +1,5 @@
-import { authenticateRequest } from "@/app/api/v1/auth";
-import transactionService from "@/domain/transaction-domain/transaction-service";
-import { toApiResponse } from "@/lib/result-helpers";
-import { NextRequest } from "next/server";
+import { handleGetTransactionById } from "@/app/api/v1/handlers/transactions/by-id.handler";
+import { withApiHandler } from "@/lib/api/with-api-handler";
 import { DELETE, HEAD, OPTIONS, PATCH, POST, PUT } from "../../routes";
 
 /**
@@ -56,14 +54,8 @@ import { DELETE, HEAD, OPTIONS, PATCH, POST, PUT } from "../../routes";
  *             schema:
  *               $ref: '#/components/schemas/Error'
  */
-export async function GET(request: NextRequest, props: { params: Promise<{ id: string }> }) {
-  const { id } = await props.params;
-
-  const result = authenticateRequest(request)
-    .andThen((user) => transactionService.getTransactionDetailResult(id, user.id))
-    .map((transaction) => ({ transaction }));
-
-  return toApiResponse(result, "Transaction retrieved successfully");
-}
+export const GET = withApiHandler(handleGetTransactionById, {
+  successMessage: "Transaction retrieved successfully",
+});
 
 export { DELETE, HEAD, OPTIONS, PATCH, POST, PUT };

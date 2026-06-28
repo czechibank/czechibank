@@ -1,10 +1,5 @@
-import { authenticateRequest } from "@/app/api/v1/auth";
-import bankAccountService from "@/domain/bankAccount-domain/ba-service";
-import transactionService from "@/domain/transaction-domain/transaction-service";
-import { ApiTransactionCreateSchema } from "@/domain/transaction-domain/transation-schema";
-import { badRequest } from "@/lib/errors";
-import { toApiResponse, validateWithResult } from "@/lib/result-helpers";
-import { errAsync, ResultAsync } from "neverthrow";
+import { handleCreateTransaction } from "@/app/api/v1/handlers/transactions/create.handler";
+import { withApiHandler } from "@/lib/api/with-api-handler";
 /**
  * @swagger
  * /transactions/create:
@@ -63,27 +58,7 @@ import { errAsync, ResultAsync } from "neverthrow";
  *               $ref: '#/components/schemas/Error'
  *
  */
-export async function POST(request: Request) {
-  const result = authenticateRequest(request).andThen((user) =>
-    ResultAsync.fromPromise(request.json(), () => badRequest("Invalid JSON body"))
-      .andThen((body) => validateWithResult(ApiTransactionCreateSchema, body))
-      .andThen((validated) =>
-        // Verify user has at least one bank account
-        bankAccountService.getMyBankAccountsResult(user.id, { page: 1, limit: 1 }).andThen((accounts) => {
-          if (accounts.items.length === 0) {
-            return errAsync(badRequest("No bank account found for user"));
-          }
-          return transactionService.sendMoneyToBankNumberResult({
-            amount: validated.amount,
-            toBankNumber: validated.toBankNumber,
-            fromBankNumber: validated.fromBankNumber,
-            userId: user.id,
-            currency: "CZECHITOKEN",
-            applicationType: "api",
-          });
-        }),
-      ),
-  );
-
-  return toApiResponse(result, "Transaction successful", 201);
-}
+export const POST = withApiHandler(handleCreateTransaction, {
+  successMessage: "Transaction successful",
+  successStatus: 201,
+});

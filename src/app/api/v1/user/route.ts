@@ -1,5 +1,5 @@
-import { authenticateRequest } from "@/app/api/v1/auth";
-import { toApiResponse } from "@/lib/result-helpers";
+import { handleGetCurrentUser } from "@/app/api/v1/handlers/user/get-current-user.handler";
+import { withApiHandler } from "@/lib/api/with-api-handler";
 import { DELETE, HEAD, OPTIONS, PATCH, POST, PUT } from "../routes";
 
 /**
@@ -52,9 +52,8 @@ import { DELETE, HEAD, OPTIONS, PATCH, POST, PUT } from "../routes";
  *       429:
  *         $ref: '#/components/responses/RateLimitExceeded'
  */
-export async function GET(request: Request) {
-  const result = authenticateRequest(request);
-  return toApiResponse(result, "User profile retrieved successfully");
-}
+export const GET = withApiHandler(handleGetCurrentUser, {
+  successMessage: "User profile retrieved successfully",
+});
 
 export { DELETE, HEAD, OPTIONS, PATCH, POST, PUT };

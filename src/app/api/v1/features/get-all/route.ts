@@ -62,22 +62,14 @@
  *               $ref: '#/components/schemas/Error'
  */
 
-import { authenticateRequest } from "@/app/api/v1/auth";
-import featuresService from "@/domain/features-domain/features-service";
+import { handleGetAllFeatures } from "@/app/api/v1/handlers/features/get-all.handler";
+import { withPaginatedApiHandler } from "@/lib/api/with-api-handler";
 import { createPaginationMeta } from "@/lib/response";
-import { toPaginatedApiResponse } from "@/lib/result-helpers";
 
-export async function GET(request: Request): Promise<Response> {
-  const { searchParams } = new URL(request.url);
-  const page = parseInt(searchParams.get("page") || "1");
-  const limit = parseInt(searchParams.get("limit") || "10");
-
-  const result = authenticateRequest(request).andThen(() =>
-    featuresService.server.getAllFeaturesResult({ page, limit }),
-  );
-
-  return toPaginatedApiResponse(result, "Features retrieved successfully", (data) => ({
+export const GET = withPaginatedApiHandler(handleGetAllFeatures, {
+  successMessage: "Features retrieved successfully",
+  transform: (data) => ({
     body: { features: data.items },
     pagination: createPaginationMeta(data.page, data.limit, data.total),
-  }));
-}
+  }),
+});
