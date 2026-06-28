@@ -1,5 +1,6 @@
 import type { DropMission, DropMissionProgress } from "@/domain/drops-domain/drops-types";
-import { badRequest, fromUnknown, notFound, validationError, type AppError } from "@/lib/errors";
+import { badRequest, fromUnknown, notFound, type AppError } from "@/lib/errors";
+import { validateWithResult } from "@/lib/result-helpers";
 import type { Prisma } from "@prisma/client";
 import { errAsync, okAsync, ResultAsync } from "neverthrow";
 import * as repository from "./drops-repository";
@@ -112,75 +113,51 @@ const dropsService = {
   },
 
   createMissionResult(raw: unknown): ResultAsync<DropMission, AppError> {
-    const parsed = CreateDropMissionSchema.safeParse(raw);
-    if (!parsed.success) {
-      return errAsync(
-        validationError(
-          "Invalid mission payload",
-          parsed.error.errors.map((e) => ({
-            code: "VALIDATION_ERROR",
-            field: e.path.join("."),
-            message: e.message,
-          })),
-        ),
-      );
-    }
-    const d = parsed.data;
-    return ResultAsync.fromPromise(
-      repository.createMission({
-        slug: d.slug,
-        name: d.name,
-        description: d.description,
-        visibility: d.visibility,
-        triggerMethod: d.triggerMethod,
-        triggerPath: d.triggerPath,
-        timezone: d.timezone,
-        definition: d.definition as unknown as Prisma.InputJsonValue,
-        rewardType: d.rewardType,
-        rewardPayload: d.rewardPayload === undefined ? undefined : (d.rewardPayload as Prisma.InputJsonValue),
-        active: d.active,
-        startsAt: d.startsAt ? new Date(d.startsAt) : undefined,
-        endsAt: d.endsAt ? new Date(d.endsAt) : undefined,
-      }),
-      (e) => fromUnknown(e, "Failed to create mission"),
+    return validateWithResult(CreateDropMissionSchema, raw).andThen((d) =>
+      ResultAsync.fromPromise(
+        repository.createMission({
+          slug: d.slug,
+          name: d.name,
+          description: d.description,
+          visibility: d.visibility,
+          triggerMethod: d.triggerMethod,
+          triggerPath: d.triggerPath,
+          timezone: d.timezone,
+          definition: d.definition as unknown as Prisma.InputJsonValue,
+          rewardType: d.rewardType,
+          rewardPayload: d.rewardPayload === undefined ? undefined : (d.rewardPayload as Prisma.InputJsonValue),
+          active: d.active,
+          startsAt: d.startsAt ? new Date(d.startsAt) : undefined,
+          endsAt: d.endsAt ? new Date(d.endsAt) : undefined,
+        }),
+        (e) => fromUnknown(e, "Failed to create mission"),
+      ),
     );
   },
 
   updateMissionBySlugResult(slug: string, raw: unknown): ResultAsync<DropMission, AppError> {
-    const parsed = UpdateDropMissionSchema.safeParse(raw);
-    if (!parsed.success) {
-      return errAsync(
-        validationError(
-          "Invalid mission payload",
-          parsed.error.errors.map((e) => ({
-            code: "VALIDATION_ERROR",
-            field: e.path.join("."),
-            message: e.message,
-          })),
-        ),
-      );
-    }
-    const d = parsed.data;
-    const data: Prisma.DropMissionUpdateInput = {};
-    if (d.slug !== undefined) data.slug = d.slug;
-    if (d.name !== undefined) data.name = d.name;
-    if (d.description !== undefined) data.description = d.description;
-    if (d.visibility !== undefined) data.visibility = d.visibility;
-    if (d.triggerMethod !== undefined) data.triggerMethod = d.triggerMethod;
-    if (d.triggerPath !== undefined) data.triggerPath = d.triggerPath;
-    if (d.timezone !== undefined) data.timezone = d.timezone;
-    if (d.definition !== undefined) data.definition = d.definition as unknown as Prisma.InputJsonValue;
-    if (d.rewardType !== undefined) data.rewardType = d.rewardType;
-    if (d.rewardPayload !== undefined) data.rewardPayload = d.rewardPayload as Prisma.InputJsonValue;
-    if (d.active !== undefined) data.active = d.active;
-    if (d.startsAt !== undefined) data.startsAt = d.startsAt ? new Date(d.startsAt) : null;
-    if (d.endsAt !== undefined) data.endsAt = d.endsAt ? new Date(d.endsAt) : null;
+    return validateWithResult(UpdateDropMissionSchema, raw).andThen((d) => {
+      const data: Prisma.DropMissionUpdateInput = {};
+      if (d.slug !== undefined) data.slug = d.slug;
+      if (d.name !== undefined) data.name = d.name;
+      if (d.description !== undefined) data.description = d.description;
+      if (d.visibility !== undefined) data.visibility = d.visibility;
+      if (d.triggerMethod !== undefined) data.triggerMethod = d.triggerMethod;
+      if (d.triggerPath !== undefined) data.triggerPath = d.triggerPath;
+      if (d.timezone !== undefined) data.timezone = d.timezone;
+      if (d.definition !== undefined) data.definition = d.definition as unknown as Prisma.InputJsonValue;
+      if (d.rewardType !== undefined) data.rewardType = d.rewardType;
+      if (d.rewardPayload !== undefined) data.rewardPayload = d.rewardPayload as Prisma.InputJsonValue;
+      if (d.active !== undefined) data.active = d.active;
+      if (d.startsAt !== undefined) data.startsAt = d.startsAt ? new Date(d.startsAt) : null;
+      if (d.endsAt !== undefined) data.endsAt = d.endsAt ? new Date(d.endsAt) : null;
 
-    if (Object.keys(data).length === 0) {
-      return errAsync(badRequest("No fields to update"));
-    }
+      if (Object.keys(data).length === 0) {
+        return errAsync(badRequest("No fields to update"));
+      }
 
-    return ResultAsync.fromPromise(repository.updateMissionBySlug(slug, data), () => notFound("Mission not found"));
+      return ResultAsync.fromPromise(repository.updateMissionBySlug(slug, data), () => notFound("Mission not found"));
+    });
   },
 
   deleteMissionBySlugResult(slug: string): ResultAsync<{ deleted: true }, AppError> {
@@ -190,9 +167,9 @@ const dropsService = {
   },
 
   getMissionBySlugResult(slug: string): ResultAsync<DropMission, AppError> {
-    return ResultAsync.fromSafePromise(repository.findMissionBySlug(slug)).andThen((mission) =>
-      mission ? okAsync(mission) : errAsync(notFound("Mission not found")),
-    );
+    return ResultAsync.fromPromise(repository.findMissionBySlug(slug), (e) =>
+      fromUnknown(e, "Failed to retrieve mission"),
+    ).andThen((mission) => (mission ? okAsync(mission) : errAsync(notFound("Mission not found"))));
   },
 
   getMyDropStatus(userId: string): ResultAsync<
@@ -206,12 +183,13 @@ const dropsService = {
     },
     AppError
   > {
-    return ResultAsync.fromSafePromise(
+    return ResultAsync.fromPromise(
       Promise.all([
         repository.findPublishedMissions(),
         repository.findAllProgressByUser(userId),
         repository.findAllCompletionsByUser(userId),
       ]),
+      (e) => fromUnknown(e, "Failed to retrieve drop status"),
     ).map(([missions, progressList, completionList]) => {
       const progressByMission = new Map(progressList.map((p) => [p.missionId, p]));
       const completionByMission = new Map(completionList.map((c) => [c.missionId, c]));
@@ -232,12 +210,9 @@ const dropsService = {
   },
 
   getAllMissionsResult(filters: repository.ListMissionsFilters) {
-    return ResultAsync.fromSafePromise(repository.findAllMissions(filters));
-  },
-
-  /** Completed missions for this user (includes `mission` relation). Plan parity wrapper around the repository. */
-  async getMyCompletions(userId: string) {
-    return repository.findCompletionsByUser(userId);
+    return ResultAsync.fromPromise(repository.findAllMissions(filters), (e) =>
+      fromUnknown(e, "Failed to retrieve missions"),
+    );
   },
 
   /** Super tokens balance + completed missions (for profile / header UI). */

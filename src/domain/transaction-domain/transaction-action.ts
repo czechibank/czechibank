@@ -42,7 +42,7 @@ export async function sendMoneyToBankNumberAction({
     const { completedMissions } = await dropsService.evaluateDropsAfterSuccess({
       userId,
       method: "POST",
-      path: "/api/v1/transactions/create",
+      path: "/api/v1/transactions/create", // must match seed-missions triggerPath
       requestBody: { amount, toBankNumber, fromBankNumber },
       resultData: (result.data && typeof result.data === "object" ? result.data : {}) as Record<string, unknown>,
     });

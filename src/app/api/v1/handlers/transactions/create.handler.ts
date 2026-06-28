@@ -34,7 +34,7 @@ export function handleCreateTransaction(request: Request) {
         evaluateDropsAfterSuccessResult({
           userId: currentUser.id,
           method: "POST",
-          path: "/api/v1/transactions/create",
+          path: "/api/v1/transactions/create", // must match seed-missions triggerPath
           requestBody: {
             amount: validated.amount,
             toBankNumber: validated.toBankNumber,

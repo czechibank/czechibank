@@ -1,4 +1,5 @@
 import { authenticateRequest } from "@/app/api/v1/auth";
+import { isAdmin } from "@/app/api/v1/handlers/shared/is-admin";
 import { parseJsonBody } from "@/app/api/v1/handlers/shared/parse-json-body";
 import { requireAdmin } from "@/app/api/v1/handlers/shared/require-admin";
 import dropsService from "@/domain/drops-domain/drops-service";
@@ -7,10 +8,6 @@ import { notFound } from "@/lib/errors";
 import { errAsync, okAsync, ResultAsync } from "neverthrow";
 
 type SlugParams = { slug: string };
-
-function isAdmin(user: { role?: string | null }) {
-  return user.role === "admin";
-}
 
 export function handleGetDropMissionBySlug(request: Request, context: ApiRouteContext<SlugParams>) {
   return authenticateRequest(request).andThen((user) =>

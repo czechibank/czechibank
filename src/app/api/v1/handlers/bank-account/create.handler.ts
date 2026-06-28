@@ -31,7 +31,7 @@ export function handleCreateBankAccount(request: Request): ResultAsync<CreateBan
       evaluateDropsAfterSuccessResult({
         userId: user.id,
         method: "POST",
-        path: "/api/v1/bank-account/create",
+        path: "/api/v1/bank-account/create", // must match seed-missions triggerPath
         requestBody: parsed as unknown as Record<string, unknown>,
         resultData: bankAccount as unknown as Record<string, unknown>,
       }).map((drops) => ({

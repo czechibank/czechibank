@@ -4,14 +4,6 @@ import type { DropVisibility } from "@/domain/drops-domain/drops-types";
 import prisma from "@/lib/db";
 import type { Prisma } from "@prisma/client";
 
-export async function getUserSuperTokens(userId: string): Promise<number> {
-  const row = await prisma.user.findUnique({
-    where: { id: userId },
-    select: { superTokens: true },
-  });
-  return row?.superTokens ?? 0;
-}
-
 export async function getUserGamificationProfile(
   userId: string,
 ): Promise<{ superTokens: number; displayTitle: string | null }> {
@@ -41,10 +33,6 @@ export async function findActiveMissionsByTrigger(method: string, path: string, 
 
 export async function findMissionBySlug(slug: string) {
   return prisma.dropMission.findUnique({ where: { slug } });
-}
-
-export async function findMissionById(id: string) {
-  return prisma.dropMission.findUnique({ where: { id } });
 }
 
 export type ListMissionsFilters = {
@@ -82,12 +70,6 @@ export async function deleteMissionBySlug(slug: string) {
   return prisma.dropMission.delete({ where: { slug } });
 }
 
-export async function findProgressByMissionAndUser(missionId: string, userId: string) {
-  return prisma.dropMissionProgress.findUnique({
-    where: { missionId_userId: { missionId, userId } },
-  });
-}
-
 export async function findAllProgressByUser(userId: string) {
   return prisma.dropMissionProgress.findMany({ where: { userId } });
 }
@@ -96,23 +78,9 @@ export async function findAllCompletionsByUser(userId: string) {
   return prisma.dropMissionCompletion.findMany({ where: { userId } });
 }
 
-export async function upsertProgress(missionId: string, userId: string, state: Prisma.InputJsonValue) {
-  return prisma.dropMissionProgress.upsert({
-    where: { missionId_userId: { missionId, userId } },
-    create: { missionId, userId, state },
-    update: { state },
-  });
-}
-
 export async function findCompletionByMissionAndUser(missionId: string, userId: string) {
   return prisma.dropMissionCompletion.findUnique({
     where: { missionId_userId: { missionId, userId } },
-  });
-}
-
-export async function createCompletion(missionId: string, userId: string, metadata?: Prisma.InputJsonValue) {
-  return prisma.dropMissionCompletion.create({
-    data: { missionId, userId, metadata },
   });
 }
 

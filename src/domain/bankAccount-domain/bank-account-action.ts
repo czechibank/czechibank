@@ -25,7 +25,7 @@ export async function createBankAccountWithDropsAction(input: {
     const { completedMissions } = await dropsService.evaluateDropsAfterSuccess({
       userId: input.userId,
       method: "POST",
-      path: "/api/v1/bank-account/create",
+      path: "/api/v1/bank-account/create", // must match seed-missions triggerPath
       requestBody: { name: input.name, currency: input.currency },
       resultData: bankAccount as unknown as Record<string, unknown>,
     });

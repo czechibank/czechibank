@@ -1,9 +1,6 @@
 import { authenticateRequest } from "@/app/api/v1/auth";
+import { isAdmin } from "@/app/api/v1/handlers/shared/is-admin";
 import dropsService from "@/domain/drops-domain/drops-service";
-
-function isAdmin(user: { role?: string | null }) {
-  return user.role === "admin";
-}
 
 /**
  * Lists drop missions. Pagination is clamped (not validated) to preserve the
