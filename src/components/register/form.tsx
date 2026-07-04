@@ -128,7 +128,7 @@ export function RegisterForm() {
                 Email <span className="text-red-500">*</span>
               </FormLabel>
               <FormControl>
-                {/* <Input placeholder="" {...field} aria-required="true" aria-invalid={!!form.formState.errors.email} /> */}
+                <Input placeholder="" {...field} aria-required="true" aria-invalid={!!form.formState.errors.email} />
               </FormControl>
               <FormDescription>Email for sign in</FormDescription>
               <FormMessage data-testid="email-message" />
