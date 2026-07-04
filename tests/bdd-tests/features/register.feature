@@ -34,3 +34,17 @@ Feature: Register user
     And I fill confirm password "12345678"
     And I click register button
     Then I should see error message "User already exists. Use another email."
+
+  @smoke
+  @register
+  @negative
+  @CZBANK-T10
+  @general
+  Scenario: CZBANK-T10_Register user with invalid email without @ symbol
+    When I fill name "Karel Novák"
+    And I fill email "zachranNas+brnopejsekAKocicka.cz"
+    And I fill registration password "12345678"
+    And I fill confirm password "12345678"
+    And I click register button
+    Then I should see "email" validation text "Invalid email"
+
