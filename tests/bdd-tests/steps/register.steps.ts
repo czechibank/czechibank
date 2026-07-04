@@ -30,7 +30,7 @@ When("I fill name {string}", async ({ page }, name: string) => {
 });
 
 When("I fill email {string}", async ({ page }, email: string) => {
-  await page.getByLabel("Email").fill(email);
+  await page.getByRole("textbox", { name: "Email" }).fill(email);
 });
 
 When("I fill registration password {string}", async ({ page }, registrationPassword: string) => {
