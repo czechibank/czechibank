@@ -16,7 +16,7 @@ Given("I am logged in as {string} with password {string}", async ({ page }, emai
 });
 
 When("I fill username {string}", async ({ page }, username: string) => {
-  await page.getByLabel("Email").fill(username);
+  await page.getByRole("textbox", { name: "Email" }).fill(username);
 });
 
 When("I fill password {string}", async ({ page }, password: string) => {

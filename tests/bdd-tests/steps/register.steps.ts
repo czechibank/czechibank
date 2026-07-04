@@ -22,7 +22,7 @@ When("I fill name with generated value", async ({ page }) => {
 });
 
 When("I fill email with generated value", async ({ page }) => {
-  await page.getByLabel("Email").fill(generatedEmail);
+  await page.getByRole("textbox", { name: "Email" }).fill(generatedEmail);
 });
 
 When("I fill name {string}", async ({ page }, name: string) => {
