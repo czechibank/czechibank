@@ -44,3 +44,16 @@ export async function getAllUsersWithBankAccounts(): Promise<UserWithBankAccount
     },
   });
 }
+
+/**
+ * Deletes a user together with their bank accounts. Sessions, accounts and
+ * API keys cascade via the schema. Used as compensating cleanup when a later
+ * registration step fails — better-auth offers no transaction spanning user
+ * creation and API key issuance.
+ */
+export async function deleteUserWithBankAccounts(userId: string): Promise<void> {
+  await prisma.$transaction([
+    prisma.bankAccount.deleteMany({ where: { userId } }),
+    prisma.user.delete({ where: { id: userId } }),
+  ]);
+}

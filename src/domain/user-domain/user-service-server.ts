@@ -28,6 +28,11 @@ const userServiceServer = {
     });
   },
 
+  /** Compensating cleanup for a failed registration (see user-repository). */
+  async deleteUserWithBankAccounts(userId: string): Promise<void> {
+    await userRepository.deleteUserWithBankAccounts(userId);
+  },
+
   // --- Result-based method ---
 
   getAllUsersWithBankAccountsResult(): ResultAsync<UserWithBankAccounts[], AppError> {

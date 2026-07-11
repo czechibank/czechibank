@@ -142,7 +142,7 @@ npm run test:api
 - **Fix:** In `getAmount`, treat empty/whitespace-only strings as `undefined` before `Number()`.
 - **Verify:** Unit test: `requestBody.amount = ""` → rule does not match.
 
-### 2.8 Make user creation + API key issuance atomic — [CR]
+### ✅ 2.8 Make user creation + API key issuance atomic — [CR]
 
 - **File:** `src/app/api/v1/handlers/user/create.handler.ts` (and the services it calls)
 - **Problem:** If `createApiKey` fails after `createUser` succeeds, the user exists without an API
