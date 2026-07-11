@@ -1,4 +1,5 @@
 import { parseJsonBody } from "@/app/api/v1/handlers/shared/parse-json-body";
+import { parsePagination } from "@/app/api/v1/handlers/shared/parse-pagination";
 import { parsePathParams } from "@/app/api/v1/handlers/shared/parse-path-params";
 import { requireAdmin } from "@/app/api/v1/handlers/shared/require-admin";
 import { ApiErrorCode } from "@/lib/response";
@@ -47,5 +48,40 @@ describe("parsePathParams", () => {
     const result = await parsePathParams(Promise.resolve({ id: "" }), schema);
     expect(result.isErr()).toBe(true);
     expect(result._unsafeUnwrapErr().code).toBe(ApiErrorCode.VALIDATION_ERROR);
+  });
+});
+
+describe("parsePagination", () => {
+  const params = (qs: string) => new URLSearchParams(qs);
+
+  it("returns defaults when params are missing", () => {
+    expect(parsePagination(params(""))).toEqual({ page: 1, limit: 50 });
+  });
+
+  it("parses valid values", () => {
+    expect(parsePagination(params("page=3&limit=20"))).toEqual({ page: 3, limit: 20 });
+  });
+
+  it.each(["abc", "1abc", "", " ", "1.5", "-5", "1e3"])("falls back to defaults for malformed value %j", (bad) => {
+    expect(parsePagination(params(`page=${encodeURIComponent(bad)}&limit=${encodeURIComponent(bad)}`))).toEqual({
+      page: 1,
+      limit: 50,
+    });
+  });
+
+  it("never produces NaN (the Math.max(1, parseInt('abc')) trap)", () => {
+    const { page, limit } = parsePagination(params("page=abc&limit=xyz"));
+    expect(Number.isNaN(page)).toBe(false);
+    expect(Number.isNaN(limit)).toBe(false);
+  });
+
+  it("clamps out-of-range values to bounds", () => {
+    expect(parsePagination(params("page=0&limit=0"))).toEqual({ page: 1, limit: 1 });
+    expect(parsePagination(params("page=1&limit=999"))).toEqual({ page: 1, limit: 100 });
+  });
+
+  it("respects custom defaults and max", () => {
+    expect(parsePagination(params(""), { defaultLimit: 10, maxLimit: 25 })).toEqual({ page: 1, limit: 10 });
+    expect(parsePagination(params("limit=30"), { maxLimit: 25 })).toEqual({ page: 1, limit: 25 });
   });
 });

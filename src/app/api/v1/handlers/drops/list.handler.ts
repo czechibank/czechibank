@@ -1,5 +1,6 @@
 import { authenticateRequest } from "@/app/api/v1/auth";
 import { isAdmin } from "@/app/api/v1/handlers/shared/is-admin";
+import { parsePagination } from "@/app/api/v1/handlers/shared/parse-pagination";
 import dropsService from "@/domain/drops-domain/drops-service";
 
 /**
@@ -9,8 +10,7 @@ import dropsService from "@/domain/drops-domain/drops-service";
  */
 export function handleListDropMissions(request: Request) {
   const { searchParams } = new URL(request.url);
-  const page = Math.max(1, parseInt(searchParams.get("page") || "1", 10));
-  const limit = Math.min(100, Math.max(1, parseInt(searchParams.get("limit") || "50", 10)));
+  const { page, limit } = parsePagination(searchParams);
 
   return authenticateRequest(request)
     .andThen((user) => {

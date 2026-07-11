@@ -68,7 +68,7 @@ npm run test:api
 
 ## Phase 2 — Correctness
 
-### 2.1 Fix NaN pagination parsing — [CR] + [CC]
+### ✅ 2.1 Fix NaN pagination parsing — [CR] + [CC] — only drops needed the fix; bank-account/transactions already validate in their services (422)
 
 - **Files:** `src/app/api/v1/handlers/drops/list.handler.ts`,
   `src/app/api/v1/handlers/bank-account/get-all.handler.ts` (same bug, unclamped),
