@@ -68,6 +68,39 @@ describe("withApiHandler", () => {
     expect(arg.durationMs).toBeGreaterThanOrEqual(0);
   });
 
+  it("returns the response even when onComplete throws", async () => {
+    const consoleError = vi.spyOn(console, "error").mockImplementation(() => {});
+    const route = withApiHandler(() => okAsync({ ok: true }), {
+      successMessage: "Done",
+      onComplete: () => {
+        throw new Error("hook exploded");
+      },
+    });
+
+    const response = await route(new Request("https://x.test/api"), emptyContext);
+
+    expect(response.status).toBe(200);
+    expect((await response.json()).success).toBe(true);
+    expect(consoleError).toHaveBeenCalled();
+    consoleError.mockRestore();
+  });
+
+  it("returns the response even when an async onComplete rejects", async () => {
+    const consoleError = vi.spyOn(console, "error").mockImplementation(() => {});
+    const route = withApiHandler(() => okAsync({ ok: true }), {
+      successMessage: "Done",
+      onComplete: async () => {
+        throw new Error("async hook exploded");
+      },
+    });
+
+    const response = await route(new Request("https://x.test/api"), emptyContext);
+
+    expect(response.status).toBe(200);
+    expect(consoleError).toHaveBeenCalled();
+    consoleError.mockRestore();
+  });
+
   it("merges meta from the meta factory", async () => {
     const route = withApiHandler(() => okAsync({ ok: true }), {
       successMessage: "Done",

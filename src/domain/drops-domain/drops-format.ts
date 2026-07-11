@@ -4,7 +4,7 @@ import type { DropRewardType } from "@/domain/drops-domain/drops-types";
 export function rewardTypeLabel(type: DropRewardType | string): string {
   switch (type) {
     case "SUPER_TOKENS":
-      return "Tokens";
+      return "Super Tokens";
     case "BADGE":
       return "Badge";
     case "LOTTERY_ENTRY":
@@ -16,4 +16,21 @@ export function rewardTypeLabel(type: DropRewardType | string): string {
     default:
       return type;
   }
+}
+
+/** Shared completed-at formatting for header chips and profile cards. */
+export function formatCompletedAt(iso: string): string {
+  return new Date(iso).toLocaleString();
+}
+
+/**
+ * One toast line per completed drop, shared by the transfer and
+ * create-account dialogs so reward labels stay consistent.
+ */
+export function formatDropToastLine(drop: { name: string; rewardType: string; rewardAmount?: number | null }): string {
+  const reward =
+    drop.rewardAmount != null
+      ? `+${drop.rewardAmount} ${rewardTypeLabel(drop.rewardType)}`
+      : rewardTypeLabel(drop.rewardType);
+  return `· ${drop.name} (${reward})`;
 }

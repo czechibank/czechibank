@@ -17,6 +17,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useToast } from "@/components/ui/use-toast";
 import { CreateBankAccountSchema } from "@/domain/bankAccount-domain/ba-schema";
 import { createBankAccountWithDropsAction } from "@/domain/bankAccount-domain/bank-account-action";
+import { formatDropToastLine } from "@/domain/drops-domain/drops-format";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Plus } from "lucide-react";
 import { useRouter } from "next/navigation";
@@ -63,11 +64,7 @@ export function CreateDialog({ session, onCreated }: CreateBankAccountDialogProp
 
       if (response.success) {
         const dropLines =
-          "drops" in response && response.drops.length > 0
-            ? response.drops
-                .map((d) => `· ${d.name}${d.rewardAmount != null ? ` (+${d.rewardAmount} Super Tokens)` : ""}`)
-                .join("\n")
-            : null;
+          "drops" in response && response.drops.length > 0 ? response.drops.map(formatDropToastLine).join("\n") : null;
         toast({
           title: "Bank Account Created",
           description: (

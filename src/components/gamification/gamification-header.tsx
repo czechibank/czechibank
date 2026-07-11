@@ -1,17 +1,26 @@
-import { rewardTypeLabel } from "@/domain/drops-domain/drops-format";
-import dropsService from "@/domain/drops-domain/drops-service";
+import { formatCompletedAt, rewardTypeLabel } from "@/domain/drops-domain/drops-format";
+import dropsService, { type GamificationCompletion } from "@/domain/drops-domain/drops-service";
 import userService from "@/domain/user-domain/user-service";
 import { Award, Sparkles } from "lucide-react";
 import { headers } from "next/headers";
 import Link from "next/link";
 
 export async function GamificationHeader() {
-  const session = await userService.server.getSession(await headers());
-  if (!session?.user?.id) {
+  // This renders in the app shell: a gamification hiccup must never take the
+  // whole page down, so fail soft to "no header" instead of throwing.
+  let superTokens: number;
+  let displayTitle: string | null;
+  let completed: GamificationCompletion[];
+  try {
+    const session = await userService.server.getSession(await headers());
+    if (!session?.user?.id) {
+      return null;
+    }
+    ({ superTokens, displayTitle, completed } = await dropsService.getGamificationSummary(session.user.id));
+  } catch (e) {
+    console.error("[gamification] header failed to load", e);
     return null;
   }
-
-  const { superTokens, displayTitle, completed } = await dropsService.getGamificationSummary(session.user.id);
 
   return (
     <div className="mb-3 flex flex-col gap-2 rounded-lg border border-amber-500/30 bg-gradient-to-r from-amber-500/10 via-amber-400/5 to-transparent px-3 py-2 text-sm dark:border-amber-400/25">
@@ -40,7 +49,7 @@ export async function GamificationHeader() {
             <span
               key={`${c.slug}-${c.completedAt}`}
               className="inline-flex items-center gap-1 rounded-full border border-amber-600/40 bg-amber-500/15 px-2 py-0.5 text-xs text-amber-950 dark:border-amber-400/40 dark:bg-amber-400/10 dark:text-amber-50"
-              title={`${c.name} · ${new Date(c.completedAt).toLocaleString()}`}
+              title={`${c.name} · ${formatCompletedAt(c.completedAt)}`}
             >
               <Award className="h-3 w-3 shrink-0 opacity-80" aria-hidden />
               <span className="max-w-[140px] truncate">{c.name}</span>

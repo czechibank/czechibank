@@ -1,7 +1,7 @@
 import { DevMissionToastPreview } from "@/components/gamification/dev-mission-toast-preview";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
-import { rewardTypeLabel } from "@/domain/drops-domain/drops-format";
+import { formatCompletedAt, rewardTypeLabel } from "@/domain/drops-domain/drops-format";
 import type { GamificationCompletion } from "@/domain/drops-domain/drops-service";
 import { Award, Sparkles } from "lucide-react";
 
@@ -52,7 +52,7 @@ export function ProfileGamificationCard({ gamification }: ProfileGamificationCar
                   <div className="min-w-0">
                     <p className="font-semibold leading-tight text-amber-950 dark:text-amber-50">{c.name}</p>
                     <p className="text-xs text-muted-foreground">{rewardTypeLabel(c.rewardType)}</p>
-                    <p className="text-xs text-muted-foreground">{new Date(c.completedAt).toLocaleString()}</p>
+                    <p className="text-xs text-muted-foreground">{formatCompletedAt(c.completedAt)}</p>
                   </div>
                 </li>
               ))}

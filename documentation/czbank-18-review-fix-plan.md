@@ -157,7 +157,7 @@ npm run test:api
 
 ## Phase 3 — Robustness & UX
 
-### 3.1 Make `GamificationHeader` fail soft — [CR]
+### ✅ 3.1 Make `GamificationHeader` fail soft — [CR]
 
 - **File:** `src/components/gamification/gamification-header.tsx` (rendered from `src/app/layout.tsx`)
 - **Problem:** It's a server component in the app shell; if `getSession` or
@@ -166,7 +166,7 @@ npm run test:api
   wrap the render site in an error boundary / `<Suspense>`.
 - **Verify:** Temporarily throw inside `getGamificationSummary` in dev — app shell still renders.
 
-### 3.2 Self-host celebration GIFs — [CR]
+### ✅ 3.2 Self-host celebration GIFs — [CR]
 
 - **Files:** `src/components/gamification/mission-drop-celebration.tsx`,
   `src/components/transactions/transfer.tsx`
@@ -175,7 +175,7 @@ npm run test:api
   them with local paths. Check `dev-mission-toast-preview.tsx` for the same URLs.
 - **Verify:** Celebration toast shows the local asset with network devtools showing no giphy.com calls.
 
-### 3.3 Consistent reward labels in toasts — [CR]
+### ✅ 3.3 Consistent reward labels in toasts — [CR]
 
 - **Files:** `src/components/gamification/mission-drop-celebration.tsx` (and toast callers)
 - **Problem:** CodeRabbit flagged inconsistent reward-type labeling in toast notifications.
@@ -195,7 +195,7 @@ npm run test:api
   published missions + user's completed missions), keeping uncompleted SECRET ones hidden.
 - **Verify:** API test: complete a SECRET mission → it appears in `/drops/me` with `completed: true`.
 
-### 3.5 `onComplete` hook — document, don't rewrite — [CR, partial pushback]
+### ✅ 3.5 `onComplete` hook — document, don't rewrite — [CR, partial pushback]
 
 - **File:** `src/lib/api/with-api-handler.ts`
 - **CodeRabbit suggested** running `onComplete` fire-and-forget so it can't add latency or fail the

@@ -36,9 +36,25 @@ type WithApiHandlerConfig = {
    * Optional post-response hook (timing, audit). Runs after the Response is
    * built. This is intentionally NOT a replacement for middleware — existing
    * middleware behavior stays untouched.
+   *
+   * The hook is awaited, so it adds to response latency: keep it fast (log,
+   * enqueue), never do slow I/O here. A throwing hook is logged and swallowed
+   * so it can't turn a successful response into a 500.
    */
   onComplete?: (ctx: OnCompleteContext) => void | Promise<void>;
 };
+
+async function runOnComplete(
+  onComplete: ((ctx: OnCompleteContext) => void | Promise<void>) | undefined,
+  ctx: OnCompleteContext,
+): Promise<void> {
+  if (!onComplete) return;
+  try {
+    await onComplete(ctx);
+  } catch (e) {
+    console.error("[with-api-handler] onComplete hook failed", e);
+  }
+}
 
 /**
  * Wraps a ResultAsync handler into a Next.js route export.
@@ -66,9 +82,7 @@ export function withApiHandler<T, TParams extends Record<string, string> = Recor
       config.meta?.(request),
     );
 
-    if (config.onComplete) {
-      await config.onComplete({ request, status: response.status, durationMs: Date.now() - startedAt });
-    }
+    await runOnComplete(config.onComplete, { request, status: response.status, durationMs: Date.now() - startedAt });
 
     return response;
   };
@@ -92,9 +106,7 @@ export function withPaginatedApiHandler<T, D, TParams extends Record<string, str
     const startedAt = Date.now();
     const response = await toPaginatedApiResponse(handler(request, context), config.successMessage, config.transform);
 
-    if (config.onComplete) {
-      await config.onComplete({ request, status: response.status, durationMs: Date.now() - startedAt });
-    }
+    await runOnComplete(config.onComplete, { request, status: response.status, durationMs: Date.now() - startedAt });
 
     return response;
   };

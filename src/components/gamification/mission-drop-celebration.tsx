@@ -5,18 +5,21 @@ import { useMemo } from "react";
 /**
  * Celebration GIFs for mission / drop rewards (plain `<img>` — no `next/image`).
  *
- * 0. [Awesome Well Done — VeeFriends](https://giphy.com/gifs/VeeFriends-great-veefriends-job-S6wdJ27DLVfh9mA9dE)
- * 1. [Well done / good job (red panda)](https://giphy.com/gifs/good-job-well-done-nice-utAO8tteQGG2zGh9ic)
- * 2. [Reaction](https://giphy.com/gifs/reaction-rT6bAA9A7A1Ne)
- * 3. [Thumbs up / great job](https://giphy.com/gifs/thumbs-up-xHMIDAy1qkzNS)
- * 4. [Spinning thumbs up](https://giphy.com/gifs/3XFwB5TrJ5L6rXqXEj)
+ * Self-hosted in `public/gamification/` so no user data leaks to Giphy and the
+ * toasts keep working if the upstream URLs die. Originals:
+ *
+ * 1. [Awesome Well Done — VeeFriends](https://giphy.com/gifs/VeeFriends-great-veefriends-job-S6wdJ27DLVfh9mA9dE)
+ * 2. [Well done / good job (red panda)](https://giphy.com/gifs/good-job-well-done-nice-utAO8tteQGG2zGh9ic)
+ * 3. [Reaction](https://giphy.com/gifs/reaction-rT6bAA9A7A1Ne)
+ * 4. [Thumbs up / great job](https://giphy.com/gifs/thumbs-up-xHMIDAy1qkzNS)
+ * 5. [Spinning thumbs up](https://giphy.com/gifs/3XFwB5TrJ5L6rXqXEj)
  */
 export const MISSION_DROP_CELEBRATION_GIFS = [
-  "https://media.giphy.com/media/S6wdJ27DLVfh9mA9dE/giphy.gif",
-  "https://media.giphy.com/media/utAO8tteQGG2zGh9ic/giphy.gif",
-  "https://media.giphy.com/media/rT6bAA9A7A1Ne/giphy.gif",
-  "https://media.giphy.com/media/xHMIDAy1qkzNS/giphy.gif",
-  "https://media.giphy.com/media/3XFwB5TrJ5L6rXqXEj/giphy.gif",
+  "/gamification/celebration-1.gif",
+  "/gamification/celebration-2.gif",
+  "/gamification/celebration-3.gif",
+  "/gamification/celebration-4.gif",
+  "/gamification/celebration-5.gif",
 ] as const;
 
 /** @deprecated Use `<MissionDropCelebrationImg />` (random). */
