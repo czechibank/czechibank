@@ -81,7 +81,7 @@ npm run test:api
 - **Verify:** Unit tests in `tests/unit/handler-shared-helpers.test.ts` for `"abc"`, `"1abc"`, `"-5"`,
   `"0"`, `""`, missing param.
 
-### 2.2 Reject (or implement) unsupported reward types — [CR]
+### ✅ 2.2 Reject (or implement) unsupported reward types — [CR]
 
 - **Files:** `src/domain/drops-domain/drops-schema.ts`, `src/domain/drops-domain/drops-repository.ts`
   (`grantMissionRewardsTx`)
@@ -93,7 +93,7 @@ npm run test:api
   with the team.
 - **Verify:** API test: `POST /drops` with `rewardType: "BADGE"` returns 400.
 
-### 2.3 Validate `rewardPayload` against `rewardType` — [CR]
+### ✅ 2.3 Validate `rewardPayload` against `rewardType` — [CR]
 
 - **File:** `src/domain/drops-domain/drops-schema.ts`
 - **Problem:** `rewardPayload` is an untyped `z.record(z.unknown())`. A `SUPER_TOKENS` mission with a
@@ -105,7 +105,7 @@ npm run test:api
 - **Verify:** Unit tests for valid/invalid payload combos; `scripts/seed-missions.ts` still seeds
   cleanly (`npm run db:seed:missions`).
 
-### 2.4 Require at least one comparator in the `amount` rule — [CR]
+### ✅ 2.4 Require at least one comparator in the `amount` rule — [CR]
 
 - **File:** `src/domain/drops-domain/drops-schema.ts` (`ruleSchema`, amount branch)
 - **Problem:** `{ kind: "amount" }` with neither `equals` nor `gte` matches **any** request that has
@@ -123,7 +123,7 @@ npm run test:api
   `i` flag alone. Only lowercase for `eq`/`in`.
 - **Verify:** Unit test: pattern `^\D+$`, `caseSensitive: false`, name `"Savings"` → must match.
 
-### 2.6 Validate regex patterns at mission creation — [CR]
+### ✅ 2.6 Validate regex patterns at mission creation — [CR]
 
 - **Files:** `src/domain/drops-domain/drops-schema.ts`, optionally `drops-rules.ts`
 - **Problem:** Patterns are compiled at evaluation time on every matching request; an invalid or
