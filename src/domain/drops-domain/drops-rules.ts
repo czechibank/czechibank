@@ -7,6 +7,8 @@ function getAmount(ctx: EvalContext): number | undefined {
   const v = ctx.requestBody.amount;
   if (typeof v === "number" && !Number.isNaN(v)) return v;
   if (typeof v === "string") {
+    // Number("") and Number("   ") are 0, not NaN — treat blank as absent.
+    if (v.trim() === "") return undefined;
     const n = Number(v);
     return Number.isNaN(n) ? undefined : n;
   }
@@ -22,12 +24,15 @@ function getBankAccountName(ctx: EvalContext): string | undefined {
 }
 
 function matchName(name: string, op: "eq" | "in" | "regex", values: string[], caseSensitive?: boolean): boolean {
-  const n = caseSensitive ? name : name.toLowerCase();
-  const vals = caseSensitive ? values : values.map((v) => v.toLowerCase());
-  if (op === "eq") return vals.some((v) => n === v);
-  if (op === "in") return vals.some((v) => n === v);
+  if (op === "eq" || op === "in") {
+    const n = caseSensitive ? name : name.toLowerCase();
+    const vals = caseSensitive ? values : values.map((v) => v.toLowerCase());
+    return vals.some((v) => n === v);
+  }
+  // Regex: never lowercase the pattern — that corrupts escape sequences
+  // (\D would become \d). The `i` flag alone handles case-insensitivity.
   try {
-    return vals.some((pattern) => {
+    return values.some((pattern) => {
       const re = new RegExp(pattern, caseSensitive ? "" : "i");
       return re.test(name);
     });

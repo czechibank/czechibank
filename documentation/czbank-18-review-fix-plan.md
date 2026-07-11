@@ -113,7 +113,7 @@ npm run test:api
 - **Fix:** `.refine((r) => r.equals !== undefined || r.gte !== undefined, "amount rule needs equals or gte")`.
 - **Verify:** Unit test: bare amount rule rejected by `DropDefinitionSchema`.
 
-### 2.5 Fix case-insensitive regex matching — [CC]
+### ✅ 2.5 Fix case-insensitive regex matching — [CC]
 
 - **File:** `src/domain/drops-domain/drops-rules.ts` (`matchName`)
 - **Problem:** For the `regex` op with `caseSensitive: false`, the code lowercases the _pattern
@@ -134,7 +134,7 @@ npm run test:api
   existing runtime try/catch as a backstop.
 - **Verify:** Unit test: creating a mission with pattern `"("` fails validation.
 
-### 2.7 Reject empty-string amounts in rule evaluation — [CC]
+### ✅ 2.7 Reject empty-string amounts in rule evaluation — [CC]
 
 - **File:** `src/domain/drops-domain/drops-rules.ts` (`getAmount`)
 - **Problem:** `Number("")` is `0`, not `NaN`, so an empty-string `amount` in a request body
