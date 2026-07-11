@@ -1,4 +1,3 @@
-"use server";
 import prisma from "@/lib/db";
 import { BankAccount, Currency, User } from "@prisma/client";
 

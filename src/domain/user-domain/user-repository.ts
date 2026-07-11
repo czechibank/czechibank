@@ -1,4 +1,3 @@
-"use server";
 import { UserWithBankAccounts } from "@/components/transactions/transfer";
 import prisma from "@/lib/db";
 

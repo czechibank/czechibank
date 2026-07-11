@@ -1,5 +1,3 @@
-"use server";
-
 import { FeatureType } from "@/domain/features-domain/features.schema";
 import prisma from "@/lib/db";
 

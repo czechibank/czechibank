@@ -1,4 +1,3 @@
-"use server";
 import prisma from "@/lib/db";
 import { Currency } from "@prisma/client";
 import { revalidatePath } from "next/cache";
