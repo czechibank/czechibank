@@ -187,14 +187,25 @@ const dropsService = {
       Promise.all([
         repository.findPublishedMissions(),
         repository.findAllProgressByUser(userId),
-        repository.findAllCompletionsByUser(userId),
+        repository.findCompletionsByUser(userId),
       ]),
       (e) => fromUnknown(e, "Failed to retrieve drop status"),
     ).map(([missions, progressList, completionList]) => {
       const progressByMission = new Map(progressList.map((p) => [p.missionId, p]));
       const completionByMission = new Map(completionList.map((c) => [c.missionId, c]));
 
-      const rows = missions.map((mission) => {
+      // Published missions first, then SECRET missions the user has already
+      // completed: a completed secret mission should show in /drops/me (it
+      // already shows in the gamification summary), while uncompleted secret
+      // missions stay hidden.
+      const missionById = new Map(missions.map((m) => [m.id, m]));
+      for (const completion of completionList) {
+        if (completion.mission && !missionById.has(completion.missionId)) {
+          missionById.set(completion.missionId, completion.mission);
+        }
+      }
+
+      const rows = Array.from(missionById.values()).map((mission) => {
         const progress = progressByMission.get(mission.id) ?? null;
         const completion = completionByMission.get(mission.id);
         return {

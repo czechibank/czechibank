@@ -184,7 +184,7 @@ npm run test:api
   shared helper (CodeRabbit nitpick).
 - **Verify:** Visual check of toast + header + profile card labels.
 
-### 3.4 Decide: show SECRET mission completions in `/drops/me`? — [CC]
+### ✅ 3.4 Decide: show SECRET mission completions in `/drops/me`? — [CC]
 
 - **Files:** `src/domain/drops-domain/drops-service.ts` (`getMyDropStatus`),
   `src/domain/drops-domain/drops-repository.ts`
@@ -211,7 +211,7 @@ npm run test:api
 
 ## Phase 4 — Schema & performance
 
-### 4.1 Add user-leading indexes — [CR]
+### ✅ 4.1 Add user-leading indexes — [CR]
 
 - **Files:** `prisma/schema.prisma`, new migration
 - **Problem:** `DropMissionProgress` / `DropMissionCompletion` only have

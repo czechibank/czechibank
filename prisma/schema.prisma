@@ -183,6 +183,7 @@ model DropMissionProgress {
   updatedAt DateTime    @updatedAt
 
   @@unique([missionId, userId])
+  @@index([userId])
   @@map("drop_mission_progress")
 }
 
@@ -196,6 +197,7 @@ model DropMissionCompletion {
   metadata    Json?
 
   @@unique([missionId, userId])
+  @@index([userId])
   @@map("drop_mission_completion")
 }
 
