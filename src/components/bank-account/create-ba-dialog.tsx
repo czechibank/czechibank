@@ -57,7 +57,6 @@ export function CreateDialog({ session, onCreated }: CreateBankAccountDialogProp
     setIsLoading(true);
     try {
       const response = await createBankAccountWithDropsAction({
-        userId: session.userId,
         currency: data.currency,
         name: data.name,
       });

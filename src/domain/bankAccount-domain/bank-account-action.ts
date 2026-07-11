@@ -1,8 +1,10 @@
 "use server";
 
 import dropsService, { type DropCompletionNotice } from "@/domain/drops-domain/drops-service";
-import type { ErrorResponse } from "@/lib/response";
+import userService from "@/domain/user-domain/user-service";
+import { ApiErrorCode, errorResponse, type ErrorResponse } from "@/lib/response";
 import type { BankAccount, Currency } from "@prisma/client";
+import { headers } from "next/headers";
 import bankAccountService from "./ba-service";
 
 type CreateSuccess = Extract<Awaited<ReturnType<typeof bankAccountService.createBankAccount>>, { success: true }>;
@@ -10,11 +12,22 @@ type CreateSuccess = Extract<Awaited<ReturnType<typeof bankAccountService.create
 export type CreateBankAccountWithDropsResult = ErrorResponse | (CreateSuccess & { drops: DropCompletionNotice[] });
 
 export async function createBankAccountWithDropsAction(input: {
-  userId: string;
   currency: Currency;
   name?: string;
 }): Promise<CreateBankAccountWithDropsResult> {
-  const result = await bankAccountService.createBankAccount(input);
+  // Server actions are client-invokable: the acting user must come from the
+  // session, never from the caller's input.
+  const session = await userService.server.getSession(await headers());
+  const userId = session?.user?.id;
+  if (!userId) {
+    return errorResponse("Unauthorized", ApiErrorCode.UNAUTHORIZED);
+  }
+
+  const result = await bankAccountService.createBankAccount({
+    userId,
+    currency: input.currency,
+    name: input.name,
+  });
   if (!result.success) {
     return result;
   }
@@ -23,7 +36,7 @@ export async function createBankAccountWithDropsAction(input: {
   let drops: DropCompletionNotice[] = [];
   try {
     const { completedMissions } = await dropsService.evaluateDropsAfterSuccess({
-      userId: input.userId,
+      userId,
       method: "POST",
       path: "/api/v1/bank-account/create", // must match seed-missions triggerPath
       requestBody: { name: input.name, currency: input.currency },
@@ -31,7 +44,7 @@ export async function createBankAccountWithDropsAction(input: {
     });
     drops = completedMissions;
   } catch (e) {
-    console.error("[drops] post-action eval failed", { userId: input.userId, where: "bank-account/create" }, e);
+    console.error("[drops] post-action eval failed", { userId, where: "bank-account/create" }, e);
   }
 
   return { ...result, drops };

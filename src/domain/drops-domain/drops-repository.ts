@@ -1,5 +1,3 @@
-"use server";
-
 import type { DropVisibility } from "@/domain/drops-domain/drops-types";
 import prisma from "@/lib/db";
 import type { Prisma } from "@prisma/client";

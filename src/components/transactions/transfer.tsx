@@ -85,7 +85,6 @@ export function TransactionTransfer({
         currency: "CZECHITOKEN",
         fromBankNumber: bankAccountNumber,
         toBankNumber: data.toBankNumber,
-        userId: userId,
         applicationType: "web",
       });
 

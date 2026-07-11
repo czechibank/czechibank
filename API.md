@@ -115,6 +115,11 @@ curl http://localhost:3000/api/v1/bank-account/get-all \
   -H "X-API-Key: your_api_key"
 ```
 
+> Note: this endpoint intentionally returns **all users'** bank accounts to any
+> authenticated user. CzechiBank is a training application and discovering other
+> accounts (e.g. to send them money) is part of the learning experience. Do not
+> copy this pattern into a real banking API.
+
 ### 3. Transaction Operations
 
 1. Create a new transaction:

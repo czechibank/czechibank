@@ -1,8 +1,10 @@
 "use server";
 
 import dropsService, { type DropCompletionNotice } from "@/domain/drops-domain/drops-service";
-import type { ErrorResponse } from "@/lib/response";
+import userService from "@/domain/user-domain/user-service";
+import { ApiErrorCode, errorResponse, type ErrorResponse } from "@/lib/response";
 import { Currency } from "@prisma/client";
+import { headers } from "next/headers";
 import transactionService from "./transaction-service";
 
 type SendSuccess = Extract<Awaited<ReturnType<typeof transactionService.sendMoneyToBankNumber>>, { success: true }>;
@@ -14,16 +16,23 @@ export async function sendMoneyToBankNumberAction({
   currency,
   fromBankNumber,
   toBankNumber,
-  userId,
   applicationType,
 }: {
   amount: number;
   currency: Currency;
   fromBankNumber: string;
   toBankNumber: string;
-  userId: string;
   applicationType: "api" | "web";
 }): Promise<SendMoneyWithDropsResult> {
+  // Server actions are client-invokable: the acting user must come from the
+  // session, never from the caller's input. Ownership of `fromBankNumber` is
+  // enforced against this userId inside the transaction service.
+  const session = await userService.server.getSession(await headers());
+  const userId = session?.user?.id;
+  if (!userId) {
+    return errorResponse("Unauthorized", ApiErrorCode.UNAUTHORIZED);
+  }
+
   const result = await transactionService.sendMoneyToBankNumber({
     amount,
     currency,
