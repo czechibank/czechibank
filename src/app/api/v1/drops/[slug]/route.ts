@@ -29,16 +29,36 @@ import { withApiHandler } from "@/lib/api/with-api-handler";
  *   put:
  *     summary: Update a drop mission (admin)
  *     tags: [Drops]
+ *     parameters:
+ *       - in: path
+ *         name: slug
+ *         required: true
+ *         schema:
+ *           type: string
  *     security:
  *       - ApiKeyAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/DropMissionUpdate'
  *     responses:
  *       200:
  *         description: Updated
  *       403:
  *         description: Forbidden
+ *       404:
+ *         description: Not found
  *   delete:
  *     summary: Delete a drop mission (admin)
  *     tags: [Drops]
+ *     parameters:
+ *       - in: path
+ *         name: slug
+ *         required: true
+ *         schema:
+ *           type: string
  *     security:
  *       - ApiKeyAuth: []
  *     responses:
@@ -46,6 +66,8 @@ import { withApiHandler } from "@/lib/api/with-api-handler";
  *         description: Deleted
  *       403:
  *         description: Forbidden
+ *       404:
+ *         description: Not found
  */
 export const GET = withApiHandler(handleGetDropMissionBySlug, {
   successMessage: "Drop mission retrieved",

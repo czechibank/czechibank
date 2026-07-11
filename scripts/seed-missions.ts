@@ -47,7 +47,7 @@ const missions: Prisma.DropMissionCreateInput[] = [
   {
     slug: "happy-hour-222",
     name: "Happy Hour Transfer",
-    description: "Send exactly 222 CZT between 14:00-14:30 CET to enter the daily lottery",
+    description: "Send exactly 222 CZT between 14:00-14:30 (Europe/Prague time) to earn 50 SUPER_TOKENS",
     visibility: "PUBLISHED",
     triggerMethod: "POST",
     triggerPath: "/api/v1/transactions/create",

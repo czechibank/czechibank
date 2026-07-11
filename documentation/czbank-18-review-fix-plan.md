@@ -225,7 +225,7 @@ npm run test:api
 
 ## Phase 5 — API spec, docs & tests
 
-### 5.1 OpenAPI fixes — [CR]
+### ✅ 5.1 OpenAPI fixes — [CR]
 
 - **Files:** `src/lib/swagger.ts`, `src/app/api/v1/drops/[slug]/route.ts`, `src/app/api/v1/drops/route.ts`
 - **Fix:**
@@ -236,14 +236,14 @@ npm run test:api
     `type: object` (mirror `CreateDropMissionSchema`).
 - **Verify:** Load `/api/doc` (Swagger UI) and check the Drops endpoints render correctly.
 
-### 5.2 Docs cleanup — [CR]
+### ✅ 5.2 Docs cleanup — [CR]
 
 - **Files:** `documentation/time-limited-api-challenges.md`, `API.md`, `scripts/seed-missions.ts`
 - **Fix:** Mark unimplemented DSL branches as “future work” or remove them; make seeded mission
   descriptions match their configured rewards and timezones (CodeRabbit found mismatches).
 - **Verify:** Read-through; re-run `npm run db:seed:missions`.
 
-### 5.3 Test coverage gaps — [CR nitpicks + regression tests from this plan]
+### ✅ 5.3 Test coverage gaps — [CR nitpicks + regression tests from this plan]
 
 - **Files:** `tests/unit/handler-shared-helpers.test.ts`, `tests/unit/with-api-handler.test.ts`,
   new `tests/unit/drops-rules.test.ts`

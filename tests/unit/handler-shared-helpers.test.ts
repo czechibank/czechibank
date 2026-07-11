@@ -34,6 +34,12 @@ describe("requireAdmin", () => {
     expect(result.isErr()).toBe(true);
     expect(result._unsafeUnwrapErr().code).toBe(ApiErrorCode.FORBIDDEN);
   });
+
+  it.each([null, undefined])("returns FORBIDDEN when role is %s", async (role) => {
+    const result = await requireAdmin({ id: "1", role });
+    expect(result.isErr()).toBe(true);
+    expect(result._unsafeUnwrapErr().code).toBe(ApiErrorCode.FORBIDDEN);
+  });
 });
 
 describe("parsePathParams", () => {

@@ -194,6 +194,15 @@ The mission definition should separate three concerns:
 
 This keeps the structure flexible without relying on brittle string parsing.
 
+> **Implementation status (v1):** the shipped schema (`src/domain/drops-domain/drops-schema.ts`)
+> implements a subset of this design: schedules `always`, `calendar_date`, `time_of_day`,
+> `weekday`; progress modes `instant`, `aggregate_count`; rules `all`, `any`, `amount`
+> (`equals`/`gte`), `bank_account_name`; reward types `SUPER_TOKENS`, `DISPLAY_TITLE`.
+> Everything else below — `cron`, `compound`, `rolling_window`, `sequence`,
+> `payload_jsonpath`, `first_global`, `body_contains`, `string_length`, `lte`, and the
+> badge / vault-bonus / lottery rewards — is **future work** and is rejected by validation
+> until implemented.
+
 ```typescript
 // Conceptual TypeScript shape. Validate this with Zod in the real implementation.
 

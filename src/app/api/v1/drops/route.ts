@@ -41,7 +41,7 @@ import { createPaginationMeta } from "@/lib/response";
  *       content:
  *         application/json:
  *           schema:
- *             type: object
+ *             $ref: '#/components/schemas/DropMissionCreate'
  *     responses:
  *       201:
  *         description: Mission created
