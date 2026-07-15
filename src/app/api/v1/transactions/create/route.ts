@@ -3,6 +3,7 @@ import bankAccountService from "@/domain/bankAccount-domain/ba-service";
 import transactionService from "@/domain/transaction-domain/transaction-service";
 import { ApiTransactionCreateSchema } from "@/domain/transaction-domain/transation-schema";
 import { badRequest } from "@/lib/errors";
+import { getPostHogClient } from "@/lib/posthog-server";
 import { toApiResponse, validateWithResult } from "@/lib/result-helpers";
 import { errAsync, ResultAsync } from "neverthrow";
 /**
@@ -73,14 +74,25 @@ export async function POST(request: Request) {
           if (accounts.items.length === 0) {
             return errAsync(badRequest("No bank account found for user"));
           }
-          return transactionService.sendMoneyToBankNumberResult({
-            amount: validated.amount,
-            toBankNumber: validated.toBankNumber,
-            fromBankNumber: validated.fromBankNumber,
-            userId: user.id,
-            currency: "CZECHITOKEN",
-            applicationType: "api",
-          });
+          return transactionService
+            .sendMoneyToBankNumberResult({
+              amount: validated.amount,
+              toBankNumber: validated.toBankNumber,
+              fromBankNumber: validated.fromBankNumber,
+              userId: user.id,
+              currency: "CZECHITOKEN",
+              applicationType: "api",
+            })
+            .map((transaction) => {
+              const posthog = getPostHogClient();
+              posthog.capture({
+                distinctId: user.id,
+                event: "transaction_created_via_api",
+                properties: { amount: validated.amount, currency: "CZECHITOKEN" },
+              });
+              posthog.flush();
+              return transaction;
+            });
         }),
       ),
   );

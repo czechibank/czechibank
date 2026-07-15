@@ -15,6 +15,7 @@ import {
 import { zodResolver } from "@hookform/resolvers/zod";
 import { ErrorContext } from "better-auth/react";
 import Link from "next/link";
+import posthog from "posthog-js";
 import { useForm } from "react-hook-form";
 
 /**
@@ -37,6 +38,7 @@ export default function SignInPage() {
   const action: () => void = form.handleSubmit(async (data: UserBaseSchemaType): Promise<void> => {
     await userServiceClient.signIn({ email: data.email, password: data.password } satisfies UserBaseSchemaType, {
       onSuccess: () => {
+        posthog.capture("user_signed_in");
         toast({
           title: "Success",
           description: "You are signed in",

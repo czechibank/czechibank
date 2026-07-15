@@ -16,6 +16,7 @@ import { useToast } from "@/components/ui/use-toast";
 import { RenameBankAccountSchema } from "@/domain/bankAccount-domain/ba-schema";
 import bankAccountService from "@/domain/bankAccount-domain/ba-service";
 import { Pencil } from "lucide-react";
+import posthog from "posthog-js";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
@@ -51,6 +52,7 @@ export function RenameDialog({ bankAccountId, currentName, session, onRenamed }:
       const response = await bankAccountService.renameBankAccount(bankAccountId, session.userId, data.name);
 
       if (response.success && !("error" in response)) {
+        posthog.capture("bank_account_renamed");
         toast({
           title: "Bank Account Renamed",
           description: `Account renamed to "${data.name}" successfully!`,

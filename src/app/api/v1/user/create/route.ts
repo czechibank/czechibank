@@ -4,6 +4,7 @@ import apikeyService from "@/domain/apikey/apikey-service";
 import { UserSchema } from "@/domain/user-domain/user-schema";
 import userService from "@/domain/user-domain/user-service";
 import { badRequest, fromUnknown } from "@/lib/errors";
+import { getPostHogClient } from "@/lib/posthog-server";
 import { toApiResponse, validateWithResult } from "@/lib/result-helpers";
 import { ResultAsync } from "neverthrow";
 
@@ -76,7 +77,15 @@ export async function POST(request: Request) {
     .andThen((createdUser) =>
       ResultAsync.fromPromise(apikeyService.server.createApiKey(createdUser.user.id), (e) =>
         fromUnknown(e, "Failed to create API key"),
-      ).map((apiKey) => ({ ...createdUser.user, apiKey: apiKey.key })),
+      ).map((apiKey) => {
+        const posthog = getPostHogClient();
+        posthog.capture({
+          distinctId: createdUser.user.id,
+          event: "user_created_via_api",
+        });
+        posthog.flush();
+        return { ...createdUser.user, apiKey: apiKey.key };
+      }),
     );
 
   return toApiResponse(result, "User created successfully", 201);

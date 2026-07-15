@@ -18,6 +18,7 @@ import { CreateBankAccountSchema } from "@/domain/bankAccount-domain/ba-schema";
 import bankAccountService from "@/domain/bankAccount-domain/ba-service";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Plus } from "lucide-react";
+import posthog from "posthog-js";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
@@ -60,6 +61,7 @@ export function CreateDialog({ session, onCreated }: CreateBankAccountDialogProp
       });
 
       if (response.success) {
+        posthog.capture("bank_account_created", { currency: data.currency });
         toast({
           title: "Bank Account Created",
           description: `Account "${data.name}" created successfully!`,

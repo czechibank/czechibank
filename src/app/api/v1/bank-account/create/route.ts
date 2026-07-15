@@ -2,6 +2,7 @@ import { authenticateRequest } from "@/app/api/v1/auth";
 import { BankAccountSchema } from "@/domain/bankAccount-domain/ba-schema";
 import bankAccountService from "@/domain/bankAccount-domain/ba-service";
 import { badRequest } from "@/lib/errors";
+import { getPostHogClient } from "@/lib/posthog-server";
 import { toApiResponse, validateWithResult } from "@/lib/result-helpers";
 import { ResultAsync } from "neverthrow";
 /**
@@ -57,11 +58,22 @@ export async function POST(request: Request) {
       ),
     )
     .andThen(({ user, parsed }) =>
-      bankAccountService.createBankAccountResult({
-        userId: user.id,
-        currency: parsed.currency,
-        name: parsed.name,
-      }),
+      bankAccountService
+        .createBankAccountResult({
+          userId: user.id,
+          currency: parsed.currency,
+          name: parsed.name,
+        })
+        .map((bankAccount) => {
+          const posthog = getPostHogClient();
+          posthog.capture({
+            distinctId: user.id,
+            event: "bank_account_created_via_api",
+            properties: { currency: parsed.currency },
+          });
+          posthog.flush();
+          return bankAccount;
+        }),
     )
     .map((bankAccount) => ({ bankAccount }));
 

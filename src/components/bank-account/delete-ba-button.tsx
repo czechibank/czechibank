@@ -5,6 +5,7 @@ import { useToast } from "@/components/ui/use-toast";
 import bankAccountService from "@/domain/bankAccount-domain/ba-service";
 import { BankAccount } from "@prisma/client";
 import { TrashIcon } from "lucide-react";
+import posthog from "posthog-js";
 import { useState } from "react";
 import CustomSession from "../../../types/session-betterAuth";
 interface DeleteBankAccountButtonProps {
@@ -29,6 +30,7 @@ export function DeleteBankAccountButton({ bankAccount, session, onDeleted }: Del
       const response = await bankAccountService.deleteBankAccount(bankAccount, session.userId);
 
       if (response.success) {
+        posthog.capture("bank_account_deleted");
         toast({
           title: "Bank account deleted",
           description: response.message,
