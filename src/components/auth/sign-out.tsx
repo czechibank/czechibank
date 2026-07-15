@@ -2,6 +2,7 @@
 
 import userServiceClient from "@/domain/user-domain/user-service-client";
 import { broadcastSessionChanged } from "@/lib/useSessionWithRefresh";
+import posthog from "posthog-js";
 import { Button } from "../ui/button";
 
 /** Sign-out button. Notifies other tabs via broadcastSessionChanged, then redirects to /signin. */
@@ -15,6 +16,8 @@ export function SignOut(props: React.ComponentPropsWithRef<typeof Button>) {
       onClick={async () => {
         await userServiceClient.signOut({
           onSuccess: () => {
+            posthog.capture("user_signed_out");
+            posthog.reset();
             broadcastSessionChanged();
             window.location.replace("/signin");
           },
