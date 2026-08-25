@@ -52,4 +52,7 @@ results.xml
 
 # Playwright BDD generated files
 **/.features-gen/**/*.spec.js
-.env.local
+
+# Local MCP artifacts
+/.playwright-mcp/
+

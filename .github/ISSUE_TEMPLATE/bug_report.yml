@@ -1,0 +1,51 @@
+name: Bug report
+description: Something in the app or API behaves differently than expected
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks. Fill in what you can; the more precise the steps, the faster the fix.
+  - type: dropdown
+    id: area
+    attributes:
+      label: Where
+      options:
+        - API
+        - Web app
+        - Both / not sure
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      description: Exact requests or clicks. For the API paste the request (method, path, headers without the key, body).
+      placeholder: |
+        1. POST /api/v1/transactions/create with body {...}
+        2. ...
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual
+      description: Paste the real response or a screenshot, including status code.
+    validations:
+      required: true
+  - type: input
+    id: env
+    attributes:
+      label: Environment
+      description: URL you tested against, browser if web, which user or API key (never paste the key itself).
+  - type: textarea
+    id: extra
+    attributes:
+      label: Anything else
+      description: Logs, timing, whether it happens every time.

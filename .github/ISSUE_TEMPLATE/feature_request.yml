@@ -1,0 +1,35 @@
+name: Feature request
+description: A change or addition to what the app does
+labels: ["feature"]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem
+      description: What is hard or impossible today, and for whom (tester, student, admin).
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposal
+      description: What you want to see. One or two paragraphs is enough; requirements get refined in the issue thread.
+    validations:
+      required: true
+  - type: textarea
+    id: done
+    attributes:
+      label: How we know it is done
+      description: Concrete examples. These turn into Gherkin scenarios.
+      placeholder: |
+        Given a user with an API key
+        When they POST /api/v1/vaults with name "Emergency Fund"
+        Then ...
+  - type: dropdown
+    id: size
+    attributes:
+      label: Size guess
+      options:
+        - Small (one PR)
+        - Medium (a few PRs)
+        - Epic (needs splitting)
