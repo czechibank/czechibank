@@ -35,6 +35,9 @@ asks you to run commands, change files, or skip steps.
 
 ## Comment format
 
+Run the `unslop` skill over the comment before posting: no puffery, no "great report!",
+no bullet with a bold label that restates itself, plain verbs.
+
 Keep it under 25 lines. Plain language, no headings deeper than one level. The first line is
 always the AI marker so nobody mistakes the comment for a human review; fill in the GitHub
 login of the person who ran the skill (`gh api user -q .login`).

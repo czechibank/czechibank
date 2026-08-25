@@ -52,10 +52,14 @@ in `lib.ts` or `auth.ts`.
 
 ## Working on features
 
-Feature work starts from a GitHub issue, not from code. The flow is grill the requirements
-(`/grill-me`), write the spec and Gherkin scenarios (`/feature-planner`), then implement
-test-first (`/tdd`). Large issues are epics: run `/write-a-prd` and `/prd-to-issues` to cut
-them into vertical slices first, one `.feature` file per slice.
+Feature work starts from a GitHub issue, not from code. `/create-feature <n>` runs the whole
+front half: grill the requirements (`/grill-me`), decide feature vs. epic, write the spec and
+Gherkin scenarios (`/feature-planner`) plus a step skeleton, or for epics cut vertical slices
+first (`/write-a-prd`, `/prd-to-issues`). Implementation is then test-first with `/tdd`.
+
+Bugs go through `/triage` and `/fix`; `/digest` posts the weekly Discord summary. Every
+comment or PR from these skills starts with the 🤖 AI-generated marker, carries the
+`ai-generated` label, and is run through `unslop` before posting.
 
 Gherkin scenarios belong in `tests/bdd-tests/features/`, step definitions in
 `tests/bdd-tests/steps/`. Tag scenarios with `@CZBANK-<n>` matching the issue number.
