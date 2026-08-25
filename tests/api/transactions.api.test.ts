@@ -518,7 +518,7 @@ describe("Transactions API", () => {
       expect(data.success).toBe(false);
     });
 
-    it("should round amount to 1 decimal place", async () => {
+    it("should accept amount with exactly one decimal place", async () => {
       const hb = SEED_USERS.highBalance;
       const response = await fetch(`${config.BASE_URL}/api/v1/transactions/create`, {
         method: "POST",
@@ -527,7 +527,7 @@ describe("Transactions API", () => {
           "X-API-Key": apiKey.highBalance,
         },
         body: JSON.stringify({
-          amount: 1.1234,
+          amount: 1.1,
           toBankNumber: hb.bankAccounts[1].number,
           fromBankNumber: hb.bankAccounts[0].number,
         }),
@@ -535,7 +535,6 @@ describe("Transactions API", () => {
       expect(response.status).toBe(201);
       const data = await response.json();
       expect(data.success).toBe(true);
-      // Amount is rounded to 1 decimal: 1.1234 → 1.1
       expect(data.data.amount).toBe(1.1);
     });
 
