@@ -16,7 +16,7 @@ interface Props {
 
 export default function BankAccountCard({ bankAccount, session, onDelete, onRename }: Props) {
   return (
-    <Card className="w-max-[400px] group relative duration-300 hover:shadow-md">
+    <Card className="group relative max-w-[400px] duration-300 hover:shadow-md">
       <div className="absolute right-2 top-2 opacity-0 transition-opacity group-hover:opacity-100">
         <DeleteBankAccountButton
           bankAccount={bankAccount}
@@ -45,9 +45,15 @@ export default function BankAccountCard({ bankAccount, session, onDelete, onRena
         <CardDescription>{bankAccount.currency}</CardDescription>
       </CardHeader>
       <CardContent>
-        <h1 className="flex scroll-m-20 flex-row items-center space-x-2 text-5xl font-extrabold tracking-tight lg:text-5xl">
-          <Image src="/czechitoken-black.svg" alt="Czechitoken" width={40} height={40} />
-          <span>{bankAccount.balance.toFixed(1)}</span>
+        <h1 className="flex scroll-m-20 flex-row items-center gap-2 text-2xl font-extrabold tracking-tight sm:text-3xl md:text-5xl">
+          <Image
+            src="/czechitoken-black.svg"
+            alt="Czechitoken"
+            width={40}
+            height={40}
+            className="h-6 w-6 sm:h-8 sm:w-8 md:h-10 md:w-10"
+          />
+          <span className="truncate">{bankAccount.balance.toFixed(1)}</span>
         </h1>
         <p className="text-gray-500">Currency: {bankAccount.currency}</p>
       </CardContent>
