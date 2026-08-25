@@ -36,7 +36,13 @@ import { ResultAsync } from "neverthrow";
  *                         bankAccount:
  *                           $ref: '#/components/schemas/BankAccount'
  *       400:
- *         description: Invalid input
+ *         description: Request body is not valid JSON
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *       422:
+ *         description: Validation error (e.g. unknown or missing currency); details list the offending field
  *         content:
  *           application/json:
  *             schema:

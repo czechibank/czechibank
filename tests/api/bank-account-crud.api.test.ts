@@ -333,3 +333,41 @@ describe("Bank Account CRUD API", () => {
     });
   });
 });
+
+describe("OpenAPI docs for POST /bank-account/create (#117)", () => {
+  async function responsesFor(path: string) {
+    const response = await fetch(`${config.BASE_URL}/api/v1/docs`, { headers: { Accept: "application/json" } });
+    expect(response.status).toBe(200);
+    const spec = await response.json();
+    return spec.paths[path].post.responses;
+  }
+
+  it("documents 422 for validation errors, matching what the endpoint returns", async () => {
+    const responses = await responsesFor("/bank-account/create");
+    expect(responses["422"]).toBeDefined();
+  });
+
+  it("returns 422 with a currency detail for an unknown currency", async () => {
+    const response = await fetch(`${config.BASE_URL}/api/v1/bank-account/create`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "X-API-Key": apiKey.vojta },
+      body: JSON.stringify({ currency: "aaaa" }),
+    });
+    expect(response.status).toBe(422);
+    const data = await response.json();
+    expect(data.success).toBe(false);
+    expect(data.error.code).toBe("VALIDATION_ERROR");
+    expect(data.error.details[0].field).toBe("currency");
+  });
+
+  it.each([{ currency: "" }, {}])("returns 422 for body %j", async (body) => {
+    const response = await fetch(`${config.BASE_URL}/api/v1/bank-account/create`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "X-API-Key": apiKey.vojta },
+      body: JSON.stringify(body),
+    });
+    expect(response.status).toBe(422);
+    const data = await response.json();
+    expect(data.error.details[0].field).toBe("currency");
+  });
+});
