@@ -30,6 +30,21 @@ describe("apiErrorStatusMap", () => {
   it("should map INTERNAL_ERROR to 500", () => {
     expect(apiErrorStatusMap[ApiErrorCode.INTERNAL_ERROR]).toBe(500);
   });
+
+  it("should map CONFLICT and INSUFFICIENT_BALANCE to 409", () => {
+    expect(apiErrorStatusMap[ApiErrorCode.CONFLICT]).toBe(409);
+    expect(apiErrorStatusMap[ApiErrorCode.INSUFFICIENT_BALANCE]).toBe(409);
+    expect(apiErrorStatusMap[ApiErrorCode.NON_ZERO_BALANCE]).toBe(409);
+  });
+
+  it("should map OPERATION_FAILED and INVALID_PASSWORD to 400", () => {
+    expect(apiErrorStatusMap[ApiErrorCode.OPERATION_FAILED]).toBe(400);
+    expect(apiErrorStatusMap[ApiErrorCode.INVALID_PASSWORD]).toBe(400);
+  });
+
+  it("should map BAD_GATEWAY to 502", () => {
+    expect(apiErrorStatusMap[ApiErrorCode.BAD_GATEWAY]).toBe(502);
+  });
 });
 
 describe("mapErrorCodeToStatus", () => {

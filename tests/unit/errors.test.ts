@@ -164,6 +164,50 @@ describe("fromUnknown", () => {
     });
   });
 
+  describe("additional better-auth code mappings (body.code)", () => {
+    it("should map INVALID_TOKEN to UNAUTHORIZED", () => {
+      const error = Object.assign(new Error("Bad token"), {
+        body: { code: "INVALID_TOKEN", message: "Bad token" },
+      });
+      expect(fromUnknown(error).code).toBe(ApiErrorCode.UNAUTHORIZED);
+    });
+
+    it("should map SESSION_NOT_FRESH to UNAUTHORIZED", () => {
+      const error = Object.assign(new Error("Stale session"), {
+        body: { code: "SESSION_NOT_FRESH", message: "Stale session" },
+      });
+      expect(fromUnknown(error).code).toBe(ApiErrorCode.UNAUTHORIZED);
+    });
+
+    it("should map INVALID_PASSWORD to INVALID_PASSWORD", () => {
+      const error = Object.assign(new Error("Wrong password"), {
+        body: { code: "INVALID_PASSWORD", message: "Wrong password" },
+      });
+      expect(fromUnknown(error).code).toBe(ApiErrorCode.INVALID_PASSWORD);
+    });
+
+    it("should map TOO_MANY_ATTEMPTS to RATE_LIMIT_EXCEEDED", () => {
+      const error = Object.assign(new Error("Too many tries"), {
+        body: { code: "TOO_MANY_ATTEMPTS", message: "Too many tries" },
+      });
+      expect(fromUnknown(error).code).toBe(ApiErrorCode.RATE_LIMIT_EXCEEDED);
+    });
+
+    it("should map PROVIDER_NOT_FOUND to NOT_FOUND", () => {
+      const error = Object.assign(new Error("No provider"), {
+        body: { code: "PROVIDER_NOT_FOUND", message: "No provider" },
+      });
+      expect(fromUnknown(error).code).toBe(ApiErrorCode.NOT_FOUND);
+    });
+
+    it("should map VALIDATION_ERROR in body to VALIDATION_ERROR", () => {
+      const error = Object.assign(new Error("Invalid"), {
+        body: { code: "VALIDATION_ERROR", message: "Invalid" },
+      });
+      expect(fromUnknown(error).code).toBe(ApiErrorCode.VALIDATION_ERROR);
+    });
+  });
+
   describe("non-object errors", () => {
     it("should use fallback message for string errors", () => {
       const result = fromUnknown("oops");
