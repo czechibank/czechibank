@@ -33,7 +33,7 @@ async function balanceOf(account: string, key: string) {
   return list.find((a: any) => a.number === account)?.balance as number;
 }
 
-Given("the victim {string} balance is recorded", async (_ignored, _email: string) => {
+Given("the victim {string} balance is recorded", async ({}, _email: string) => {
   bag.victimId = (await api("/user", VICTIM.key)).data.id;
   bag.victimBefore = await balanceOf(VICTIM.account, VICTIM.key);
   expect(bag.victimBefore, "victim should have a balance to steal").toBeGreaterThan(0);
