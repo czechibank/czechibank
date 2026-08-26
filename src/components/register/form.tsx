@@ -133,7 +133,7 @@ export function RegisterForm() {
                 <Input placeholder="" {...field} aria-required="true" aria-invalid={!!form.formState.errors.email} />
               </FormControl>
               <FormDescription>Email for sign in</FormDescription>
-              <FormMessage />
+              <FormMessage data-testid="email-message" />
             </FormItem>
           )}
         />
