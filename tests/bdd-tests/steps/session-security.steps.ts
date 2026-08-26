@@ -63,12 +63,19 @@ Given("I am logged in as a fresh attacker", async ({ page }) => {
 
 When("I submit a transfer but rewrite the sender to the victim", async ({ page, context }) => {
   const a = bag.attacker!;
+  bag.rewrote = false;
+  bag.requests = 0;
   await context.route("**/*", async (route) => {
     const req = route.request();
     const body = req.postData() ?? "";
-    if (req.method() === "POST" && body.includes(a.id)) {
-      const spoofed = body.split(a.id).join(bag.victimId!).split(a.account.number).join(VICTIM.account);
-      return route.continue({ postData: spoofed });
+    if (req.method() === "POST" && body) {
+      bag.requests!++;
+      if (body.includes(a.id)) {
+        const spoofed = body.split(a.id).join(bag.victimId!).split(a.account.number).join(VICTIM.account);
+        bag.rewrote = true;
+        console.log(`[#89] rewrote POST to ${new URL(req.url()).pathname}`);
+        return route.continue({ postData: spoofed });
+      }
     }
     return route.continue();
   });
@@ -78,10 +85,13 @@ When("I submit a transfer but rewrite the sender to the victim", async ({ page, 
   await page.getByRole("option").first().click();
   await page.getByPlaceholder("Amount").fill("1");
   await page.getByRole("button", { name: "Transfer" }).click();
-  await page.waitForTimeout(2500);
+  await page.waitForTimeout(3000);
+  console.log(`[#89] posts seen=${bag.requests} rewrote=${bag.rewrote}`);
 });
 
 Then("the victim balance is unchanged", async () => {
   const after = await balanceOf(VICTIM.account, VICTIM.key);
+  console.log(`[#89] victim before=${bag.victimBefore} after=${after}`);
+  expect(bag.rewrote, "the spoofed server-action request must actually have been sent").toBe(true);
   expect(after, "the signed-in attacker must not be able to move the victim's money").toBe(bag.victimBefore);
 });
