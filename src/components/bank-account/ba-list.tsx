@@ -1,7 +1,7 @@
 "use client";
 
 import { CreateDialog } from "@/components/bank-account/create-ba-dialog";
-import bankAccountService from "@/domain/bankAccount-domain/ba-service";
+import { getMyBankAccountsAction } from "@/domain/bankAccount-domain/ba-action";
 import { BankAccount } from "@prisma/client";
 import Link from "next/link";
 import { useEffect, useState } from "react";
@@ -17,7 +17,7 @@ export default function BankAccountsList({ initialBankAccounts, session }: BankA
   const pagination = { page: 1, limit: 100 };
   async function handleRefresh() {
     try {
-      const response = await bankAccountService.getMyBankAccounts(session.userId, pagination);
+      const response = await getMyBankAccountsAction(pagination);
 
       if (!response.success) {
         console.error("Failed to fetch bank accounts:", response.message);
