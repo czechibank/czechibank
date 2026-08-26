@@ -8,8 +8,8 @@
  * `<app-uuid>-pr-<n>`), creates the database if it is missing, runs
  * `prisma migrate deploy`, seeds, and then starts Next.js.
  *
- * Outside a preview (no `-pr-<n>` in COOLIFY_CONTAINER_NAME) it keeps the
- * DATABASE_URL untouched and only migrates and starts.
+ * Outside a preview (no `-pr-<n>` in COOLIFY_CONTAINER_NAME) it behaves like
+ * plain `pnpm start`, so develop keeps its current deploy flow.
  */
 import { PrismaClient } from "@prisma/client";
 import { execSync, spawn } from "child_process";
@@ -57,11 +57,12 @@ async function main() {
   if (preview) {
     await ensureDatabase(baseUrl, preview.dbName);
     process.env.DATABASE_URL = preview.url;
+    console.log("[preview] DATABASE_URL:", redact(preview.url));
+    execSync("npx prisma migrate deploy", { stdio: "inherit", env: process.env });
+    execSync("pnpm db:seed:features && pnpm db:seed:users", { stdio: "inherit", env: process.env });
+  } else {
+    console.log("[preview] not a PR preview container, starting normally");
   }
-  console.log("[preview] DATABASE_URL:", redact(process.env.DATABASE_URL!));
-
-  execSync("npx prisma migrate deploy", { stdio: "inherit", env: process.env });
-  execSync("pnpm db:seed:features && pnpm db:seed:users", { stdio: "inherit", env: process.env });
 
   const server = spawn("pnpm", ["start"], { stdio: "inherit", env: process.env });
   for (const signal of ["SIGINT", "SIGTERM"] as const) {
