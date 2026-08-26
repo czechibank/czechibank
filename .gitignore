@@ -53,3 +53,6 @@ results.xml
 # Playwright BDD generated files
 **/.features-gen/**/*.spec.js
 .env.local
+
+# Storybook
+storybook-static/
