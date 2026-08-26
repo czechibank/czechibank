@@ -28,6 +28,11 @@ Techstack: NextJS (Typescript) + Prisma + Auth.js (email)
 1. Run script to initialize tables for NextAuth
    - `pnpx prisma generate && pnpx prisma migrate dev`
 
+## Deployment
+
+Pull requests against `develop` get a preview at `https://<pr>.develop.czechibank.ostrava.digital`.
+How it works and how to debug it: [docs/coolify-previews.md](docs/coolify-previews.md).
+
 ## Frameworks + Tools
 
 ### Prisma

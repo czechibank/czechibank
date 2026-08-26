@@ -1,0 +1,4 @@
+# Coolify builds this app with Nixpacks. The start command detects PR preview
+# containers and prepares a per-PR database first; see scripts/preview-start.ts.
+[start]
+cmd = "pnpm start:preview"
