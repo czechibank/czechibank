@@ -29,6 +29,7 @@ yarn-error.log*
 
 # local env files
 .env*.local
+.env
 
 # vercel
 .vercel
@@ -45,11 +46,13 @@ next-env.d.ts
 /playwright-report/
 /blob-report/
 /playwright/.cache/
+results.xml
 
 /prisma/prisma-client
 
 # Playwright BDD generated files
 **/.features-gen/**/*.spec.js
+.env.local
 
 # Storybook
 storybook-static/

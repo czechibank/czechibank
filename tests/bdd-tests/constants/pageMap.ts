@@ -1,4 +1,6 @@
 export const pageMap: Record<string, string> = {
   Dashboard: "/",
-  Signin: "/signin",
+  SigninPage: "/signin",
+  RegisterPage: "/register",
+  RegisterSuccessPage: "/register/success",
 };

@@ -1,5 +1,3 @@
-import { ZodSchema } from "zod";
-
 export type PaginationMeta = {
   page: number;
   limit: number;
@@ -79,17 +77,6 @@ export function createPaginationMeta(page: number, limit: number, total: number)
     total,
     totalPages: Math.ceil(total / limit),
   };
-}
-
-export async function validateEventHandler<TInput, TOutput>(
-  schema: ZodSchema<TOutput, any, TInput>,
-  event: TInput,
-): Promise<TOutput | ErrorResponse> {
-  const result = await schema.safeParseAsync(event);
-  if (!result.success) {
-    return errorResponse("Validation error", ApiErrorCode.VALIDATION_ERROR, result.error.errors);
-  }
-  return result.data;
 }
 
 // Error codes enum for consistent error reporting

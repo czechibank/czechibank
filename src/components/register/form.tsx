@@ -16,6 +16,7 @@ import { generateRandomAvatarConfig } from "@/lib/utils";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { ErrorContext } from "better-auth/react";
 import { useRouter } from "next/navigation";
+import posthog from "posthog-js";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
@@ -61,6 +62,7 @@ export function RegisterForm() {
       } as CreateUserSchemaType,
       {
         onSuccess: () => {
+          posthog.capture("user_signed_up");
           form.reset();
           broadcastSessionChanged();
           router.refresh();
@@ -131,7 +133,7 @@ export function RegisterForm() {
                 <Input placeholder="" {...field} aria-required="true" aria-invalid={!!form.formState.errors.email} />
               </FormControl>
               <FormDescription>Email for sign in</FormDescription>
-              <FormMessage />
+              <FormMessage data-testid="email-message" />
             </FormItem>
           )}
         />

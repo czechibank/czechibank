@@ -3,7 +3,7 @@
  * /features/update:
  *   post:
  *     summary: Update features
- *     description: Update the status of multiple features
+ *     description: Update the status of multiple features. Requires admin role.
  *     tags: [Features]
  *     security:
  *       - ApiKeyAuth: []
@@ -31,79 +31,60 @@
  *                           items:
  *                             $ref: '#/components/schemas/Feature'
  *       400:
- *         description: Invalid input data
+ *         description: Invalid JSON body
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/ErrorResponse'
+ *               $ref: '#/components/schemas/Error'
  *       401:
- *         description: Unauthorized access
+ *         description: Unauthorized - API key is missing or invalid
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/ErrorResponse'
- *       404:
- *         description: Feature not found
+ *               $ref: '#/components/schemas/Error'
+ *       429:
+ *         $ref: '#/components/responses/RateLimitExceeded'
+ *       403:
+ *         description: Forbidden - requires admin role
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/ErrorResponse'
+ *               $ref: '#/components/schemas/Error'
+ *       422:
+ *         description: Validation error - invalid request body
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
  *       500:
  *         description: Internal server error
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/ErrorResponse'
+ *               $ref: '#/components/schemas/Error'
  */
 
-import { ApiError } from "@/app/api/v1/api-error";
-import { handleErrors } from "@/app/api/v1/routes";
-import { checkUserAuthOrThrowError } from "@/app/api/v1/server-actions";
+import { authenticateRequest } from "@/app/api/v1/auth";
 import featuresService from "@/domain/features-domain/features-service";
 import { AllFeaturesSchema } from "@/domain/features-domain/features.schema";
-import { ApiErrorCode, successResponse, validateEventHandler } from "@/lib/response";
+import { badRequest, forbidden } from "@/lib/errors";
+import { toApiResponse, validateWithResult } from "@/lib/result-helpers";
+import { errAsync, okAsync, ResultAsync } from "neverthrow";
 
 export async function POST(request: Request): Promise<Response> {
-  try {
-    const user = await checkUserAuthOrThrowError(request);
-    if ("errror" in user) {
-      return Response.json(user, { status: 401 });
-    }
+  const result = authenticateRequest(request)
+    .andThen((user) => {
+      if (user.role !== "admin") {
+        return errAsync(forbidden("Forbidden"));
+      }
+      return okAsync(user);
+    })
+    .andThen(() => ResultAsync.fromPromise(request.json(), () => badRequest("Invalid JSON body")))
+    .andThen((body) => validateWithResult(AllFeaturesSchema, body))
+    .andThen(({ features }) => featuresService.server.updateFeaturesResult(features))
+    .map((features) => ({ features }));
 
-    const body = await request.json();
-    const validatedBody = await validateEventHandler(AllFeaturesSchema, body);
-
-    if ("error" in validatedBody) {
-      return Response.json(validatedBody, { status: 400 });
-    }
-
-    const { features } = validatedBody;
-    const updatedFeatures = await featuresService.server.updateFeatures(features);
-
-    if ("error" in updatedFeatures) {
-      return Response.json(updatedFeatures, { status: 404 });
-    }
-
-    return Response.json(
-      successResponse(
-        "Features updated successfully",
-        { features: updatedFeatures.data },
-        {
-          timestamp: new Date().toISOString(),
-          requestId: request.headers.get("x-request-id") || undefined,
-        },
-      ),
-      {
-        status: 200,
-      },
-    );
-  } catch (error) {
-    if (error instanceof ApiError) {
-      return handleErrors(error);
-    } else {
-      throw new ApiError("Internal Server Error", 500, ApiErrorCode.INTERNAL_ERROR, [
-        { code: ApiErrorCode.INTERNAL_ERROR, message: error instanceof Error ? error.message : "Unknown error" },
-      ]);
-    }
-  }
+  return toApiResponse(result, "Features updated successfully", 200, {
+    requestId: request.headers.get("x-request-id") || undefined,
+  });
 }

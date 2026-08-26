@@ -11,7 +11,7 @@ export type SeedUserDef = {
   avatarConfig: string;
   bankAccounts: Array<{ number: string }>;
   balance: number;
-  apiKeys: Array<{ key: string; active: boolean }>;
+  apiKeys: Array<{ key: string; active: boolean; rateLimitMax?: number }>;
   transactions?: {
     needsHistory: true;
     targetCount: number;
@@ -144,6 +144,20 @@ export const SEED_USERS = {
     apiKeys: [
       { key: "expired_expired.key@example.com000000000000000000000000000000000", active: false },
       { key: "key__0_expired.key@example.com0000000000000000000000000000000000", active: true },
+    ],
+  },
+
+  rateLimited: {
+    email: "rate.limited@example.com",
+    name: "Rate Limited User",
+    password: "password123",
+    role: "user",
+    avatarConfig:
+      '{"backgroundColor":["E2A04A"],"eyebrows":["variant12"],"eyebrowsColor":["000000"],"eyes":["variant01"],"eyesColor":["000000"],"freckles":["variant01"],"frecklesColor":["000000"],"frecklesProbability":[null],"glasses":["variant01"],"glassesColor":["000000"],"glassesProbability":[null],"mouth":["neutral01"],"mouthColor":["000000"],"nose":["variant01"],"noseColor":["000000"]}',
+    bankAccounts: [{ number: "100000000007/5555" }],
+    balance: 10_000,
+    apiKeys: [
+      { key: "key__0_rate.limited@example.com0000000000000000000000000000000000", active: true, rateLimitMax: 2 },
     ],
   },
 

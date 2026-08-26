@@ -86,11 +86,14 @@ async function seedUsers() {
         console.log(`[users seed] Creating API key ${i + 1}/${userSeed.apiKeys.length} for user: ${user.email}`);
         const createdKey = await auth.api.createApiKey({ body: { userId: user.id } });
 
-        const updateData: { key: string; expiresAt?: Date } = { key: keyDef.key };
+        const updateData: { key: string; expiresAt?: Date; rateLimitMax?: number } = { key: keyDef.key };
         if (!keyDef.active) {
           const expiredDate = new Date();
           expiredDate.setDate(expiredDate.getDate() - 1);
           updateData.expiresAt = expiredDate;
+        }
+        if (keyDef.rateLimitMax !== undefined) {
+          updateData.rateLimitMax = keyDef.rateLimitMax;
         }
 
         await prisma.apikey.update({

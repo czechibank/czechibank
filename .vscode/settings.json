@@ -7,5 +7,9 @@
       "connectString": "postgresql://czechitasBank:czechitasBank@localhost:1111/database?connection_limit=5&pool_timeout=2",
       "name": "czechitasbank"
     }
-  ]
+  ],
+  "cucumberautocomplete.steps": ["tests/bdd-tests/steps/**/*.ts"],
+  "cucumberautocomplete.onTypeFormat": true,
+  "cucumberautocomplete.stepsInvariants": true,
+  "cucumberautocomplete.strictGherkinCompletion": true
 }

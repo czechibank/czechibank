@@ -8,8 +8,15 @@ Given("I am on the login page", async ({ page }) => {
   await page.goto("/signin");
 });
 
+Given("I am logged in as {string} with password {string}", async ({ page }, email: string, password: string) => {
+  await page.goto("/signin");
+  await page.getByLabel("Email").fill(email);
+  await page.getByLabel("Password").fill(password);
+  await page.getByRole("button", { name: "Sign in" }).click();
+});
+
 When("I fill username {string}", async ({ page }, username: string) => {
-  await page.getByLabel("Email").fill(username);
+  await page.getByRole("textbox", { name: "Email" }).fill(username);
 });
 
 When("I fill password {string}", async ({ page }, password: string) => {
@@ -30,5 +37,18 @@ Then("I should see title {string}", async ({ page }, headingText: string) => {
 });
 
 Then("I should see error message {string}", async ({ page }, errorText: string) => {
-  await expect(page.getByRole("status")).toContainText(errorText);
+  await expect(page.getByText(errorText, { exact: true })).toBeVisible();
+});
+
+Then("I should see {string} validation text {string}", async ({ page }, fieldID: string, validationText: string) => {
+  await expect(page.getByTestId(`${fieldID}-message`)).toBeVisible();
+  await expect(page.getByTestId(`${fieldID}-message`)).toContainText(validationText);
+});
+
+Then("I click profile button", async ({ page }) => {
+  await page.getByTestId("avatarCtxMenu").click();
+});
+
+Then("I click sign out button", async ({ page }) => {
+  await page.getByRole("button", { name: "Sign Out" }).click();
 });

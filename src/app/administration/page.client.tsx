@@ -10,6 +10,7 @@ import { FeatureType } from "@/domain/features-domain/features.schema";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { flatMap, isEmpty, isEqual, omitBy, uniq } from "lodash";
 import { SettingsIcon } from "lucide-react";
+import posthog from "posthog-js";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import z, { ZodBoolean, ZodDefault } from "zod";
@@ -108,6 +109,8 @@ export default function AdministrationClientPage({ features }: { features: Featu
       });
       return;
     }
+
+    posthog.capture("feature_flags_updated", { updated_flags: Object.keys(updatedFeatures) });
 
     // change in the database
     const newFeatures: FeatureType[] = allFeatures.map((feature: FeatureType): FeatureType => {

@@ -53,7 +53,7 @@ export default function BankAccountsList({ initialBankAccounts, session }: BankA
           onCreated={(newBankAccount: BankAccount) => setAccounts((prev) => [...prev, newBankAccount])}
         />
       </div>
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         {accounts.map((ba) => (
           //comment Silviczka> div added to avoid oppening of bank account card while renaming
           <div key={ba.id}>

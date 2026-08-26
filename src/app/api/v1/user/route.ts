@@ -1,6 +1,6 @@
-import { checkUserAuthOrThrowError } from "@/app/api/v1/server-actions";
-import { ApiErrorCode, successResponse } from "@/lib/response";
-import { ApiError, DELETE, HEAD, OPTIONS, PATCH, POST, PUT, handleErrors } from "../routes";
+import { authenticateRequest } from "@/app/api/v1/auth";
+import { toApiResponse } from "@/lib/result-helpers";
+import { DELETE, HEAD, OPTIONS, PATCH, POST, PUT } from "../routes";
 
 /**
  * @swagger
@@ -49,30 +49,12 @@ import { ApiError, DELETE, HEAD, OPTIONS, PATCH, POST, PUT, handleErrors } from 
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/Error'
+ *       429:
+ *         $ref: '#/components/responses/RateLimitExceeded'
  */
 export async function GET(request: Request) {
-  try {
-    const user = await checkUserAuthOrThrowError(request);
-    // Check if the returned object has an 'error' property, indicating authentication failure
-    if ("error" in user) {
-      console.log("Authentication failed:", user);
-      return Response.json(user, { status: 401 });
-    }
-    // If no 'error' property, authentication was successful
-    return Response.json(successResponse("User profile retrieved successfully", user), {
-      status: 200,
-    });
-  } catch (error) {
-    if (error instanceof ApiError) {
-      return handleErrors(error);
-    } else {
-      // Ensure unexpected errors are still handled and logged appropriately
-      console.error("Internal server error in GET /user:", error);
-      throw new ApiError("Internal Server Error", 500, ApiErrorCode.INTERNAL_ERROR, [
-        { code: ApiErrorCode.INTERNAL_ERROR, message: error instanceof Error ? error.message : "Unknown error" },
-      ]);
-    }
-  }
+  const result = authenticateRequest(request);
+  return toApiResponse(result, "User profile retrieved successfully");
 }
 
 export { DELETE, HEAD, OPTIONS, PATCH, POST, PUT };

@@ -9,6 +9,7 @@ import { FeatureType } from "@/domain/features-domain/features.schema";
 import { sendMoneyToBankNumberAction } from "@/domain/transaction-domain/transaction-action";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Prisma } from "@prisma/client";
+import posthog from "posthog-js";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
@@ -82,11 +83,11 @@ export function TransactionTransfer({
         currency: "CZECHITOKEN",
         fromBankNumber: bankAccountNumber,
         toBankNumber: data.toBankNumber,
-        userId: userId,
         applicationType: "web",
       });
 
       if (response.success) {
+        posthog.capture("money_transferred", { amount: data.amount, currency: "CZECHITOKEN" });
         if (showGifInTransactionsFeature(features)) {
           toast({
             title: "💸 Transaction created!",

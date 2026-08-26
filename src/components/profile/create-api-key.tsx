@@ -19,6 +19,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { Apikey } from "@prisma/client";
 import { CopyIcon, PlusIcon } from "lucide-react";
 import { useRouter } from "next/navigation";
+import posthog from "posthog-js";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
@@ -66,6 +67,9 @@ export default function CreateApiKey() {
         onSuccess: (context) => {
           const apiKey = context.data as Apikey;
           setNewApiKey(apiKey.key);
+          posthog.capture("api_key_created", {
+            expires_in_days: data.expiresInDays ?? null,
+          });
           toast({
             title: "API key created",
             description: "Your new API key has been created successfully",

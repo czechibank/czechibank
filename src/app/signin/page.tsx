@@ -15,6 +15,7 @@ import {
 import { zodResolver } from "@hookform/resolvers/zod";
 import { ErrorContext } from "better-auth/react";
 import Link from "next/link";
+import posthog from "posthog-js";
 import { useForm } from "react-hook-form";
 
 /**
@@ -37,6 +38,7 @@ export default function SignInPage() {
   const action: () => void = form.handleSubmit(async (data: UserBaseSchemaType): Promise<void> => {
     await userServiceClient.signIn({ email: data.email, password: data.password } satisfies UserBaseSchemaType, {
       onSuccess: () => {
+        posthog.capture("user_signed_in");
         toast({
           title: "Success",
           description: "You are signed in",
@@ -74,7 +76,7 @@ export default function SignInPage() {
                   <Input placeholder="" {...field} aria-required="true" aria-invalid={!!form.formState.errors.email} />
                 </FormControl>
                 <FormDescription>Email for sign in</FormDescription>
-                <FormMessage id="email-message" />
+                <FormMessage id="email-message" data-testid="email-message" />
               </FormItem>
             )}
           />
@@ -96,7 +98,7 @@ export default function SignInPage() {
                   />
                 </FormControl>
                 <FormDescription>Your password must be at least {MIN_PASSWORD_LENGTH} characters long.</FormDescription>
-                <FormMessage id="password-message" />
+                <FormMessage id="password-message" data-testid="password-message" />
               </FormItem>
             )}
           />

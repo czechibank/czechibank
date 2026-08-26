@@ -9,6 +9,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { useSessionWithRefresh } from "@/lib/useSessionWithRefresh";
 import Link from "next/link";
+import posthog from "posthog-js";
 import { useEffect, useRef, useState } from "react";
 import { Button } from "../ui/button";
 import { UserAvatar } from "../user/avatar";
@@ -21,6 +22,15 @@ export default function UserButton() {
 
   const { data: session, isPending } = useSessionWithRefresh();
   const lastSessionRef = useRef(session);
+
+  useEffect(() => {
+    if (session?.user?.id) {
+      posthog.identify(session.user.id, {
+        email: session.user.email,
+        name: session.user.name,
+      });
+    }
+  }, [session?.user?.id]);
   if (session !== undefined) lastSessionRef.current = session;
   const displaySession = session ?? lastSessionRef.current;
 
