@@ -105,6 +105,9 @@
   "pnpm": {
     "overrides": {
       "handlebars": ">=4.7.9"
-    }
+    },
+    "neverBuiltDependencies": [
+      "better-sqlite3"
+    ]
   }
 }
