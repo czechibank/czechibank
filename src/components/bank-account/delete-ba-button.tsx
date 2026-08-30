@@ -2,7 +2,7 @@
 
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/use-toast";
-import bankAccountService from "@/domain/bankAccount-domain/ba-service";
+import { deleteBankAccountAction } from "@/domain/bankAccount-domain/ba-action";
 import { BankAccount } from "@prisma/client";
 import { TrashIcon } from "lucide-react";
 import posthog from "posthog-js";
@@ -27,7 +27,7 @@ export function DeleteBankAccountButton({ bankAccount, session, onDeleted }: Del
 
     setIsLoading(true);
     try {
-      const response = await bankAccountService.deleteBankAccount(bankAccount, session.userId);
+      const response = await deleteBankAccountAction({ bankAccountId: bankAccount.id });
 
       if (response.success) {
         posthog.capture("bank_account_deleted");

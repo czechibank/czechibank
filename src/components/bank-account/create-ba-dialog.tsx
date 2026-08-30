@@ -14,8 +14,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/components/ui/use-toast";
+import { createBankAccountAction } from "@/domain/bankAccount-domain/ba-action";
 import { CreateBankAccountSchema } from "@/domain/bankAccount-domain/ba-schema";
-import bankAccountService from "@/domain/bankAccount-domain/ba-service";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Plus } from "lucide-react";
 import posthog from "posthog-js";
@@ -54,8 +54,7 @@ export function CreateDialog({ session, onCreated }: CreateBankAccountDialogProp
   async function onSubmit(data: FormData) {
     setIsLoading(true);
     try {
-      const response = await bankAccountService.createBankAccount({
-        userId: session.userId,
+      const response = await createBankAccountAction({
         currency: data.currency,
         name: data.name,
       });

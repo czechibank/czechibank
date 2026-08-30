@@ -13,8 +13,8 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/components/ui/use-toast";
+import { renameBankAccountAction } from "@/domain/bankAccount-domain/ba-action";
 import { RenameBankAccountSchema } from "@/domain/bankAccount-domain/ba-schema";
-import bankAccountService from "@/domain/bankAccount-domain/ba-service";
 import { Pencil } from "lucide-react";
 import posthog from "posthog-js";
 import { useState } from "react";
@@ -49,7 +49,7 @@ export function RenameDialog({ bankAccountId, currentName, session, onRenamed }:
 
   async function onSubmit(data: FormData) {
     try {
-      const response = await bankAccountService.renameBankAccount(bankAccountId, session.userId, data.name);
+      const response = await renameBankAccountAction({ bankAccountId, newName: data.name });
 
       if (response.success && !("error" in response)) {
         posthog.capture("bank_account_renamed");
