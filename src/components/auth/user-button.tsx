@@ -20,7 +20,7 @@ export default function UserButton() {
   const [mounted, setMounted] = useState(false);
   useEffect(() => setMounted(true), []);
 
-  const { data: session, isPending } = useSessionWithRefresh();
+  const { data: session, isPending, error } = useSessionWithRefresh();
   const lastSessionRef = useRef(session);
 
   useEffect(() => {
@@ -31,7 +31,10 @@ export default function UserButton() {
       });
     }
   }, [session?.user?.id]);
-  if (session !== undefined) lastSessionRef.current = session;
+  // Only remember a session we actually received. A failed check (rate limited, offline)
+  // returns null, and storing that would make the header claim the user is signed out
+  // while their session is still valid (CZBANK-82).
+  if (!error && session !== undefined) lastSessionRef.current = session;
   const displaySession = session ?? lastSessionRef.current;
 
   if (!mounted) return <Link href="/signin">Sign in</Link>;
