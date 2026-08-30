@@ -47,4 +47,3 @@ Feature: Register user
     And I fill confirm password "12345678"
     And I click register button
     Then I should see "email" validation text "Invalid email"
-
