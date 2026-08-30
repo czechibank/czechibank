@@ -43,14 +43,14 @@ Application `czechibank:develop`, section Preview Deployments:
 
 Preview environment variables (separate from the develop set):
 
-| Variable | Value | Note |
-| --- | --- | --- |
-| `DATABASE_URL` | `postgres://postgres:<pw>@d4os84cc8soss0o4o4cogoog:5432/<anything>` | the script replaces the database name |
-| `HOST` | `$COOLIFY_FQDN` | resolved by Coolify at runtime |
-| `BETTER_AUTH_URL` | `$COOLIFY_URL` | resolved by Coolify at runtime |
-| `BETTER_AUTH_SECRET`, `SECRET_KEY` | any 32+ chars | |
-| `ENV` | `PROD` | see the `ENV` gotcha below |
-| `DISCORD_WEBHOOK_URL` | empty | keeps QA traffic out of the Discord channel |
+| Variable                           | Value                                                               | Note                                        |
+| ---------------------------------- | ------------------------------------------------------------------- | ------------------------------------------- |
+| `DATABASE_URL`                     | `postgres://postgres:<pw>@d4os84cc8soss0o4o4cogoog:5432/<anything>` | the script replaces the database name       |
+| `HOST`                             | `$COOLIFY_FQDN`                                                     | resolved by Coolify at runtime              |
+| `BETTER_AUTH_URL`                  | `$COOLIFY_URL`                                                      | resolved by Coolify at runtime              |
+| `BETTER_AUTH_SECRET`, `SECRET_KEY` | any 32+ chars                                                       |                                             |
+| `ENV`                              | `PROD`                                                              | see the `ENV` gotcha below                  |
+| `DISCORD_WEBHOOK_URL`              | empty                                                               | keeps QA traffic out of the Discord channel |
 
 ## Gotchas
 

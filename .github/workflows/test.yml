@@ -44,6 +44,10 @@ jobs:
           cache: "pnpm"
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
+      # Squash merges are created on GitHub and never run the local pre-commit hook,
+      # so unformatted files can reach develop unnoticed. Fail the PR instead.
+      - name: Check formatting
+        run: pnpm exec prettier --check .
       - name: Generate Prisma Client
         run: pnpm exec prisma generate
       - name: Run database migrations
