@@ -22,7 +22,7 @@ export default function ProfileClientPage({
   user: typeof authClient.$Infer.Session.user;
   apiKeys: Omit<Apikey, "key">[];
 }) {
-  const { data: session, isPending, error } = useSessionWithRefresh();
+  const { isPending } = useSessionWithRefresh();
   const router = useRouter();
   const [isUpdatingAvatar, setIsUpdatingAvatar] = useState(false);
 
@@ -33,14 +33,6 @@ export default function ProfileClientPage({
       </div>
     );
   }
-  if (error) {
-    return (
-      <div className="flex min-h-[400px] items-center justify-center">
-        <div className="text-destructive">Error: {error.message}</div>
-      </div>
-    );
-  }
-
   const handleGenerateAvatar = async () => {
     setIsUpdatingAvatar(true);
     const avatarConfig = generateRandomAvatarConfig();
