@@ -10,7 +10,7 @@ import {
 import { useSessionWithRefresh } from "@/lib/useSessionWithRefresh";
 import Link from "next/link";
 import posthog from "posthog-js";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "../ui/button";
 import { UserAvatar } from "../user/avatar";
 import { SignOut } from "./sign-out";
@@ -21,7 +21,19 @@ export default function UserButton() {
   useEffect(() => setMounted(true), []);
 
   const { data: session, isPending, error } = useSessionWithRefresh();
-  const lastSessionRef = useRef(session);
+  // Last session we actually received, so the header does not flicker to "Sign in" while a
+  // refetch is in flight. Held in state rather than a ref because render must stay pure:
+  // React can discard a render, and a ref written during one could leak a session the UI
+  // never committed.
+  const [lastSession, setLastSession] = useState(session);
+
+  useEffect(() => {
+    // Store only a result we actually received. A failed check (rate limited, offline)
+    // reports null, and storing that would make the header claim the user is signed out
+    // while their session is still valid (CZBANK-82). A real sign-out also reports null,
+    // but carries no error, so it is stored and the header updates.
+    if (!error && session !== undefined) setLastSession(session);
+  }, [error, session]);
 
   useEffect(() => {
     if (session?.user?.id) {
@@ -31,11 +43,7 @@ export default function UserButton() {
       });
     }
   }, [session?.user?.id]);
-  // Only remember a session we actually received. A failed check (rate limited, offline)
-  // returns null, and storing that would make the header claim the user is signed out
-  // while their session is still valid (CZBANK-82).
-  if (!error && session !== undefined) lastSessionRef.current = session;
-  const displaySession = session ?? lastSessionRef.current;
+  const displaySession = session ?? lastSession;
 
   if (!mounted) return <Link href="/signin">Sign in</Link>;
   if (isPending && displaySession === undefined) return <p className="mt-8 text-center">Loading...</p>;
