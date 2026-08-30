@@ -1,7 +1,7 @@
 import bankAccountService from "@/domain/bankAccount-domain/ba-service";
 import prisma from "@/lib/db";
 import { ac, admin, user } from "@/lib/permissions";
-import { RATE_LIMIT, SESSION } from "@/server-constants";
+import { AUTH_RATE_LIMIT, RATE_LIMIT, SESSION } from "@/server-constants";
 import { betterAuth } from "better-auth";
 import { prismaAdapter } from "better-auth/adapters/prisma";
 import { admin as adminPlugin, apiKey } from "better-auth/plugins";
@@ -18,6 +18,13 @@ export const auth = betterAuth({
     updateAge: SESSION.UPDATE_AGE,
   },
   telemetry: { enabled: false },
+  rateLimit: {
+    window: AUTH_RATE_LIMIT.WINDOW_SECONDS,
+    max: AUTH_RATE_LIMIT.MAX_REQUESTS,
+    // Sign-out is exempt: a 429 returns before the handler runs, so the session would
+    // survive a sign-out the user was told had succeeded. See AUTH_RATE_LIMIT.
+    customRules: AUTH_RATE_LIMIT.CUSTOM_RULES,
+  },
   plugins: [
     apiKey({
       rateLimit: {
