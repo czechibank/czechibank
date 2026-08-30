@@ -1,3 +1,4 @@
+import { InactivityLogoutGuard } from "@/components/auth/inactivity-logout-guard";
 import UserButton from "@/components/auth/user-button";
 import { ThemeProvider } from "@/components/theme-provider";
 import { ModeToggle } from "@/components/theme/toggle-button";
@@ -28,6 +29,7 @@ export default async function RootLayout({
       <body className="flex min-h-screen flex-col">
         <div className={inter.className + " w-full min-w-full flex-grow px-4 py-4 pb-10 sm:px-6 md:max-w-3xl"}>
           <ThemeProvider attribute="class" defaultTheme="system">
+            <InactivityLogoutGuard />
             <div className="flex flex-row items-center justify-between">
               <Link href={"/"} className="flex flex-row items-center space-x-2">
                 <Image src={`/logo.svg`} alt={"Logo"} width="40" height="40" />
